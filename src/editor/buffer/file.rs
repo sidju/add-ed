@@ -2,9 +2,11 @@ use std::io::ErrorKind;
 use crate::error_consts::*;
 
 /// File IO abstractions
-pub fn read_file(filepath: &str, must_exist: bool) -> Result<Vec<String>, &'static str> {
+pub fn read_file(filepath: &str, must_exist: bool)
+  -> Result<Vec<String>, &'static str>
+{
   match read(filepath) {
-    Ok(x) => Ok(x),
+    Ok(data) => Ok(data),
     Err(e) => match e.kind() {
       ErrorKind::PermissionDenied => Err(PERMISSION_DENIED),
       ErrorKind::NotFound => {
@@ -34,22 +36,24 @@ pub fn write_file(filepath: &str, data: &[String], append: bool)
     })
 }
 
-fn read(filepath: &str) -> std::io::Result<Vec<String>> {
-    use std::io::{BufRead, BufReader};
-    let mut data = Vec::new();
-    let file = std::fs::OpenOptions::new()
-        .read(true)
-        .open(filepath)?;
-    let mut reader = BufReader::new(file);
-    loop {
-        let mut line = String::new();
-        match reader.read_line(&mut line)?
-        {
-            0 => break, // Is end of file
-            _ => data.push(line),
-        }
+fn read(filepath: &str)
+  -> std::io::Result<Vec<String>>
+{
+  use std::io::{BufRead, BufReader};
+  let mut data = Vec::new();
+  let file = std::fs::OpenOptions::new()
+      .read(true)
+      .open(filepath)?;
+  let mut reader = BufReader::new(file);
+  loop {
+    let mut line = String::new();
+    match reader.read_line(&mut line)?
+    {
+      0 => break, // Is end of file
+      _ => data.push(line),
     }
-    Ok(data)
+  }
+  Ok(data)
 }
 fn write(filepath: &str, data: &[String], append: bool) -> std::io::Result<()> {
     use std::io::{BufWriter, Write};

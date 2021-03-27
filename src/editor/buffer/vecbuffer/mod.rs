@@ -1,4 +1,5 @@
 use super::Buffer;
+use super::file;
 use crate::error_consts::*;
 
 pub struct VecBuffer {
@@ -15,14 +16,6 @@ impl VecBuffer {
   }
 }
 impl Buffer for VecBuffer {
-
-  fn set_saved(&mut self) {
-    self.saved = true;
-  }
-
-  fn saved(&self) -> bool {
-    self.saved
-  }
 
   fn len(&self) -> usize {
       self.buffer.len()
@@ -45,6 +38,36 @@ impl Buffer for VecBuffer {
       return Err(INDEX_TOO_BIG);
     }
     Ok(())
+  }
+
+  fn read_from(&mut self, path: &str, index: Option<usize>, must_exist: bool)
+    -> Result<usize, &'static str>
+  {
+    let mut data = file::read_file(path, must_exist)?;
+    let len = data.len();
+    if let Some(i) = index {
+      self.insert(&mut data, i)?;
+    }
+    else {
+      self.change(&mut data, (0, self.len()))?;
+      self.saved = true;
+    }
+    Ok(len)
+  }
+
+  fn write_to(&mut self, selection: (usize, usize), path: &str, append: bool)
+    -> Result<(), &'static str>
+  {
+    let data = self.get_selection(selection)?;
+    file::write_file(path, data, append)?;
+    if selection == (0, self.len()) {
+      self.saved = true;
+    }
+    Ok(())
+  }
+
+  fn saved(&self) -> bool {
+    self.saved
   }
 
   fn get_selection(&self, selection: (usize, usize)) -> Result<&[String], &'static str> {

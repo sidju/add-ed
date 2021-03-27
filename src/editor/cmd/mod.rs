@@ -1,7 +1,7 @@
-use crate::error_consts::*;
-use crate::ui;
-
-use crate::buffer::Buffer;
+use super::Ed;
+use super::UI;
+use super::Buffer;
+use super::error_consts::*;
 
 mod substitute;
 mod parse_selection;
@@ -14,15 +14,13 @@ mod parse_flags;
 use parse_flags::*;
 
 
-pub fn run<'a>(state: &'a mut crate::State, command: &'a mut str)
-  -> Result<(), &'static str>
+pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
+  -> Result<bool, &'static str>
 {
   // Declare flags for printing after the command has been executed.
   let mut p = false;
   let mut n = false;
   let mut l = false;
-  // And a bool to say if view has any reason to be reprinted
-  let mut view_changed = false;
 
   // Parse out the command index and the selection
   let (cmd_i, selection) = parse_selection(command)?;
@@ -31,15 +29,15 @@ pub fn run<'a>(state: &'a mut crate::State, command: &'a mut str)
   let clean = &command[cmd_i + 1..].trim();
 
   // Match the command and act upon it
-  match command[cmd_i..].trim().chars().next() {
+  let ret = match command[cmd_i..].trim().chars().next() {
     // No command is valid. It updates selection and thus works as a print when viewer is on
     None => {
       // Get and update the selection.
       let sel = interpret_selection(selection, state.selection, state.buffer.len(), false);
       state.buffer.verify_selection(sel)?;
       state.selection = Some(sel);
-      view_changed = true; // Set to reprint
-      Ok(())
+      p = true; // Default command is 'p'
+      Ok(false)
     },
     Some(ch) => match ch {
       // Quit commands
@@ -47,8 +45,7 @@ pub fn run<'a>(state: &'a mut crate::State, command: &'a mut str)
         if selection != Sel::Lone(Ind::Default) { return Err(SELECTION_FORBIDDEN); }
         parse_flags(clean, "")?;
         if state.buffer.saved() {
-          state.done = true;
-          return Ok(());
+          Ok(true)
         }
         else {
           Err(UNSAVED_CHANGES)
@@ -57,27 +54,26 @@ pub fn run<'a>(state: &'a mut crate::State, command: &'a mut str)
       'Q' => {
         if selection != Sel::Lone(Ind::Default) { return Err(SELECTION_FORBIDDEN); }
         parse_flags(clean, "")?;
-        state.done = true;
-        return Ok(());
+        Ok(true)
       }
       // Help commands
       '?' => {
         if selection != Sel::Lone(Ind::Default) { return Err(SELECTION_FORBIDDEN); }
         parse_flags(clean, "")?;
-        ui::print(&mut state.stdout, HELP_TEXT);
-        Ok(())
+        ui.print(HELP_TEXT)?;
+        Ok(false)
       },
       'h' => {
         if selection != Sel::Lone(Ind::Default) { return Err(SELECTION_FORBIDDEN); }
         parse_flags(clean, "")?;
-        ui::print(&mut state.stdout, state.error.unwrap_or(NO_ERROR));
-        Ok(())
+        ui.print(state.error.unwrap_or(NO_ERROR))?;
+        Ok(false)
       },
       'H' => {
         if selection != Sel::Lone(Ind::Default) { return Err(SELECTION_FORBIDDEN); }
         parse_flags(clean, "")?;
         state.print_errors = !state.print_errors; // Toggle the setting
-        Ok(())
+        Ok(false)
       }
       // File commands
       'f' => { // Set or print filename
@@ -85,28 +81,28 @@ pub fn run<'a>(state: &'a mut crate::State, command: &'a mut str)
         parse_flags(clean, "")?;
         match parse_path(clean) {
           None => { // Print current filename
-            if state.file.len() == 0 {
-              ui::print(&mut state.stdout, NO_FILE);
+            if state.path.len() == 0 {
+              ui.print(NO_FILE)?;
             }
             else {
-              ui::println(&mut state.stdout, &state.file);
+              ui.print(&state.path)?;
             }
           },
           Some(x) => { // Set new filename
-            state.file = x.to_string();
+            state.path = x.to_string();
           }
         }
-        Ok(())
+        Ok(false)
       }
       'e' | 'E' | 'r' => {
         // Read the selection if 'r', else error on any selection and return 0 on none (Lone default == no input)
         let index = 
           if ch == 'r' {
-            Ok(interpret_selection(selection, state.selection, state.buffer.len(), true).1)
+            Ok(Some(interpret_selection(selection, state.selection, state.buffer.len(), true).1))
           }
           else {
             if selection == Sel::Lone(Ind::Default) {
-              Ok(0)
+              Ok(None)
             }
             else {
               Err(SELECTION_FORBIDDEN)
@@ -119,57 +115,42 @@ pub fn run<'a>(state: &'a mut crate::State, command: &'a mut str)
         else {
           // Get the path (cutting of the command char and the trailing newline)
           let path = parse_path(clean);
-          // If opening another file
-          // or inserting current file again
-          // or unconditionally resetting current changes
-          // then view has changed
-            if path.is_some() || ch == 'r' || ch == 'E' { view_changed = true; }
-          let path = path.unwrap_or(&state.file);
+          let path = path.unwrap_or(&state.path);
           // Read the data from the file
-          let mut data = crate::file::read_file(path, ch == 'r')?;
-          let datalen = data.len();
-          // Empty the buffer if not 'r'
+          let datalen = state.buffer.read_from(path, index, ch == 'E')?;
           if ch != 'r' {
-            state.buffer = crate::buffer::VecBuffer::new();
+            state.path = path.to_string();
           }
-          state.buffer.insert(&mut data, index)?;
-          if ch != 'r' {
-            state.buffer.set_saved();
-            state.file = path.to_string();
-          }
+          let index = index.unwrap_or(0);
           state.selection = Some((index, index + datalen));
-          Ok(())
+          Ok(false)
         }
       },
       'w' | 'W' => {
         // Get the selection to write
         let sel = interpret_selection(selection, state.selection, state.buffer.len(), true);
         // If not wq, parse path
-        let (q, path) = if clean.len() != 1 {
-          let path = parse_path(clean).unwrap_or(&state.file);
+        let (q, path) = if clean != &"q" {
+          let path = parse_path(clean).unwrap_or(&state.path);
           (false, path)
         }
         // If wq, use current file path
         else {
-          (true, &state.file[..])
+          (true, &state.path[..])
         };
         // If the 'q' flag is set the whole buffer must be selected
         if q && sel != (0, state.buffer.len()) { return Err(UNSAVED_CHANGES); }
-        // Get the data
-        let data = state.buffer.get_selection(sel)?;
-        let append = ch == 'W';
         // Write it into the file (append if 'W')
-        crate::file::write_file(path, data, append)?;
-        // If all was written, update state.file and set saved
+        let append = ch == 'W';
+        state.buffer.write_to(sel, path, append)?;
+        // If all was written, update state.file
         if sel == (0, state.buffer.len()) {
-          state.buffer.set_saved();
-          state.file = path.to_string();
-          state.done = q;
+          state.path = path.to_string();
         }
         else {
           state.selection = Some(sel);
         }
-        Ok(())
+        Ok(q)
       }
       // Print commands
       'p' | 'n' | 'l' => {
@@ -183,7 +164,7 @@ pub fn run<'a>(state: &'a mut crate::State, command: &'a mut str)
         p = flags.remove(&'p').unwrap();
         n = flags.remove(&'n').unwrap();
         l = flags.remove(&'l').unwrap();
-        Ok(())
+        Ok(false)
       }
       // Basic editing commands
       'a' | 'i' | 'c' => {
@@ -193,7 +174,7 @@ pub fn run<'a>(state: &'a mut crate::State, command: &'a mut str)
         n = flags.remove(&'n').unwrap();
         l = flags.remove(&'l').unwrap();
         // When all possible checks have been run, get input
-        let mut input = ui::get_input(state)?;
+        let mut input = ui.get_input(state.buffer, '.')?;
         let new_sel = match ch {
           'a' | 'i' => {
             if input.len() != 0 {
@@ -224,8 +205,7 @@ pub fn run<'a>(state: &'a mut crate::State, command: &'a mut str)
         };
         // If resulting selection is empty, set original selection?
         state.selection = new_sel;
-        view_changed = true;
-        Ok(())
+        Ok(false)
       }
       'd' => {
         let sel = interpret_selection(selection, state.selection, state.buffer.len(), false);
@@ -238,8 +218,7 @@ pub fn run<'a>(state: &'a mut crate::State, command: &'a mut str)
           else if sel.0 != state.buffer.len() { Some((sel.0, sel.0 + 1)) }
           else { None }
         ;
-        view_changed = true;
-        Ok(())
+        Ok(false)
       }
       // Advanced editing commands
       'm' | 't' => {
@@ -268,8 +247,7 @@ pub fn run<'a>(state: &'a mut crate::State, command: &'a mut str)
         }
         // Update the selection
         state.selection = Some((index, end));
-        view_changed = true;
-        Ok(())
+        Ok(false)
       }
       'j' => {
         // Calculate the selection
@@ -280,8 +258,7 @@ pub fn run<'a>(state: &'a mut crate::State, command: &'a mut str)
         l = flags.remove(&'l').unwrap();
         state.buffer.join(selection)?;
         state.selection = Some((selection.0, selection.0 + 1)); // Guaranteed to exist, but may be wrong.
-        view_changed = true;
-        Ok(())
+        Ok(false)
       }    
       // Regex commands
       // s and g, in essence
@@ -303,13 +280,10 @@ pub fn run<'a>(state: &'a mut crate::State, command: &'a mut str)
             state.selection = Some(
               state.buffer.search_replace((expressions[0], &substituted), selection, g)?
             );         
-            view_changed = true;
           }
           else { return Err(EXPRESSION_TOO_SHORT); }
         }
-        else { // implies 'g'
-        }
-        Ok(())
+        Ok(false)
       }
       _cmd => {
         Err(UNDEFINED_COMMAND)
@@ -320,25 +294,12 @@ pub fn run<'a>(state: &'a mut crate::State, command: &'a mut str)
   // If print flags are set, print
   if p | n | l {
     if let Some(sel) = state.selection {
-      // Get selection
-      let output = state.buffer.get_selection(sel)?;
-      // Print it (static false is to not limit by terminal height)
-      crate::ui::format_print(state, output, sel.0, false, n, l)?;
+      ui.print_selection(state.buffer, sel, n, l)?;
     }
     else {
       Err(SELECTION_EMPTY)?
     }
   }
-  // Othewise, print the height of the terminal -2 lines from start of the selection - 5 or so
-  else if view_changed {
-    if let Some(sel) = state.selection {
-      // Handle the cases where we would go out of index bounds
-      let start = sel.0.saturating_sub(15);
-      let end = state.buffer.len();
-      let output = state.buffer.get_selection((start,end))?;
-      crate::ui::format_print(state, output, start, true, true, false)?; // TODO: Handle flags
-    }
-  }
 
-  Ok(())
+  Ok(ret)
 }

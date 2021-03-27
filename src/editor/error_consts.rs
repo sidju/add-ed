@@ -59,6 +59,9 @@ pub const PERMISSION_DENIED: &str = "Could not open file. Permission denied.\n\r
 pub const NOT_FOUND: &str = "Could not open file. Not found or invalid path.\n\r";
 pub const UNKNOWN: &str = "Unknown error while reading file.\n\r";
 
+// UI errors
+pub const NO_INPUT: &str = "Failed to get input.\n\r"; // Probably only used by DummyUI, which has limited input.
+
 // Terminal interaction errors
 // No carriage returns, since only used through panic messages.
 pub const TERMINAL_READ: &str = "Failed to read from terminal.";
