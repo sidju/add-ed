@@ -62,29 +62,50 @@ impl <'a, B: Buffer> Ed <'a, B> {
     command: &str,
   ) -> Result<bool, &'static str> {
     // Just hand execution into the cmd module
-    cmd::run(
-      self,
-      ui,
-      command,
-    )
+    match cmd::run(self, ui, command) {
+      // If error, note it in state
+      Err(e) => {
+        self.error = Some(e);
+        Err(e)
+      },
+      x => x,
+    }
   }
 
   /// Run given instance of Ed until it receives a command to quit or errors
   /// The returned error type could be improved, suggestions welcome.
-  pub fn run(
+  pub fn run_macro(
     &mut self,
     ui: &mut dyn UI,
   ) -> Result<(), &'static str> {
-    // Loop until quit command or UI error
+    // Loop until quit or error
     loop {
-      let cmd = ui.get_command( self.buffer )?;
-      // If the returned bool is true the command was to quit, so we quit
-      if self.run_command(
-        ui,
-        &cmd,
-      )? {
-        return Ok(());
+      let cmd = match ui.get_command( self.buffer ) {
+        Err(e) => { self.error = Some(e); return Err(e) },
+        Ok(x) => x,
+      };
+      if self.run_command(ui, &cmd)? {
+        break;
       }
+    }
+  }
+  pub fn run(
+    &mut self,
+    ui: &mut dyn UI,
+  ) {
+    loop {
+      match self.run_macro(ui) {
+        Ok(()) => break,
+        Err(e) => {
+          if self.print_errors {
+            ui.print(self.error.unwrap());
+          }
+          else {
+            ui.print("?\n");
+          }
+        },
+      }
+
     }
   }
 }

@@ -16,10 +16,5 @@ fn main() {
   let mut ed = editor::Ed::new(&mut buffer, "".to_string()).expect("Failed to open file");
 
   // And finally run it
-  loop {
-    match ed.run(&mut ui) {
-      Ok(()) => break,
-      Err(e) => println!("Error: {}", e),
-    }
-  }
+  ed.run(&mut ui);
 }

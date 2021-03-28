@@ -3,6 +3,9 @@
 
 use super::Buffer;
 
+mod dummy_ui;
+pub use dummy_ui::DummyUI;
+
 mod classic_ui;
 pub use classic_ui::ClassicUI;
 

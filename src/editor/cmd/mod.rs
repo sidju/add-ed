@@ -2,6 +2,7 @@ use super::Ed;
 use super::UI;
 use super::Buffer;
 use super::error_consts::*;
+use super::ui::DummyUI;
 
 mod substitute;
 mod parse_selection;
@@ -262,11 +263,11 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
       }    
       // Regex commands
       // s and g, in essence
-      's' /* | 'g' */ => {
+      's' | 'g' => {
         // Calculate the selection
         let selection = interpret_selection(selection, state.selection, state.buffer.len(), false);
         // Read in the expressions
-        let expressions = parse_expressions(clean);
+        let mut expressions = parse_expressions(clean);
         // Split based on command
         if ch == 's' {
           if expressions.len() == 3 { // A proper new expression was given
@@ -282,6 +283,35 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
             );         
           }
           else { return Err(EXPRESSION_TOO_SHORT); }
+        }
+        else { // implies 'g'
+          // We expect one regex and at least one command
+          let commands = match expressions.len() {
+            0 | 1 => return Err(EXPRESSION_TOO_SHORT),
+            2 => { // If open, get input until closed
+              let mut input = ui.get_input(state.buffer, clean.chars().next().unwrap())?;
+              // If there was something put on the command line, use it
+              // Otherwise discard, to prevent unexpected prints
+              if expressions[1] != "\n" && expressions[1].len() != 0 {
+                input.insert(0, expressions[1].to_string());
+              }
+              input
+            },
+            _ => expressions.split_off(1).iter().map(|s| s.to_string()).collect(),
+          };
+          // Then get the matching lines
+          let lines = state.buffer.find_matching(expressions[0], selection)?;
+          // Set each line to default selection and run the commands in sequence
+          for line in lines {
+            state.selection = Some((line, line + 1));
+            // Use the dummy UI to use command list as input
+            let mut dummy = DummyUI{
+              input: commands.iter().map(|x| x.clone()).collect(),
+              print_ui: Some(ui),
+            };
+            // And then recurse into state.run
+            state.run(&mut dummy)?;
+          }
         }
         Ok(false)
       }
