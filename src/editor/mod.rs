@@ -88,24 +88,25 @@ impl <'a, B: Buffer> Ed <'a, B> {
         break;
       }
     }
+    Ok(())
   }
   pub fn run(
     &mut self,
     ui: &mut dyn UI,
-  ) {
+  ) -> Result<(), &'static str> {
     loop {
       match self.run_macro(ui) {
         Ok(()) => break,
-        Err(e) => {
+        Err(_) => {
           if self.print_errors {
-            ui.print(self.error.unwrap());
+            ui.print(self.error.unwrap())?;
           }
           else {
-            ui.print("?\n");
+            ui.print("?\n")?;
           }
         },
       }
-
     }
+    Ok(())
   }
 }

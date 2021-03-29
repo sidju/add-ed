@@ -310,7 +310,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
               print_ui: Some(ui),
             };
             // And then recurse into state.run
-            state.run(&mut dummy)?;
+            state.run_macro(&mut dummy)?;
           }
         }
         Ok(false)

@@ -16,5 +16,5 @@ fn main() {
   let mut ed = editor::Ed::new(&mut buffer, "".to_string()).expect("Failed to open file");
 
   // And finally run it
-  ed.run(&mut ui);
+  ed.run(&mut ui).unwrap();
 }
