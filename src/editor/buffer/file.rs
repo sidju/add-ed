@@ -21,7 +21,7 @@ pub fn read_file(filepath: &str, must_exist: bool)
     },
   }
 }
-pub fn write_file(filepath: &str, data: &[String], append: bool)
+pub fn write_file<'a>(filepath: &str, data: impl Iterator<Item = &'a str>, append: bool)
   -> Result<(), &'static str>
 {
   write(filepath, data, append)
@@ -55,7 +55,9 @@ fn read(filepath: &str)
   }
   Ok(data)
 }
-fn write(filepath: &str, data: &[String], append: bool) -> std::io::Result<()> {
+fn write<'a>(filepath: &str, data: impl Iterator<Item = &'a str>, append: bool)
+  -> std::io::Result<()>
+{
     use std::io::{BufWriter, Write};
     let file = std::fs::OpenOptions::new()
         .write(true)

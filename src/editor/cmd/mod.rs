@@ -175,7 +175,8 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         n = flags.remove(&'n').unwrap();
         l = flags.remove(&'l').unwrap();
         // When all possible checks have been run, get input
-        let mut input = ui.get_input(state.buffer, '.')?;
+        let tmp = ui.get_input(state.buffer, '.')?;
+        let mut input = tmp.iter().map(|string| &string[..]);
         let new_sel = match ch {
           'a' | 'i' => {
             if input.len() != 0 {
@@ -212,7 +213,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         let sel = interpret_selection(selection, state.selection, state.buffer.len(), false);
         // Since selection after execution can be 0 it isn't allowed to auto print after
         parse_flags(clean, "")?;
-        state.buffer.delete(sel)?;
+        state.buffer.cut(sel)?;
         // Try to figure out a selection after the deletion
         state.selection = 
           if sel.0 != 0 { Some((sel.0 - 1, sel.0)) }
@@ -244,7 +245,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           state.buffer.mov(selection, index)?;
         }
         else {
-          state.buffer.copy(selection, index)?;
+          state.buffer.mov_copy(selection, index)?;
         }
         // Update the selection
         state.selection = Some((index, end));
@@ -300,7 +301,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
             _ => expressions.split_off(1).iter().map(|s| s.to_string()).collect(),
           };
           // Then get the matching lines
-          let lines = state.buffer.find_matching(expressions[0], selection)?;
+          let lines = state.buffer.get_all_matching(expressions[0], selection)?;
           // Set each line to default selection and run the commands in sequence
           for line in lines {
             state.selection = Some((line, line + 1));
