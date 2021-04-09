@@ -52,6 +52,7 @@ pub const BUFFER_NOT_IMPLEMENTED: &str = "Feature not implemented in buffer.\n\r
 pub const INDEX_TOO_BIG: &str = "Selection overshoots buffer length.\n\r";
 pub const SELECTION_EMPTY: &str = "Selection empty or inverted.\n\r";
 pub const MOVE_INTO_SELF: &str = "Cannot move selection into itself.\n\r";
+pub const INVALID_TAG: &str = "Invalid line tag entered.\n\r";
 pub const INVALID_REGEX: &str = "Invalid regex entered.\n\r";
 pub const NO_MATCH: &str = "No line matched requirements.\n\r";
 

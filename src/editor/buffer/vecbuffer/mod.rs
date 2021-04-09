@@ -56,7 +56,7 @@ impl Buffer for VecBuffer {
     }
     Err(NO_MATCH)
   }
-  fn get_matching(&self, pattern: &str, selection: (usize, usize))
+  fn get_matching(&self, pattern: &str, selection: (usize, usize), backwards: bool)
     -> Result<usize, &'static str>
   {
     use regex::RegexBuilder;
@@ -66,9 +66,18 @@ impl Buffer for VecBuffer {
       .build()
       .map_err(|_| INVALID_REGEX)
     ?;
-    for index in selection.0 .. selection.1 {
-      if regex.is_match(&(self.buffer[index].1)) {
-        return Ok(index);
+    if !backwards {
+      for index in selection.0 .. selection.1 {
+        if regex.is_match(&(self.buffer[index].1)) {
+          return Ok(index);
+        }
+      }
+    }
+    else {
+      for index in selection.1 .. selection.0 {
+        if regex.is_match(&(self.buffer[index].1)) {
+          return Ok(index);
+        }
       }
     }
     Err(NO_MATCH)
@@ -211,7 +220,7 @@ impl Buffer for VecBuffer {
     }
     Ok(())
   }
-  fn paste(&mut self, index: usize) -> Result<(), &'static str> {
+  fn paste(&mut self, index: usize) -> Result<usize, &'static str> {
     self.verify_index(index)?;
     // Cut off the tail in one go, to reduce time complexity
     let mut tmp = self.buffer.split_off(index);
@@ -221,7 +230,7 @@ impl Buffer for VecBuffer {
     }
     // Finally put back the tail
     self.buffer.append(&mut tmp);
-    Ok(())
+    Ok(self.clipboard.len())
   }
   fn search_replace(&mut self, pattern: (&str, &str), selection: (usize, usize), global: bool) -> Result<(usize, usize), &'static str>
   {

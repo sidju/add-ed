@@ -22,8 +22,8 @@ pub trait Buffer {
   /// Get line tagged with given letter. Not found is error
   fn get_tag(&self, tag: char, selection: (usize, usize))
     -> Result<usize, &'static str> ;
-  /// Return the first index in the selection that contains the regex pattern
-  fn get_matching(&self, pattern: &str, selection: (usize, usize))
+  /// Return the first/last index in the selection that contains the regex pattern
+  fn get_matching(&self, pattern: &str, selection: (usize, usize), backwards: bool)
     -> Result<usize, &'static str> ;
   /// Return the indices in the selection whose lines contain the regex pattern
   fn get_all_matching(&self, pattern: &str, selection: (usize, usize))
@@ -57,7 +57,7 @@ pub trait Buffer {
   /// Paste the clipboard contents to given index
   /// Leave clipboard unchanged
   fn paste(&mut self, index: usize)
-    -> Result<(), &'static str> ;
+    -> Result<usize, &'static str> ;
   /// Perform regex search and replace on the selection changing pattern.0 to pattern.1
   /// If pattern is empty, should re-use stored pattern from previous s command
   /// Returns selection, since it may delete or add lines

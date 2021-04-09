@@ -76,6 +76,21 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         state.print_errors = !state.print_errors; // Toggle the setting
         Ok(false)
       }
+      // Non-editing commands
+      '#' => {
+        // Get and update selection (none given gives no change)
+        let sel = interpret_selection(selection, state.selection, state.buffer.len(), false);
+        state.buffer.verify_selection(sel)?;
+        state.selection = Some(sel);
+        Ok(false)
+      },
+      '=' => { // Print selection (can set selection)
+        let sel = interpret_selection(selection, state.selection, state.buffer.len(), false);
+        state.buffer.verify_selection(sel)?;
+        state.selection = Some(sel);
+        ui.print( &format!("({},{})", sel.0, sel.1) )?;
+        Ok(false)
+      },
       // File commands
       'f' => { // Set or print filename
         if selection != Sel::Lone(Ind::Default) { return Err(SELECTION_FORBIDDEN); }
@@ -209,7 +224,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         state.selection = new_sel;
         Ok(false)
       }
-      'd' => {
+      'd' => { // Cut
         let sel = interpret_selection(selection, state.selection, state.buffer.len(), false);
         // Since selection after execution can be 0 it isn't allowed to auto print after
         parse_flags(clean, "")?;
@@ -221,8 +236,39 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           else { None }
         ;
         Ok(false)
-      }
+      },
+      'y' => { // Copy to clipboard
+        let sel = interpret_selection(selection, state.selection, state.buffer.len(), false);
+        let mut flags = parse_flags(clean, "pnl")?;
+        state.buffer.copy(sel)?;
+        // Save the selection and export the flags
+        state.selection = Some(sel);
+        p = flags.remove(&'p').unwrap();
+        n = flags.remove(&'n').unwrap();
+        l = flags.remove(&'l').unwrap();
+        Ok(false)
+      },
+      'x' | 'X' => { // Append/prepend (respectively) clipboard contents to index
+        let sel = interpret_selection(selection, state.selection, state.buffer.len(), false);
+        let mut flags = parse_flags(clean, "pnl")?;
+        let index = if ch == 'X' { sel.0 } else { sel.1 }; // Append or prepend based on command
+        let length = state.buffer.paste(index)?;
+        state.selection = if length != 0 { Some((index, index + length)) } else { None };
+        p = flags.remove(&'p').unwrap();
+        n = flags.remove(&'n').unwrap();
+        l = flags.remove(&'l').unwrap();
+        Ok(false)
+      },
       // Advanced editing commands
+      'k' | 'K' => { // Tag first (k) or last (K) line in selection
+        let sel = interpret_selection(selection, state.selection, state.buffer.len(), false);
+        // Expect only the tag, no flags
+        if clean.len() != 1 { return Err(INVALID_TAG); }
+        let index = if ch == 'k' { sel.0 } else { sel.1 };
+        state.buffer.tag_line(index, clean.chars().next().unwrap())?;
+        state.selection = Some(sel);
+        Ok(false)
+      },
       'm' | 't' => {
         // Split out the potential print flags from the index (nice extra feature)
         let ind_end = clean.find( char::is_alphabetic ).unwrap_or(clean.len());
@@ -262,7 +308,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         state.selection = Some((selection.0, selection.0 + 1)); // Guaranteed to exist, but may be wrong.
         Ok(false)
       }    
-      // Regex commands
+      // Pattern commands
       // s and g, in essence
       's' | 'g' => {
         // Calculate the selection
@@ -316,6 +362,15 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         }
         Ok(false)
       }
+,
+      // Meta commands (non-numeric index variations)
+      // Implemented as commands as it is easier and adds a feature of limiting selection if needed
+      '/' | '?' => { // Execute argument command on matching line, search from sel.0(/) or .1(?)
+        Ok(false)
+      },
+      '\'' => { // Execute argument command on line with given tag, search from sel.0
+        Ok(false)
+      },
       _cmd => {
         Err(UNDEFINED_COMMAND)
       }
