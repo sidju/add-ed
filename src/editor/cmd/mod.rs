@@ -58,16 +58,17 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         Ok(true)
       }
       // Help commands
-      '?' => {
-        if selection != Sel::Lone(Ind::Default) { return Err(SELECTION_FORBIDDEN); }
-        parse_flags(clean, "")?;
-        ui.print(HELP_TEXT)?;
-        Ok(false)
-      },
       'h' => {
         if selection != Sel::Lone(Ind::Default) { return Err(SELECTION_FORBIDDEN); }
-        parse_flags(clean, "")?;
-        ui.print(state.error.unwrap_or(NO_ERROR))?;
+        // If 'help' was entered, print held
+        if clean == &"elp" {
+          ui.print(HELP_TEXT)?;
+        }
+        // Else no flags accepted and print last error
+        else {
+          parse_flags(clean, "")?;
+          ui.print(state.error.unwrap_or(NO_ERROR))?;
+        }
         Ok(false)
       },
       'H' => {
@@ -360,15 +361,6 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
             state.run_macro(&mut dummy)?;
           }
         }
-        Ok(false)
-      }
-,
-      // Meta commands (non-numeric index variations)
-      // Implemented as commands as it is easier and adds a feature of limiting selection if needed
-      '/' | '?' => { // Execute argument command on matching line, search from sel.0(/) or .1(?)
-        Ok(false)
-      },
-      '\'' => { // Execute argument command on line with given tag, search from sel.0
         Ok(false)
       },
       _cmd => {
