@@ -34,6 +34,8 @@ pub const HELP_TEXT: &str =
 // Pre-command parsing errors
 pub const INDEX_PARSE: &str = "Could not parse given index.\n\r";
 pub const NO_COMMAND: &str = "No valid command given.\n\r";
+pub const NO_SELECTION: &str = "No prior selection exists.\n\r";
+pub const NEGATIVE_INDEX: &str = "Resulting index is negative.\n\r";
 
 // Command handling errors
 pub const UNDEFINED_COMMAND: &str = "Command not defined.\n\r";

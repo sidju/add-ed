@@ -1,166 +1,249 @@
-/// Since default selections vary between commands and some of them need to know
-/// if anything was entered we parse to an intermediary struct that is then
-/// interpreted using data from the command.
+/// Since default selections vary between commands and access to the
+/// buffer is needed for realisation we parse into an intermediate
+/// struct which is then interpreted using additional data.
 
 use crate::error_consts::*;
 
-#[derive(PartialEq, Debug)]
-pub enum Ind {
-  Default,
+use super::Buffer;
+
+// A struct to formalise all the kinds of indices
+#[derive(PartialEq)]
+pub enum Ind <'a> {
+  Selection,
   BufferLen,
-  Relative(i32),
   Literal(usize),
-}
-#[derive(PartialEq, Debug)]
-pub enum Sel {
-  FromStart(Ind, Ind),
-  FromSelection(Ind, Ind),
-  Lone(Ind),
-}
-
-pub fn parse_index(index: &str)
-  -> Result<Ind, &'static str>
-{
-  if index.len() == 0 {
-    Ok(Ind::Default)
-  }
-  else {
-    match index {
-      "." => Ok(Ind::Relative(0)),
-      "$" => Ok(Ind::BufferLen),
-      "+" => Ok(Ind::Relative(1)),
-      "-" => Ok(Ind::Relative(-1)),
-      _ => { match index.chars().next() {
-        Some('-')|Some('+') => index[..].parse::<i32>().map(|x| Ind::Relative(x) ),
-        _ => index.parse::<usize>().map(|x| Ind::Literal(x) ),
-      }.map_err(|_| INDEX_PARSE)},
-    }
-  }
+  Tag(char),
+  Pattern(&'a str),
+  RevPattern(&'a str),
+  Add(Box<Ind<'a>>, usize),
+  Sub(Box<Ind<'a>>, usize),
 }
 
-// Returns the index of the command char and the parsed selection
-pub fn parse_selection(input: &str)
-  -> Result<(usize, Sel), &'static str>
-{
-  // Variables set in the loop
-  let mut sep_i = None;
+pub enum Sel <'a> {
+  Pair(Ind<'a>, Ind<'a>),
+  Lone(Ind<'a>)
+}
 
-  for (i, char) in input.char_indices() {
-    // Find the separator, if any
-    if char == ',' || char == ';' {
-      if sep_i != None { return Err(INDEX_PARSE); } // Multiple separators given
-      // Save index and which separator it is
-      sep_i = Some((i, char));
-    }
-    // When we reach the command, use the collected data to parse
-    else if char.is_ascii_alphabetic() | (char == '\n') {
-      let sel = match sep_i {
-        Some((si, sep)) => {
-          // Means we parse the indices separately
-          let sel_start = parse_index(&input[..si])?;
-          let sel_end = parse_index(&input[si + 1..i])?;
-          // Convert from inclusive 1 indexed to exclusive 0 indexed
-          let sel_start = match sel_start {
-            Ind::Literal(x) => { Ind::Literal(x - ( 1 * (x != 0) as usize ) ) }, // subtract 1 if not 0
-            i => i,
+enum State {
+  Default(usize),
+  Tag,
+  Pattern(usize),
+  RevPattern(usize),
+  Offset(usize, bool),
+}
+
+pub fn parse_index<'a> (
+  input: &'a str,
+) -> Result<(usize, Option<Ind<'a>>), &'static str> {
+  // Set up state variables for one-pass parse
+  let mut i = 0;
+  let mut state = State::Default(0);
+  let mut selection_default = None;
+  let mut current_ind = None;
+  // Loop over chars and parse
+  let iter = input.char_indices().peekable();
+  for (index, ch) in iter {
+    // Save over index into i
+    i = index;
+    // Handle based on state
+    match state {
+      // If a state change is coming, populate current ind and make the change
+      State::Default(start) => {
+        match ch {
+          '/' | '\'' | '?' => {
+            // These are only valid at the start of an index
+            if start != i { return Err(INDEX_PARSE); }
+            // Since prior tags or patterns reset start, check that current_ind is none
+            if current_ind.is_some() { return Err(INDEX_PARSE); }
+            match ch {
+              '\'' => {
+                state = State::Tag;
+              },
+              '/' => {
+                state = State::Pattern(i);
+              },
+              '?' => {
+                state = State::RevPattern(i);
+              },
+              '.' => {
+                current_ind = Some(Ind::Selection);
+              },
+              '$' => {
+                current_ind = Some(Ind::BufferLen)
+              },
+            }
+          }
+          '+' => { state = State::Offset(i, false); },
+          '-' => { state = State::Offset(i, true); },
+          _ => {
+            // If not numeric (base 10) it must be the end of the index
+            // Break the loop and handle the last outside
+            if ! ch.is_digit(10) {
+              break;
+            }
+          },
+        }
+      },
+      // If the tag state was entered, save the next char as tag and return to default
+      State::Tag => {
+        current_ind = Some(Ind::Tag(ch));
+        state = State::Default( i + ch.len_utf8() );
+      },
+      // If the pattern state was entered, save as pattern until end char is given and return to default
+      State::Pattern(start) => {
+        if ch == '/' {
+          current_ind = Some(Ind::Pattern(&input[start .. i]));
+          state = State::Default( i + ch.len_utf8() );
+        }
+      },
+      // Same as pattern with different end char
+      State::RevPattern(start) => {
+        if ch == '?' {
+          current_ind = Some(Ind::RevPattern(&input[start .. i]));
+          state = State::Default( i + ch.len_utf8() );
+        }
+      },
+      // For the Add and Sub cases we need to check for separator or command to know when to stop
+      // This means we also need to recognize separators or commands as Default would
+      // We do this by returning to default when we find a non-numeric character
+      State::Offset(start, negative) => {
+        // Offset only takes numeric input, so at end of numeric input we hand back over to Default
+        // This requires peeking at the next char
+        let is_end = match iter.peek() {
+          None => true,
+          Some((_index, cha)) => {
+            ! cha.is_digit(10)
+          },
+        };
+        if is_end {
+          // Parse our offset and put it together in current_ind
+          let offset = if start != i {
+            input[start .. i].parse::<usize>().map_err(|_| INDEX_PARSE)?
+          } else {
+            1
           };
-          if sep == ',' {
-            Sel::FromStart(sel_start, sel_end)
-          }
-          else {
-            Sel::FromSelection(sel_start, sel_end)
-          }
+          current_ind = Some( if negative {
+            Ind::Sub(Box::new(current_ind.unwrap_or(Ind::Selection)), offset)
+          } else {
+            Ind::Add(Box::new(current_ind.unwrap_or(Ind::Selection)), offset)
+          });
+          // Then return to default state
+          state = State::Default( i + ch.len_utf8() );
         }
-        None => {
-          // Means we parse a lone index 
-          Sel::Lone(parse_index(&input[..i])?)
+      },
+    } // End of match
+  } // End of for-each
+
+  // When we get here we have either gone through the whole buffer or
+  // found a command/separator that marks the end of this index
+
+  // Check the state
+  match state {
+    // If the string ends in Default mode its contents should be sane 
+    State::Default(start) => {
+      if start != i {
+        // If there is both a current ind and a numeral literal it is error
+        if current_ind.is_some() { Err(INDEX_PARSE) }
+        // Else we parse the literal and return it
+        else {
+          let literal = input[start .. i].parse::<usize>().map_err(|_| INDEX_PARSE)?;
+          Ok((i, Some(Ind::Literal(literal))))
         }
-      };
-      // Return selection and index of the command char
-      return Ok((i, sel));
-    }
-  }
-  Err(NO_COMMAND)
-}
-
-pub fn u_i_add(a: usize, b: i32)
- -> usize
-{
-  if b.is_negative() {
-    a.saturating_sub((b * -1) as usize)
-  }
-  else {
-    a.saturating_add(b as usize)
-  }
-}
-
-pub fn interpret_index(
-  index: Ind,
-  old_selection: Option<usize>,
-  bufferlen: usize,
-  default: usize,
-)
-  -> usize
-{
-  let sel = old_selection.unwrap_or(default);
-  match index {
-    Ind::Default => default,
-    Ind::BufferLen => bufferlen,
-    Ind::Relative(x) => u_i_add(sel, x),
-    Ind::Literal(x) => x,
-  }
-}
-
-pub fn interpret_selection(
-  selection: Sel,
-  old_selection: Option<(usize, usize)>,
-  bufferlen: usize,
-  default_all: bool,
-)
-  -> (usize, usize)
-{
-  let old_sel = old_selection.unwrap_or((0, bufferlen));
-  match selection {
-    Sel::Lone(i) => {
-      match i {
-        Ind::Default => {
-          if default_all { (0, bufferlen) }
-          else { old_sel }
-        }
-        Ind::BufferLen => (bufferlen - 1, bufferlen),
-        Ind::Relative(x) => (u_i_add(old_sel.0, x), u_i_add(old_sel.1, x)),
-        Ind::Literal(x) => (x - (1 * (x != 0) as usize), x)
       }
+      // If there is no literal we return current_ind as-is, since None is the correct return if nothing was parsed
+      else {
+        Ok((i, current_ind))
+      }
+    },
+    // If the string ended abruptly in offset mode the contents may be usable
+    State::Offset(start, negative) => {
+      let offset = if start != i {
+        input[start .. i].parse::<usize>().map_err(|_| INDEX_PARSE)?
+      } else {
+        1
+      };
+      Ok((i, Some(
+        if negative {
+          Ind::Sub(Box::new(current_ind.unwrap_or(Ind::Selection)), offset)
+        } else {
+          Ind::Add(Box::new(current_ind.unwrap_or(Ind::Selection)), offset)
+        }
+      )))
+    },
+    // If we get here in a state that isn't terminated (returned to Default) there is an error
+    _ => {
+      Err(INDEX_PARSE)
+    },
+  }
+}
+
+pub fn parse_selection<'a>(
+  input: &'a str,
+) -> Result<Ind<'a>, &'static str> {
+  // First parse, getting an index and the offset it stopped parsing at
+  let (offset, ind) = parse_index(input)?;
+  match input[offset .. ].chars().next() {
+    None => {},
+    Some(ch) => match ch {
+      ';' => {
+        let (offset2, ind2) = parse_index(&input[offset + 1 ..]);
+        return Ok((offset2, Sel::FromSelection(ind, ind2)));
+      },
+      ',' => {
+        let (offset2, ind2) = parse_index(&input[offset + 1 ..]);
+        return Ok((offset2, Sel::FromStart(ind, ind2)));
+      },
+      _ => {},
     }
-    Sel::FromSelection(i, j) => {
-      let start = match i {
-        Ind::Default => old_sel.0,
-        Ind::BufferLen => bufferlen,
-        Ind::Relative(x) => u_i_add(old_sel.0, x),
-        Ind::Literal(x) => x,
-      };
-      let end = match j {
-        Ind::Default => bufferlen,
-        Ind::BufferLen => bufferlen,
-        Ind::Relative(x) => u_i_add(old_sel.1, x),
-        Ind::Literal(x) => x,
-      };
-      (start, end)
-    }
-    Sel::FromStart(i, j) => {
-      let start = match i {
-        Ind::Default => 0,
-        Ind::BufferLen => bufferlen,
-        Ind::Relative(x) => u_i_add(old_sel.0, x),
-        Ind::Literal(x) => x,
-      };
-      let end = match j {
-        Ind::Default => bufferlen,
-        Ind::BufferLen => bufferlen,
-        Ind::Relative(x) => u_i_add(old_sel.1, x),
-        Ind::Literal(x) => x,
-      };
-      (start, end)
+  }
+  return Ok((offset, Sel::Lone(ind)));
+}
+
+pub fn interpret_index<'a> (
+  index: Ind<'a>,
+  buffer: &dyn Buffer,
+  old_selection: Option<usize>,
+) -> Result<usize, &'static str> {
+  match index {
+    Ind::Selection => match old_selection {
+      Some(sel) => Ok(sel),
+      None => Err(NO_SELECTION),
+    },
+    Ind::BufferLen => Ok(buffer.len()),
+    Ind::Literal(index) => Ok(index),
+
+    // Decide on option or result from the buffer API
+    Ind::Tag(tag) => buffer.get_tag(tag),
+    Ind::Pattern(pattern) => buffer.get_matching(pattern, false),
+    Ind::RevPattern(pattern) => buffer.get_matching(pattern, true),
+
+    Ind::Add(inner, offset) => {
+      let inner = interpret_index(inner.into_inner(), buffer, old_selection)?;
+      Ok(inner + offset)
+    },
+    Ind::Sub(inner, offset) => {
+      let inner = interpret_index(inner.into_inner(), buffer, old_selection)?;
+      if offset > inner { Err(NEGATIVE_INDEX) }
+      else { Ok(inner - offset) }
+    },
+  }
+}
+
+pub fn interpret_selection<'a>(
+  selection: Sel<'a>,
+  buffer: &dyn Buffer,
+  old_selection: Option<(usize, usize)>,
+  default_all: bool,
+) -> Result<(usize, usize), &'static str> {
+  match selection {
+    Sel::Lone(ind) => {
+      match ind {
+        Ind::Default => {
+          if default_all { Ok((0, buffer.len())) }
+          else { Ok(old_selection.unwrap_or((0, buffer.len()))) }
+        }
+
+      }
     }
   }
 }
