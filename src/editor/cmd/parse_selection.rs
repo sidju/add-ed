@@ -7,7 +7,7 @@ use crate::error_consts::*;
 use super::Buffer;
 
 // A struct to formalise all the kinds of indices
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum Ind <'a> {
   Selection,
   BufferLen,
@@ -38,11 +38,10 @@ pub fn parse_index<'a> (
   // Set up state variables for one-pass parse
   let mut i = 0;
   let mut state = State::Default(0);
-  let mut selection_default = None;
   let mut current_ind = None;
   // Loop over chars and parse
-  let iter = input.char_indices().peekable();
-  for (index, ch) in iter {
+  let mut iter = input.char_indices().peekable();
+  while let Some((index, ch)) = iter.next() {
     // Save over index into i
     i = index;
     // Handle based on state
@@ -60,17 +59,20 @@ pub fn parse_index<'a> (
                 state = State::Tag;
               },
               '/' => {
-                state = State::Pattern(i);
+                state = State::Pattern(i + 1); // Since we know the length of these chars to be one byte
               },
               '?' => {
-                state = State::RevPattern(i);
+                state = State::RevPattern(i + 1); // Since we know the length of these chars to be one byte
               },
               '.' => {
                 current_ind = Some(Ind::Selection);
+                state = State::Default(i + 1); // reset start after moving into current_ind
               },
               '$' => {
-                current_ind = Some(Ind::BufferLen)
+                current_ind = Some(Ind::BufferLen);
+                state = State::Default(i + 1); // reset start after moving into current_ind
               },
+              _ => panic!("Unreachable"),
             }
           }
           '+' => { state = State::Offset(i, false); },
@@ -179,24 +181,31 @@ pub fn parse_index<'a> (
 
 pub fn parse_selection<'a>(
   input: &'a str,
-) -> Result<Ind<'a>, &'static str> {
+) -> Result<(usize, Option<Sel<'a>>), &'static str> {
   // First parse, getting an index and the offset it stopped parsing at
   let (offset, ind) = parse_index(input)?;
+  // Match the next char to see what kind of selection this is
   match input[offset .. ].chars().next() {
-    None => {},
-    Some(ch) => match ch {
-      ';' => {
-        let (offset2, ind2) = parse_index(&input[offset + 1 ..]);
-        return Ok((offset2, Sel::FromSelection(ind, ind2)));
-      },
-      ',' => {
-        let (offset2, ind2) = parse_index(&input[offset + 1 ..]);
-        return Ok((offset2, Sel::FromStart(ind, ind2)));
-      },
-      _ => {},
-    }
+    // Unwraps nothing in the first index into selection
+    Some(';') => {
+      let (offset2, ind2) = parse_index(&input[offset + 1 ..])?;
+      let unwrapped1 = ind.unwrap_or(Ind::Selection);
+      let unwrapped2 = ind2.unwrap_or(Ind::BufferLen);
+      Ok((offset2 + 1 + offset, Some(Sel::Pair(unwrapped1, unwrapped2))))
+    },
+    // Unwraps nothing in the first index into start of buffer
+    Some(',') => {
+      let (offset2, ind2) = parse_index(&input[offset + 1 ..])?;
+      let unwrapped1 = ind.unwrap_or(Ind::Literal(0));
+      let unwrapped2 = ind2.unwrap_or(Ind::BufferLen);
+      Ok((offset2 + 1 + offset, Some(Sel::Pair(unwrapped1, unwrapped2))))
+    },
+    _ => { // Either no more input or the command char itself
+      // This means it is a lone index
+      // Map the potential index to a Sel::Lone, since None should remain None
+      Ok(( offset, ind.map(|i| Sel::Lone(i)) ))
+    },
   }
-  return Ok((offset, Sel::Lone(ind)));
 }
 
 pub fn interpret_index<'a> (
@@ -218,11 +227,11 @@ pub fn interpret_index<'a> (
     Ind::RevPattern(pattern) => buffer.get_matching(pattern, true),
 
     Ind::Add(inner, offset) => {
-      let inner = interpret_index(inner.into_inner(), buffer, old_selection)?;
+      let inner = interpret_index(*inner, buffer, old_selection)?;
       Ok(inner + offset)
     },
     Ind::Sub(inner, offset) => {
-      let inner = interpret_index(inner.into_inner(), buffer, old_selection)?;
+      let inner = interpret_index(*inner, buffer, old_selection)?;
       if offset > inner { Err(NEGATIVE_INDEX) }
       else { Ok(inner - offset) }
     },
@@ -230,20 +239,28 @@ pub fn interpret_index<'a> (
 }
 
 pub fn interpret_selection<'a>(
-  selection: Sel<'a>,
-  buffer: &dyn Buffer,
+  input: Option<Sel<'a>>,
   old_selection: Option<(usize, usize)>,
+  buffer: &dyn Buffer,
   default_all: bool,
 ) -> Result<(usize, usize), &'static str> {
+  let selection = if default_all {
+    input.unwrap_or(Sel::Pair( Ind::Literal(1), Ind::BufferLen ))
+  }
+  // If not default all default is old selection
+  else {
+    input.unwrap_or(Sel::Pair( Ind::Selection, Ind::Selection ))
+  };
   match selection {
     Sel::Lone(ind) => {
-      match ind {
-        Ind::Default => {
-          if default_all { Ok((0, buffer.len())) }
-          else { Ok(old_selection.unwrap_or((0, buffer.len()))) }
-        }
-
-      }
-    }
+      // Just interpret the lone index and make it a selection
+      let i = interpret_index(ind, buffer, old_selection.map(|x| x.0) )?;
+      Ok((i, i + 1))
+    },
+    Sel::Pair(ind1, ind2) => {
+      let i1 = interpret_index(ind1, buffer, old_selection.map(|x| x.0) )?;
+      let i2 = interpret_index(ind2, buffer, old_selection.map(|x| x.1) )?;
+      Ok((i1, i2))
+    },
   }
 }

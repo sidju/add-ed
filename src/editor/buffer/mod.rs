@@ -20,10 +20,10 @@ pub trait Buffer {
   fn verify_selection(&self, selection: (usize, usize))
     -> Result<(), &'static str> ;
   /// Get line tagged with given letter. Not found is error
-  fn get_tag(&self, tag: char, selection: (usize, usize))
+  fn get_tag(&self, tag: char)
     -> Result<usize, &'static str> ;
   /// Return the first/last index in the selection that contains the regex pattern
-  fn get_matching(&self, pattern: &str, selection: (usize, usize), backwards: bool)
+  fn get_matching(&self, pattern: &str, backwards: bool)
     -> Result<usize, &'static str> ;
   /// Return the indices in the selection whose lines contain the regex pattern
   fn get_all_matching(&self, pattern: &str, selection: (usize, usize))

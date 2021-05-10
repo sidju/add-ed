@@ -46,35 +46,34 @@ impl Buffer for VecBuffer {
     }
     Ok(())
   }
-  fn get_tag(&self, tag: char, selection: (usize, usize))
+  fn get_tag(&self, tag: char)
     -> Result<usize, &'static str>
   {
-    let mut index = selection.0;
-    for (ltag, _line) in &self.buffer[selection.0 .. selection.1] {
+    let mut index = 0;
+    for (ltag, _line) in &self.buffer[..] {
       if &tag == ltag { return Ok(index); }
       index += 1;
     }
     Err(NO_MATCH)
   }
-  fn get_matching(&self, pattern: &str, selection: (usize, usize), backwards: bool)
+  fn get_matching(&self, pattern: &str, backwards: bool)
     -> Result<usize, &'static str>
   {
     use regex::RegexBuilder;
-    self.verify_selection(selection)?;
     let regex = RegexBuilder::new(pattern)
       .multi_line(true)
       .build()
       .map_err(|_| INVALID_REGEX)
     ?;
     if !backwards {
-      for index in selection.0 .. selection.1 {
+      for index in 0 .. self.len() {
         if regex.is_match(&(self.buffer[index].1)) {
           return Ok(index);
         }
       }
     }
     else {
-      for index in selection.1 .. selection.0 {
+      for index in self.len() - 1 ..= 0 {
         if regex.is_match(&(self.buffer[index].1)) {
           return Ok(index);
         }

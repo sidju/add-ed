@@ -34,7 +34,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
     // No command is valid. It updates selection and thus works as a print when viewer is on
     None => {
       // Get and update the selection.
-      let sel = interpret_selection(selection, state.selection, state.buffer.len(), false);
+      let sel = interpret_selection(selection, state.selection, state.buffer, false)?;
       state.buffer.verify_selection(sel)?;
       state.selection = Some(sel);
       p = true; // Default command is 'p'
@@ -43,7 +43,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
     Some(ch) => match ch {
       // Quit commands
       'q' => {
-        if selection != Sel::Lone(Ind::Default) { return Err(SELECTION_FORBIDDEN); }
+        if selection.is_some() { return Err(SELECTION_FORBIDDEN); }
         parse_flags(clean, "")?;
         if state.buffer.saved() {
           Ok(true)
@@ -53,13 +53,13 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         }
       }
       'Q' => {
-        if selection != Sel::Lone(Ind::Default) { return Err(SELECTION_FORBIDDEN); }
+        if selection.is_some() { return Err(SELECTION_FORBIDDEN); }
         parse_flags(clean, "")?;
         Ok(true)
       }
       // Help commands
       'h' => {
-        if selection != Sel::Lone(Ind::Default) { return Err(SELECTION_FORBIDDEN); }
+        if selection.is_some() { return Err(SELECTION_FORBIDDEN); }
         // If 'help' was entered, print held
         if clean == &"elp" {
           ui.print(HELP_TEXT)?;
@@ -72,7 +72,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         Ok(false)
       },
       'H' => {
-        if selection != Sel::Lone(Ind::Default) { return Err(SELECTION_FORBIDDEN); }
+        if selection.is_some() { return Err(SELECTION_FORBIDDEN); }
         parse_flags(clean, "")?;
         state.print_errors = !state.print_errors; // Toggle the setting
         Ok(false)
@@ -80,13 +80,13 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
       // Non-editing commands
       '#' => {
         // Get and update selection (none given gives no change)
-        let sel = interpret_selection(selection, state.selection, state.buffer.len(), false);
+        let sel = interpret_selection(selection, state.selection, state.buffer, false)?;
         state.buffer.verify_selection(sel)?;
         state.selection = Some(sel);
         Ok(false)
       },
       '=' => { // Print selection (can set selection)
-        let sel = interpret_selection(selection, state.selection, state.buffer.len(), false);
+        let sel = interpret_selection(selection, state.selection, state.buffer, false)?;
         state.buffer.verify_selection(sel)?;
         state.selection = Some(sel);
         ui.print( &format!("({},{})", sel.0, sel.1) )?;
@@ -94,7 +94,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
       },
       // File commands
       'f' => { // Set or print filename
-        if selection != Sel::Lone(Ind::Default) { return Err(SELECTION_FORBIDDEN); }
+        if selection.is_some() { return Err(SELECTION_FORBIDDEN); }
         parse_flags(clean, "")?;
         match parse_path(clean) {
           None => { // Print current filename
@@ -115,10 +115,10 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         // Read the selection if 'r', else error on any selection and return 0 on none (Lone default == no input)
         let index = 
           if ch == 'r' {
-            Ok(Some(interpret_selection(selection, state.selection, state.buffer.len(), true).1))
+            Ok(Some(interpret_selection(selection, state.selection, state.buffer, true)?.1))
           }
           else {
-            if selection == Sel::Lone(Ind::Default) {
+            if selection.is_none() {
               Ok(None)
             }
             else {
@@ -145,7 +145,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
       },
       'w' | 'W' => {
         // Get the selection to write
-        let sel = interpret_selection(selection, state.selection, state.buffer.len(), true);
+        let sel = interpret_selection(selection, state.selection, state.buffer, true)?;
         // If not wq, parse path
         let (q, path) = if clean != &"q" {
           let path = parse_path(clean).unwrap_or(&state.path);
@@ -172,7 +172,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
       // Print commands
       'p' | 'n' | 'l' => {
         // Get and update the selection.
-        let sel = interpret_selection(selection, state.selection, state.buffer.len(), false);
+        let sel = interpret_selection(selection, state.selection, state.buffer, false)?;
         state.buffer.verify_selection(sel)?;
         state.selection = Some(sel);
         // Get the flags
@@ -185,7 +185,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
       }
       // Basic editing commands
       'a' | 'i' | 'c' => {
-        let sel = interpret_selection(selection, state.selection, state.buffer.len(), false);
+        let sel = interpret_selection(selection, state.selection, state.buffer, false)?;
         let mut flags = parse_flags(clean, "pnl")?;
         p = flags.remove(&'p').unwrap();
         n = flags.remove(&'n').unwrap();
@@ -226,7 +226,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         Ok(false)
       }
       'd' => { // Cut
-        let sel = interpret_selection(selection, state.selection, state.buffer.len(), false);
+        let sel = interpret_selection(selection, state.selection, state.buffer, false)?;
         // Since selection after execution can be 0 it isn't allowed to auto print after
         parse_flags(clean, "")?;
         state.buffer.cut(sel)?;
@@ -239,7 +239,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         Ok(false)
       },
       'y' => { // Copy to clipboard
-        let sel = interpret_selection(selection, state.selection, state.buffer.len(), false);
+        let sel = interpret_selection(selection, state.selection, state.buffer, false)?;
         let mut flags = parse_flags(clean, "pnl")?;
         state.buffer.copy(sel)?;
         // Save the selection and export the flags
@@ -250,7 +250,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         Ok(false)
       },
       'x' | 'X' => { // Append/prepend (respectively) clipboard contents to index
-        let sel = interpret_selection(selection, state.selection, state.buffer.len(), false);
+        let sel = interpret_selection(selection, state.selection, state.buffer, false)?;
         let mut flags = parse_flags(clean, "pnl")?;
         let index = if ch == 'X' { sel.0 } else { sel.1 }; // Append or prepend based on command
         let length = state.buffer.paste(index)?;
@@ -262,7 +262,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
       },
       // Advanced editing commands
       'k' | 'K' => { // Tag first (k) or last (K) line in selection
-        let sel = interpret_selection(selection, state.selection, state.buffer.len(), false);
+        let sel = interpret_selection(selection, state.selection, state.buffer, false)?;
         // Expect only the tag, no flags
         if clean.len() != 1 { return Err(INVALID_TAG); }
         let index = if ch == 'k' { sel.0 } else { sel.1 };
@@ -271,21 +271,19 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         Ok(false)
       },
       'm' | 't' => {
-        // Split out the potential print flags from the index (nice extra feature)
-        let ind_end = clean.find( char::is_alphabetic ).unwrap_or(clean.len());
-        // Then parse first goal index, then flags
+        // Parse the target index, then the flags if any
+        let (ind_end, ind) = parse_index(&clean)?;
         let index = interpret_index(
-          parse_index(&clean[..ind_end])?,
+          ind.unwrap_or(Ind::BufferLen),
+          state.buffer,
           state.selection.map(|s| s.1),
-          state.buffer.len(),
-          state.buffer.len(),
-        );
+        )?;
         let mut flags = parse_flags(&clean[ind_end..], "pnl")?;
         p = flags.remove(&'p').unwrap();
         n = flags.remove(&'n').unwrap();
         l = flags.remove(&'l').unwrap();
         // Calculate the selection
-        let selection = interpret_selection(selection, state.selection, state.buffer.len(), false);
+        let selection = interpret_selection(selection, state.selection, state.buffer, false)?;
         let end = index + (selection.1 - selection.0);
         // Make the change
         if ch == 'm' {
@@ -300,7 +298,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
       }
       'j' => {
         // Calculate the selection
-        let selection = interpret_selection(selection, state.selection, state.buffer.len(), false);
+        let selection = interpret_selection(selection, state.selection, state.buffer, false)?;
         let mut flags = parse_flags(clean, "pnl")?;
         p = flags.remove(&'p').unwrap();
         n = flags.remove(&'n').unwrap();
@@ -313,7 +311,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
       // s and g, in essence
       's' | 'g' => {
         // Calculate the selection
-        let selection = interpret_selection(selection, state.selection, state.buffer.len(), false);
+        let selection = interpret_selection(selection, state.selection, state.buffer, false)?;
         // Read in the expressions
         let mut expressions = parse_expressions(clean);
         // Split based on command
