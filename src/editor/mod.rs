@@ -38,18 +38,19 @@ impl <'a, B: Buffer> Ed <'a, B> {
     path: String,
   ) -> Result<Self, &'static str> {
     let len = path.len();
+    if len != 0 {
+      buffer.read_from(&path, None, false)?;
+    }
     let tmp = Self {
       // Sane defaults for initial settings
       print_errors: true,
       error: None,
-      selection: None,
+      // We attempt to set a reasonable default selection
+      selection: Some((0, buffer.len().saturating_sub(1))),
       // And the given values
       buffer: buffer,
       path: path,
     };
-    if len != 0 {
-      tmp.buffer.read_from(&tmp.path, None, false)?;
-    }
     Ok(tmp)
   }
 

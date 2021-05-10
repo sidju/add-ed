@@ -49,7 +49,7 @@ pub fn parse_index<'a> (
       // If a state change is coming, populate current ind and make the change
       State::Default(start) => {
         match ch {
-          '/' | '\'' | '?' => {
+          '/' | '\'' | '?' | '.' | '$' => {
             // These are only valid at the start of an index
             if start != i { return Err(INDEX_PARSE); }
             // Since prior tags or patterns reset start, check that current_ind is none
@@ -75,8 +75,15 @@ pub fn parse_index<'a> (
               _ => panic!("Unreachable"),
             }
           }
-          '+' => { state = State::Offset(i, false); },
-          '-' => { state = State::Offset(i, true); },
+          // For the offset we need to see if there is a literal before it, before entering state
+          '+' | '-' => {
+            if start != i {
+              if current_ind.is_some() { return Err(INDEX_PARSE) }
+              let literal = input[start .. i].parse::<usize>().map_err(|_| INDEX_PARSE)?;
+              current_ind = Some(Ind::Literal(literal));
+            }
+            state = State::Offset(i + 1, ch == '-');
+          },
           _ => {
             // If not numeric (base 10) it must be the end of the index
             // Break the loop and handle the last outside
@@ -105,33 +112,29 @@ pub fn parse_index<'a> (
           state = State::Default( i + ch.len_utf8() );
         }
       },
-      // For the Add and Sub cases we need to check for separator or command to know when to stop
-      // This means we also need to recognize separators or commands as Default would
-      // We do this by returning to default when we find a non-numeric character
+      // For Offset we never return to Default, since the only state valid after a non-normal state is Offset
+      // As such we ourselves check for the end of the index or subsequent offsets and handle accordingly
       State::Offset(start, negative) => {
-        // Offset only takes numeric input, so at end of numeric input we hand back over to Default
-        // This requires peeking at the next char
-        let is_end = match iter.peek() {
-          None => true,
-          Some((_index, cha)) => {
-            ! cha.is_digit(10)
+        // Check if a known state change. If so, handle it
+        match ch {
+          // If we are recursing we parse current offset, put it in current_ind and change state accordingly
+          '+' | '-' => {
+            let offset = if start != i {
+              input[start .. i].parse::<usize>().map_err(|_| INDEX_PARSE)?
+            } else { 1 };
+            current_ind = Some( if negative {
+              Ind::Sub(Box::new(current_ind.unwrap_or(Ind::Selection)), offset)
+            } else {
+              Ind::Add(Box::new(current_ind.unwrap_or(Ind::Selection)), offset)
+            });
+            state = State::Offset( i + ch.len_utf8(), ch == '-' );
           },
-        };
-        if is_end {
-          // Parse our offset and put it together in current_ind
-          let offset = if start != i {
-            input[start .. i].parse::<usize>().map_err(|_| INDEX_PARSE)?
-          } else {
-            1
-          };
-          current_ind = Some( if negative {
-            Ind::Sub(Box::new(current_ind.unwrap_or(Ind::Selection)), offset)
-          } else {
-            Ind::Add(Box::new(current_ind.unwrap_or(Ind::Selection)), offset)
-          });
-          // Then return to default state
-          state = State::Default( i + ch.len_utf8() );
-        }
+          x if x.is_ascii_digit() => {}, // Ignore until we find the end
+          _ => { // Means this is the end
+            // Our parsing logic outside the loop does all we want, so just break
+            break;
+          },
+        } 
       },
     } // End of match
   } // End of for-each
@@ -208,36 +211,54 @@ pub fn parse_selection<'a>(
   }
 }
 
+// Interprets index struct into usize.
+// Should not be able to return a non-zero index equal to or bigger than buffer.len().
+// If buffer.len() is 0 or 1 it should return 0 under all circumstances.
 pub fn interpret_index<'a> (
   index: Ind<'a>,
   buffer: &dyn Buffer,
   old_selection: Option<usize>,
 ) -> Result<usize, &'static str> {
   match index {
+    // This should have been vetted before it was saved into state
+    // Therefore expected to be valid
     Ind::Selection => match old_selection {
       Some(sel) => Ok(sel),
       None => Err(NO_SELECTION),
     },
-    Ind::BufferLen => Ok(buffer.len()),
-    Ind::Literal(index) => Ok(index),
-
-    // Decide on option or result from the buffer API
+    // We saturating sub so it points at 0 and/or the last valid line
+    Ind::BufferLen => Ok(buffer.len().saturating_sub(1)),
+    // Sub 1 to make it 0-indexed. Limit it within valid index span.
+    Ind::Literal(index) => {
+      let i = index.saturating_sub(1);
+      if i > buffer.len() {
+        Ok(buffer.len())
+      }
+      else {
+        Ok(i)
+      }
+    },
+    // These come from the buffer, so they must be correctly indexed
     Ind::Tag(tag) => buffer.get_tag(tag),
     Ind::Pattern(pattern) => buffer.get_matching(pattern, false),
     Ind::RevPattern(pattern) => buffer.get_matching(pattern, true),
-
+    // These are relative to the prior, so have no indexing per-se
+    // We do, however, limit their result between 0 and buffer.len()
     Ind::Add(inner, offset) => {
       let inner = interpret_index(*inner, buffer, old_selection)?;
-      Ok(inner + offset)
+      let res = if inner + offset >= buffer.len() { buffer.len().saturating_sub(1) }
+      else { inner + offset };
+      Ok(res)
     },
     Ind::Sub(inner, offset) => {
       let inner = interpret_index(*inner, buffer, old_selection)?;
-      if offset > inner { Err(NEGATIVE_INDEX) }
-      else { Ok(inner - offset) }
+      Ok(inner.saturating_sub(offset))
     },
   }
 }
 
+// Interprets a given selection into two usize.
+// If buffer size is 0 it will create 0-sized selections, which is invalid for some commands
 pub fn interpret_selection<'a>(
   input: Option<Sel<'a>>,
   old_selection: Option<(usize, usize)>,
@@ -255,12 +276,14 @@ pub fn interpret_selection<'a>(
     Sel::Lone(ind) => {
       // Just interpret the lone index and make it a selection
       let i = interpret_index(ind, buffer, old_selection.map(|x| x.0) )?;
-      Ok((i, i + 1))
+      let i2 = if i + 1 > buffer.len() { buffer.len() } else { i + 1 };
+      Ok((i, i2))
     },
     Sel::Pair(ind1, ind2) => {
-      let i1 = interpret_index(ind1, buffer, old_selection.map(|x| x.0) )?;
+      let i = interpret_index(ind1, buffer, old_selection.map(|x| x.0) )?;
       let i2 = interpret_index(ind2, buffer, old_selection.map(|x| x.1) )?;
-      Ok((i1, i2))
+      let i2 = if i2 + 1 > buffer.len() { buffer.len() } else { i2 + 1 };
+      Ok((i, i2))
     },
   }
 }
