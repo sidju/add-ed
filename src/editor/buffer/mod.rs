@@ -22,8 +22,8 @@ pub trait Buffer {
   /// Get line tagged with given letter. Not found is error
   fn get_tag(&self, tag: char)
     -> Result<usize, &'static str> ;
-  /// Return the first/last index in the selection that contains the regex pattern
-  fn get_matching(&self, pattern: &str, backwards: bool)
+  /// Return the nearest previous/following index in the selection than contains the regex pattern
+  fn get_matching(&self, pattern: &str, curr_line: usize, backwards: bool)
     -> Result<usize, &'static str> ;
   /// Return the indices in the selection whose lines contain the regex pattern
   fn get_all_matching(&self, pattern: &str, selection: (usize, usize))

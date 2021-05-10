@@ -240,8 +240,10 @@ pub fn interpret_index<'a> (
     },
     // These come from the buffer, so they must be correctly indexed
     Ind::Tag(tag) => buffer.get_tag(tag),
-    Ind::Pattern(pattern) => buffer.get_matching(pattern, false),
-    Ind::RevPattern(pattern) => buffer.get_matching(pattern, true),
+    Ind::Pattern(pattern) =>
+      buffer.get_matching(pattern, old_selection.unwrap_or(0), false),
+    Ind::RevPattern(pattern) =>
+      buffer.get_matching(pattern, old_selection.unwrap_or(buffer.len().saturating_sub(1)), true),
     // These are relative to the prior, so have no indexing per-se
     // We do, however, limit their result between 0 and buffer.len()
     Ind::Add(inner, offset) => {

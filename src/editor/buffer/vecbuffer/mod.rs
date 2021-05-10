@@ -56,7 +56,7 @@ impl Buffer for VecBuffer {
     }
     Err(NO_MATCH)
   }
-  fn get_matching(&self, pattern: &str, backwards: bool)
+  fn get_matching(&self, pattern: &str, curr_line: usize, backwards: bool)
     -> Result<usize, &'static str>
   {
     use regex::RegexBuilder;
@@ -65,14 +65,21 @@ impl Buffer for VecBuffer {
       .build()
       .map_err(|_| INVALID_REGEX)
     ?;
+    // Figure out how far to iterate
+    let length = if ! backwards {
+      self.buffer.len().saturating_sub(curr_line + 1)
+    } else {
+      curr_line
+    };
+
     // Since the range must be positive we subtract from bufferlen for backwards
-    for index in 0 .. self.len() {
+    for index in 0 .. length {
       if backwards {
-        if regex.is_match(&(self.buffer[self.len() - 1 - index].1)){
-          return Ok(self.len() - 1 - index)
+        if regex.is_match(&(self.buffer[curr_line - 1 - index].1)){
+          return Ok(curr_line - 1 - index)
         }
       } else {
-        if regex.is_match(&(self.buffer[index].1)) { return Ok(index) }
+        if regex.is_match(&(self.buffer[curr_line + index + 1].1)) { return Ok(curr_line + index + 1) }
       }
     }
     Err(NO_MATCH)
