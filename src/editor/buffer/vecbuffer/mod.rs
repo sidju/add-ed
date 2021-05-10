@@ -65,18 +65,14 @@ impl Buffer for VecBuffer {
       .build()
       .map_err(|_| INVALID_REGEX)
     ?;
-    if !backwards {
-      for index in 0 .. self.len() {
-        if regex.is_match(&(self.buffer[index].1)) {
-          return Ok(index);
+    // Since the range must be positive we subtract from bufferlen for backwards
+    for index in 0 .. self.len() {
+      if backwards {
+        if regex.is_match(&(self.buffer[self.len() - 1 - index].1)){
+          return Ok(self.len() - 1 - index)
         }
-      }
-    }
-    else {
-      for index in self.len() - 1 ..= 0 {
-        if regex.is_match(&(self.buffer[index].1)) {
-          return Ok(index);
-        }
+      } else {
+        if regex.is_match(&(self.buffer[index].1)) { return Ok(index) }
       }
     }
     Err(NO_MATCH)
