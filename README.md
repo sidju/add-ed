@@ -10,11 +10,12 @@ And so here it is, with all its flaws and deficiencies. Any and all pull request
 The original 'ed' keeps track of one line that you recently interacted with and defaults to working on that if no lines are given with a command. This is an extension of that logic, making it a span of lines. I find that this is more intuitive.
 (To avoid unpleasantries some commands don't default to the selection, such as 'w'. If you want to modify the selection behavior for any command create an issue, I may well have missed one.)
 
-### The view:
-The original 'ed' allows you to set the 'p' flag on most commands, causing the affected lines to be printed after being changed. On a modern terminal there is no real reason not to do this by default on any text change, so I have written in the view.
-It is intended to print as much as fits on the screen from 5 lines before the start of the current selection. Currently it prints unless a print command printed, but this will be adjusted to only print if an editing command was called.
+### Flexible APIs:
+The modules have been set up with clear traits to enable changing out the components easily. For example it should be somewhat trivial to code a SSH+sed Buffer implementation for remote editing or a GUI frontend conforming to the UI trait.
 
 ## Commands:
+This list is not fully updated. Hired now supports nearly all Ed commands, only missing 'z', 'v', 'V', 'u' and '!'. Currently known disparities are that 's' cannot be ran without regex.
+ 
 ### Lone commands:
 Commands that take no input or selection.
 - q: Quit. Returns error if you have unsaved changes.
@@ -28,13 +29,13 @@ Commands that take no input or selection.
 - E: Closes current file and opens the given path, ignoring unsaved changes.
 - r: Append the data from given path to given selection.
 
-- w: Write the given selection (default whole buffer) to given path (default filepath). Waring, silently overwrites the file.
+- w: Write the given selection (default whole buffer) to given path (default filepath). Warning, silently overwrites the file.
 - W: Append the given selection (default whole buffer) to given path (default filepath).
 
 ### Print commands:
 - p: Print the given selection.
 - n: Print the given selection with numbered lines.
-- l: Print the given selection with character escaping. (NOT IMPLEMENTED)
+- l: Print the given selection with character escaping. 
 
 ### Basic editing commands:
 - a: Append. Append lines given after the command to given selection. Stop entry with only '.' on a line.
@@ -60,7 +61,6 @@ Note that these aren't set in stone (nor are the others). If a better idea comes
 - A: Append Inline. Appends to the same line rather that creating a new line after.
 - I: Insert Inline. Inserts at the start of the same line rather that creating a new line before. (Perfect for commenting out)
 - J: Re-Join. Join all the lines in the selection and then split them (following word boundaries) at the given number of columns. Will not handle adding // before comments or anything, but a macro could probably see you through when those come...
-- P: Toggle View. Toggle wether the View is printed after each editing command.
 
 #### Hard to implement:
 - C: Change Inline. Change the given line by opening it in a one-line editing buffer. If multiple lines enter submits current and moves to next one. '\n' in a line is substituted with newline. (Requires small editing buffer)

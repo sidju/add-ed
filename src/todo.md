@@ -1,10 +1,4 @@
 # Feature parity:
-## Addressing:
-- /regex/ (next matching)
-- ?regex? (previous matching)
-- '[tag]
-- [address] +/- [offset] (currently only if no address)
-
 ## Commands:
 - G interactive global (take command list for each match)
 - v inverted global
