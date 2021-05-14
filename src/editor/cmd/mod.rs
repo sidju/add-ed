@@ -308,56 +308,87 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         Ok(false)
       }    
       // Pattern commands
-      // s and g, in essence
-      's' | 'g' => {
-        // Calculate the selection
+      's' => {
         let selection = interpret_selection(selection, state.selection, state.buffer, false)?;
-        // Read in the expressions
-        let mut expressions = parse_expressions(clean);
-        // Split based on command
-        if ch == 's' {
-          if expressions.len() == 3 { // A proper new expression was given
-            let mut flags = parse_flags(&(expressions[2]), "gpnl")?;
-            let g = flags.remove(&'g').unwrap();
-            p = flags.remove(&'p').unwrap();
-            n = flags.remove(&'n').unwrap();
-            l = flags.remove(&'l').unwrap();
-            let substituted = substitute::substitute(expressions[1]);
-            // Perform the command, which returns the resulting selection
-            state.selection = Some(
-              state.buffer.search_replace((expressions[0], &substituted), selection, g)?
-            );         
+        // switch based on if clean was given or not
+        if clean.len() == 0 {
+          // This means we use the arguments stored in state.s_args
+          match &state.s_args {
+            None => return Err(NO_PRIOR_S),
+            Some((pattern, replacement, global)) => {
+              state.selection = Some(
+                state.buffer.search_replace((pattern, replacement), selection, *global)?
+              );
+            }
           }
-          else { return Err(EXPRESSION_TOO_SHORT); }
         }
-        else { // implies 'g'
-          // We expect one regex and at least one command
-          let commands = match expressions.len() {
-            0 | 1 => return Err(EXPRESSION_TOO_SHORT),
-            2 => { // If open, get input until closed
-              let mut input = ui.get_input(state.buffer, clean.chars().next().unwrap())?;
-              // If there was something put on the command line, use it
-              // Otherwise discard, to prevent unexpected prints
-              if expressions[1] != "\n" && expressions[1].len() != 0 {
-                input.insert(0, expressions[1].to_string());
-              }
-              input
-            },
-            _ => expressions.split_off(1).iter().map(|s| s.to_string()).collect(),
-          };
-          // Then get the matching lines
-          let lines = state.buffer.get_all_matching(expressions[0], selection)?;
-          // Set each line to default selection and run the commands in sequence
-          for line in lines {
-            state.selection = Some((line, line + 1));
-            // Use the dummy UI to use command list as input
-            let mut dummy = DummyUI{
-              input: commands.iter().map(|x| x.clone()).collect(),
-              print_ui: Some(ui),
-            };
-            // And then recurse into state.run
-            state.run_macro(&mut dummy)?;
+        else {
+          let expressions = parse_expressions(clean);
+          if expressions.len() != 3 { return Err(EXPRESSION_TOO_SHORT); }
+          let mut flags = parse_flags(&(expressions[2]), "gpnl")?;
+          let g = flags.remove(&'g').unwrap();
+          p = flags.remove(&'p').unwrap();
+          // TODO, regex in 'n' and 'l'
+          let substituted = substitute::substitute(expressions[1]);
+          state.selection = Some(
+            state.buffer.search_replace((expressions[0], &substituted), selection, g)?
+          );
+          // If that was valid we save all the arguments to support lone 's'
+          state.s_args = Some((expressions[0].to_string(), substituted, g));
+        }
+        Ok(false)
+      },
+      'g' | 'v' => {
+        let selection = interpret_selection(selection, state.selection, state.buffer, false)?;
+        let mut expressions = parse_expressions(clean);
+        if expressions.len() < 2 { return Err(EXPRESSION_TOO_SHORT); }
+        let commands = if expressions.len() == 2 {
+          // Means the command input was left open, so accept more until terminated.
+          // (expression.len() == 2 implies at least 1 character in clean, so we can unwrap here
+          let mut input = ui.get_input(state.buffer, clean.chars().next().unwrap())?;
+          // If expression[1] is something add it, else discard to prevent unexpected prints
+          if expressions[1] != "\n" && expressions[1].len() != 0 {
+            input.insert(0, expressions[1].to_string());
           }
+          input
+        }
+        // If more than 2 was given as arguments we use them as commands and take no further input
+        else {
+          expressions.split_off(1).iter().map(|s| s.to_string()).collect()
+        };
+        // After command collection we get the matching lines to run them at and do so
+        let lines = state.buffer.get_all_matching(expressions[0], selection, ch == 'v')?;
+        for line in lines {
+          // Use dummy UI to recurse while supporting text input
+          let mut dummy = DummyUI{
+            input: commands.iter().map(|s| s.clone()).collect(),
+            print_ui: Some(ui),
+          };
+          state.selection = Some((line, line + 1));
+          state.run_macro(&mut dummy)?;
+        }
+        Ok(false)
+      },
+      'G' | 'V' => {
+        let selection = interpret_selection(selection, state.selection, state.buffer, false)?;
+        let expressions = parse_expressions(clean);
+        if expressions.len() != 2 { return Err(EXPRESSION_TOO_SHORT); }
+        if expressions[1].len() != 0 && expressions[1] != "\n" { return Err(UNDEFINED_FLAG); }
+        let pattern = expressions[0];
+        // With all data gathered we fetch and iterate over the lines
+        let lines = state.buffer.get_all_matching(pattern, selection, ch == 'V')?;
+        for line in lines {
+          // Print the line, so the user knows what they are changing
+          ui.print_selection(state.buffer, (line, line + 1), false, false)?;
+          // Get input and create dummy-ui with it
+          // expressions.len() == 2 implies that a separator was given
+          let input = ui.get_input(state.buffer, clean.chars().next().unwrap())?;
+          let mut dummy = DummyUI{
+            input: input.into(),
+            print_ui: Some(ui),
+          };
+          state.selection = Some((line, line + 1));
+          state.run_macro(&mut dummy)?;
         }
         Ok(false)
       },

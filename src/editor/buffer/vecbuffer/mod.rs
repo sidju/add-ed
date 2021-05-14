@@ -84,7 +84,7 @@ impl Buffer for VecBuffer {
     }
     Err(NO_MATCH)
   }
-  fn get_all_matching(&self, pattern: &str, selection: (usize, usize))
+  fn get_all_matching(&self, pattern: &str, selection: (usize, usize), inverse: bool)
     -> Result<Vec<usize>, &'static str>
   {
     use regex::RegexBuilder;
@@ -96,7 +96,7 @@ impl Buffer for VecBuffer {
     ?;
     let mut ret = Vec::new();
     for index in selection.0 .. selection.1 {
-      if regex.is_match(&(self.buffer[index].1)) {
+      if regex.is_match(&(self.buffer[index].1)) ^ inverse {
         ret.push(index);
       }
     }

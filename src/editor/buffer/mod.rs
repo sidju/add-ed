@@ -26,7 +26,7 @@ pub trait Buffer {
   fn get_matching(&self, pattern: &str, curr_line: usize, backwards: bool)
     -> Result<usize, &'static str> ;
   /// Return the indices in the selection whose lines contain the regex pattern
-  fn get_all_matching(&self, pattern: &str, selection: (usize, usize))
+  fn get_all_matching(&self, pattern: &str, selection: (usize, usize), inverse: bool)
     -> Result<Vec<usize>, &'static str> ;
 
   // Simple buffer modifications, but with possibly complex storage

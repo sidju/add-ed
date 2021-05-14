@@ -46,6 +46,7 @@ pub const NO_FILE: &str = "No file set.\n\r";
 
 // Post-command parsing errors
 pub const EXPRESSION_TOO_SHORT: &str = "Expression too short or not closed.\n\r";
+pub const NO_PRIOR_S: &str = "'s' has not been run before, so no default exists.\n\r";
 pub const UNDEFINED_FLAG: &str = "Unknown flag entered.\n\r";
 pub const DUPLICATE_FLAG: &str = "A flag was entered twice.\n\r";
 

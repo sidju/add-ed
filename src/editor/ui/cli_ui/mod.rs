@@ -1,9 +1,10 @@
+// Include the UI trait and error consts from above
 use super::*;
 
-mod print;
-use print::*;
-mod input;
-use input::*;
+//mod print;
+//use print::*;
+//mod input;
+//use input::*;
 
 const THEME: &[u8] = include_bytes!("theme.xml");
 
@@ -40,7 +41,7 @@ impl UI for CliUI {
     &mut self,
     data: &str,
   ) -> Result<(), &'static str> {
-    print(&mut self.stdout, data);
+    //print(&mut self.stdout, data);
     Ok(())
   }
 
@@ -48,7 +49,8 @@ impl UI for CliUI {
     &mut self,
     buffer: & dyn Buffer,
   ) -> Result<String, &'static str> {
-    get_command(&mut self, buffer)
+    //get_command(&mut self, buffer)
+    Ok(String::new())
   }
 
   fn get_input(
@@ -56,7 +58,8 @@ impl UI for CliUI {
     buffer: & dyn Buffer,
     terminator: char,
   ) -> Result<Vec<String>, &'static str> {
-    get_input(&mut self, buffer, terminator)
+    //get_input(&mut self, buffer, terminator)
+    Ok(vec![String::new()])
   }
 
   fn print_selection(
@@ -66,5 +69,6 @@ impl UI for CliUI {
     numbered: bool,
     literal: bool,
   ) -> Result<(), &'static str> {
+    Ok(())
   }
 }

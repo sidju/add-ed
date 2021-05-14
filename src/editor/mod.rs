@@ -23,6 +23,9 @@ pub struct Ed <'a, B: Buffer> {
   /// The path to the currently selected file
   path: String,
 
+  /// The previous search_replace's arguments, to support repeating the last
+  s_args: Option<(String, String, bool)>,
+
   /// Wether or not to print errors when they occur (if not, print ? instead of error)
   print_errors: bool,
   /// The previous error that occured, since we may not have printed it
@@ -45,6 +48,7 @@ impl <'a, B: Buffer> Ed <'a, B> {
       // Sane defaults for initial settings
       print_errors: true,
       error: None,
+      s_args: None,
       // We attempt to set a reasonable default selection
       selection: Some((0, buffer.len().saturating_sub(1))),
       // And the given values
