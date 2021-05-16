@@ -3,7 +3,7 @@
 //! running this editor as a library
 
 pub mod error_consts;
-pub mod cmd;
+mod cmd;
 
 pub mod ui;
 pub mod buffer;

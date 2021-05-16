@@ -1,9 +1,9 @@
-# hired
-## The ed rewrite for daily use
+# Add-ED
+## The standard editor, now as a library
+Some time ago I decided to write an ED clone with syntax highlighting. On my way to that goal I needed to write an implementation of ED's command parsing and execution to wrap in that syntax highlighting. And so, here it is.
 
-After tiring of emacs freezing up on me one time too many and concluding that vim isn't any less of a monstrosity I made the reasonable choice and started using ed.
-It was a bit frustrating at the start but grew to be quite nice. The only missing feature really being syntax highlighting. After some research I couldn't find any ed fork or clone with syntax highlighting, so I once again made the reasonable choice and wrote my own.
-And so here it is, with all its flaws and deficiencies. Any and all pull requests welcome.
+## Early APIs
+The current API design is only based on my use-case. If you are interested in using it and need some change to make it work better you are more than welcome to suggest changes.
 
 ## Core concepts:
 ### The selection:
@@ -14,7 +14,7 @@ The original 'ed' keeps track of one line that you recently interacted with and 
 The modules have been set up with clear traits to enable changing out the components easily. For example it should be somewhat trivial to code a SSH+sed Buffer implementation for remote editing or a GUI frontend conforming to the UI trait.
 
 ## Commands:
-This list is not fully updated. Hired now supports nearly all Ed commands, only missing 'z', 'v', 'V', 'u' and '!'. Currently known disparities are that 's' cannot be ran without regex.
+This list is not fully updated. Hired now supports nearly all Ed commands, only missing 'z', 'u' and '!'.
  
 ### Lone commands:
 Commands that take no input or selection.
@@ -50,24 +50,13 @@ Commands that take no input or selection.
 
 ### Regex commands:
 - s: Substitute. Regex replace, just like 'sed'.
+- g: Global command. Command list given as arguments or text input runs on all matching lines.
+- v: inVerted global. Command list given as arguments or text input runs on all non-matching lines.
+- G: interactive Global. Prints matching lines and takes command list for each line as text input.
+- V: interactive inVerted global. Prints non-matching lines and takes commands for each as text input.
 
 ### Special cases:
 - no command: Takes the given selection and sets it to the default selection.
-
-### Commands not yet implemented:
-Note that these aren't set in stone (nor are the others). If a better idea comes up or people believe something would be confusing I'll skip or adjust it.
-
-#### Easy to implement:
-- A: Append Inline. Appends to the same line rather that creating a new line after.
-- I: Insert Inline. Inserts at the start of the same line rather that creating a new line before. (Perfect for commenting out)
-- J: Re-Join. Join all the lines in the selection and then split them (following word boundaries) at the given number of columns. Will not handle adding // before comments or anything, but a macro could probably see you through when those come...
-
-#### Hard to implement:
-- C: Change Inline. Change the given line by opening it in a one-line editing buffer. If multiple lines enter submits current and moves to next one. '\n' in a line is substituted with newline. (Requires small editing buffer)
-- g: Group. A macro command that executes a given list of commands on all lines in the selection that match a given regex. Will require considerable work in the command logic and I have yet to feel a need for it myself.
-- !: Run. A way to do ANYTHING, if I can manage it. The given selection of lines is piped into your shell with the given command. Some way of flagging what to do with the output is pending desing. Flags 'c','a','i' and 'p' would require custom parsing, but not too much....
-- :: Macro. Intended to allow the user to define macros of commands in the eventually created config file. This would allow ':push' to be the same as 'w' and '!git push', or whatever the user wishes.
-
 ## Attributions:
 This project has of course greatly benefited from all the crates it depends on. Especially I'd like to thank regex and syntect for helping me through my, to various degrees badly though out, issues.
 

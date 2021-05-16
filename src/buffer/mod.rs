@@ -1,9 +1,12 @@
 // Include a general file handler
 // Separate to enable URL based buffers and other creative solutions
-mod file;
+pub mod file;
 
-// Include the buffer implementations
+// Include the buffer implementations based on features
+
+#[cfg(feature = "vecbuffer")]
 mod vecbuffer;
+#[cfg(feature = "vecbuffer")]
 pub use vecbuffer::*;
 
 /// Trait that defines a buffer supporting 'ed's base commands

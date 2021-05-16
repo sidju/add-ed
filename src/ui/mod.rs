@@ -6,12 +6,6 @@ use super::Buffer;
 mod dummy_ui;
 pub use dummy_ui::DummyUI;
 
-mod classic_ui;
-pub use classic_ui::ClassicUI;
-
-mod cli_ui;
-pub use cli_ui::CliUI;
-
 /// The UI trait used to abstract all common UI operations
 pub trait UI {
   /// A basic print for output of commands
