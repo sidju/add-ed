@@ -171,16 +171,15 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         }
         // Print commands
         'p' | 'n' | 'l' => {
-          // Get and update the selection.
           let sel = interpret_selection(selection, state.selection, state.buffer, false)?;
           state.buffer.verify_selection(sel)?;
-          state.selection = Some(sel);
           // Get the flags
           let mut flags = parse_flags(&command[cmd_i..], "pnl")?;
           // Set the global print flags (safe to unwrap since parse_flags never removes a key)
           p = flags.remove(&'p').unwrap();
           n = flags.remove(&'n').unwrap();
           l = flags.remove(&'l').unwrap();
+          state.selection = Some(sel);
           Ok(false)
         }
         // Basic editing commands
@@ -366,7 +365,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
               input: commands.iter().map(|s| s.clone()).collect(),
               print_ui: Some(ui),
             };
-            state.selection = Some((index, index + 1));
+            state.selection = Some((index, index));
             state.run_macro(&mut dummy)?;
           }
           Ok(false)

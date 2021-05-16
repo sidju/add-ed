@@ -260,6 +260,7 @@ pub fn interpret_index<'a> (
 }
 
 // Interprets a given selection into two usize.
+// This function tries to make every selection inclusive towards its ending index
 // If buffer size is 0 it will create 0-sized selections, which is invalid for some commands
 pub fn interpret_selection<'a>(
   input: Option<Sel<'a>>,
@@ -278,13 +279,11 @@ pub fn interpret_selection<'a>(
     Sel::Lone(ind) => {
       // Just interpret the lone index and make it a selection
       let i = interpret_index(ind, buffer, old_selection.map(|x| x.0) )?;
-      let i2 = if i + 1 > buffer.len() { buffer.len() } else { i + 1 };
-      Ok((i, i2))
+      Ok((i, i))
     },
     Sel::Pair(ind1, ind2) => {
       let i = interpret_index(ind1, buffer, old_selection.map(|x| x.0) )?;
       let i2 = interpret_index(ind2, buffer, old_selection.map(|x| x.1) )?;
-      let i2 = if i2 + 1 > buffer.len() { buffer.len() } else { i2 + 1 };
       Ok((i, i2))
     },
   }
