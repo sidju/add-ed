@@ -162,7 +162,7 @@ pub fn parse_index<'a> (
     },
     // If the string ended abruptly in offset mode the contents may be usable
     State::Offset(start, negative) => {
-      let offset = if start != i {
+      let offset = if start < i {
         input[start .. i].parse::<usize>().map_err(|_| INDEX_PARSE)?
       } else {
         1

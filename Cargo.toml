@@ -22,3 +22,7 @@ vecbuffer = []
 
 [dependencies]
 regex = "1.4"
+
+[[bin]]
+name = "classic"
+required-features = ["vecbuffer"]

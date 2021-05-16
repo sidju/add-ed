@@ -18,7 +18,8 @@ impl <'a> UI for DummyUI<'a> {
   ) -> Result<String, &'static str> {
     match self.input.pop_front() {
       Some(x) => Ok(x),
-      None => Ok("q\n".to_string()),
+      // Returns from the macro execution no matter what.
+      None => Ok("Q\n".to_string()),
     }
   }
 
