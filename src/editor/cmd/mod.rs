@@ -342,6 +342,9 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         let selection = interpret_selection(selection, state.selection, state.buffer, false)?;
         let mut expressions = parse_expressions(clean);
         if expressions.len() < 2 { return Err(EXPRESSION_TOO_SHORT); }
+        // We first try to mark all matching lines, to tell if there is any issue
+        state.buffer.mark_matching(expressions[0], selection, ch == 'v')?;
+        // Then we get the script to run against them, if not already given
         let commands = if expressions.len() == 2 {
           // Means the command input was left open, so accept more until terminated.
           // (expression.len() == 2 implies at least 1 character in clean, so we can unwrap here
@@ -357,14 +360,13 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           expressions.split_off(1).iter().map(|s| s.to_string()).collect()
         };
         // After command collection we get the matching lines to run them at and do so
-        let lines = state.buffer.get_all_matching(expressions[0], selection, ch == 'v')?;
-        for line in lines {
+        while let Some(index) = state.buffer.get_marked()? {
           // Use dummy UI to recurse while supporting text input
           let mut dummy = DummyUI{
             input: commands.iter().map(|s| s.clone()).collect(),
             print_ui: Some(ui),
           };
-          state.selection = Some((line, line + 1));
+          state.selection = Some((index, index + 1));
           state.run_macro(&mut dummy)?;
         }
         Ok(false)
@@ -374,12 +376,12 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         let expressions = parse_expressions(clean);
         if expressions.len() != 2 { return Err(EXPRESSION_TOO_SHORT); }
         if expressions[1].len() != 0 && expressions[1] != "\n" { return Err(UNDEFINED_FLAG); }
-        let pattern = expressions[0];
+        // Mark first, to check if the expression is valid
+        state.buffer.mark_matching(expressions[0], selection, ch == 'V')?;
         // With all data gathered we fetch and iterate over the lines
-        let lines = state.buffer.get_all_matching(pattern, selection, ch == 'V')?;
-        for line in lines {
+        while let Some(index) = state.buffer.get_marked()? {
           // Print the line, so the user knows what they are changing
-          ui.print_selection(state.buffer, (line, line + 1), false, false)?;
+          ui.print_selection(state.buffer, (index, index + 1), false, false)?;
           // Get input and create dummy-ui with it
           // expressions.len() == 2 implies that a separator was given
           let input = ui.get_input(state.buffer, clean.chars().next().unwrap())?;
@@ -387,7 +389,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
             input: input.into(),
             print_ui: Some(ui),
           };
-          state.selection = Some((line, line + 1));
+          state.selection = Some((index, index + 1));
           state.run_macro(&mut dummy)?;
         }
         Ok(false)

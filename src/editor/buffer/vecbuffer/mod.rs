@@ -7,11 +7,17 @@ use crate::error_consts::*;
 //#[test]
 //mod test;
 
+#[derive(Clone)]
+pub struct Line {
+  tag: char,
+  matched: bool,
+  text: String,
+}
 pub struct VecBuffer {
   saved: bool,
   // Chars used for tagging. No tag equates to NULL in the char
-  buffer: Vec<(char, String)>,
-  clipboard: Vec<(char, String)>,
+  buffer: Vec<Line>,
+  clipboard: Vec<Line>,
 }
 impl VecBuffer {
   pub fn new() -> Self
@@ -50,8 +56,8 @@ impl Buffer for VecBuffer {
     -> Result<usize, &'static str>
   {
     let mut index = 0;
-    for (ltag, _line) in &self.buffer[..] {
-      if &tag == ltag { return Ok(index); }
+    for line in &self.buffer[..] {
+      if &tag == &line.tag { return Ok(index); }
       index += 1;
     }
     Err(NO_MATCH)
@@ -75,17 +81,21 @@ impl Buffer for VecBuffer {
     // Since the range must be positive we subtract from bufferlen for backwards
     for index in 0 .. length {
       if backwards {
-        if regex.is_match(&(self.buffer[curr_line - 1 - index].1)){
+        if regex.is_match(&(self.buffer[curr_line - 1 - index].text)) {
           return Ok(curr_line - 1 - index)
         }
       } else {
-        if regex.is_match(&(self.buffer[curr_line + index + 1].1)) { return Ok(curr_line + index + 1) }
+        if regex.is_match(&(self.buffer[curr_line + index + 1].text)) {
+          return Ok(curr_line + index + 1)
+        }
       }
     }
     Err(NO_MATCH)
   }
-  fn get_all_matching(&self, pattern: &str, selection: (usize, usize), inverse: bool)
-    -> Result<Vec<usize>, &'static str>
+
+  // For macro commands
+  fn mark_matching(&mut self, pattern: &str, selection: (usize, usize), inverse: bool)
+    -> Result<(), &'static str>
   {
     use regex::RegexBuilder;
     self.verify_selection(selection)?;
@@ -94,13 +104,26 @@ impl Buffer for VecBuffer {
       .build()
       .map_err(|_| INVALID_REGEX)
     ?;
-    let mut ret = Vec::new();
     for index in selection.0 .. selection.1 {
-      if regex.is_match(&(self.buffer[index].1)) ^ inverse {
-        ret.push(index);
+      if index >= selection.0 && index < selection.1 {
+        self.buffer[index].matched = regex.is_match(&(self.buffer[index].text)) ^ inverse;
+      }
+      else {
+        self.buffer[index].matched = false;
       }
     }
-    Ok(ret)
+    Ok(())
+  }
+  fn get_marked(&mut self)
+    -> Result<Option<usize>, &'static str>
+  {
+    for index in 0 .. self.buffer.len() {
+      if self.buffer[index].matched {
+        self.buffer[index].matched = false;
+        return Ok(Some(index));
+      }
+    }
+    Ok(None)
   }
 
   // Simple buffer modifications:
@@ -108,7 +131,7 @@ impl Buffer for VecBuffer {
     -> Result<(), &'static str>
   {
     // Overwrite current char with given char
-    self.buffer[index].0 = tag;
+    self.buffer[index].tag = tag;
     Ok(())
   }
   // Take an iterator over &str as data
@@ -122,7 +145,7 @@ impl Buffer for VecBuffer {
     let mut tail = self.buffer.split_off(index);
     // Then append the insert data
     for line in data {
-      self.buffer.push(('\0', line.to_string()));
+      self.buffer.push(Line{tag: '\0', matched: false, text: line.to_string()});
     }
     // And finally the cut off tail
     self.buffer.append(&mut tail);
@@ -145,7 +168,7 @@ impl Buffer for VecBuffer {
     let mut tail = self.buffer.split_off(selection.1);
     self.clipboard = self.buffer.split_off(selection.0);
     for line in data {
-      self.buffer.push(('\0', line.to_string()));
+      self.buffer.push(Line{tag: '\0', matched: false, text: line.to_string()});
     }
     self.buffer.append(&mut tail);
     Ok(())
@@ -208,8 +231,8 @@ impl Buffer for VecBuffer {
     self.buffer.append(&mut tail);
     // Add their contents to the line left in
     for line in data {
-      self.buffer[selection.0].1.pop(); // Remove the existing newline
-      self.buffer[selection.0].1.push_str(&line.1); // Add in the line
+      self.buffer[selection.0].text.pop(); // Remove the existing newline
+      self.buffer[selection.0].text.push_str(&line.text); // Add in the line
     }
     Ok(())
   }
@@ -252,22 +275,22 @@ impl Buffer for VecBuffer {
     let mut tail = self.buffer.split_off(selection.1);
     let before = self.buffer.split_off(selection.0 + 1);
     // Save ourselves a little bit of copying/allocating
-    let (_tag, mut tmp) = self.buffer.pop().unwrap();
+    let mut tmp = self.buffer.pop().unwrap();
     // Then join all selected lines together
     for line in before {
-      tmp.push_str(&line.1);
+      tmp.text.push_str(&line.text);
     }
     // Run the search-replace over it
     let mut after = if global {
-      regex.replace_all(&tmp, pattern.1).to_string()
+      regex.replace_all(&tmp.text, pattern.1).to_string()
     }
     else {
-      regex.replace(&tmp, pattern.1).to_string()
+      regex.replace(&tmp.text, pattern.1).to_string()
     };
     // If there is no newline at the end, join next line
     if !after.ends_with('\n') {
       if tail.len() > 0 {
-        after.push_str(&tail.remove(0).1);
+        after.push_str(&tail.remove(0).text);
       }
       else {
         after.push('\n');
@@ -275,7 +298,7 @@ impl Buffer for VecBuffer {
     }
     // Split on newlines and add all lines to the buffer
     for line in after.lines() {
-      self.buffer.push(('\0', format!("{}\n", line)));
+      self.buffer.push(Line{tag: '\0', matched: false, text: format!("{}\n", line)});
     }
     // Get the end of the affected area from current bufferlen
     selection_after.1 = self.buffer.len(); 
@@ -318,7 +341,7 @@ impl Buffer for VecBuffer {
     -> Result<Box<dyn Iterator<Item = &'a str> + 'a>, &'static str>
   {
     self.verify_selection(selection)?;
-    let tmp = self.buffer[selection.0 .. selection.1].iter().map(|(_tag, line)| &line[..]);
+    let tmp = self.buffer[selection.0 .. selection.1].iter().map(|line| &line.text[..]);
     Ok(Box::new(tmp))
   }
 }

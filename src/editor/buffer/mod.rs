@@ -25,9 +25,14 @@ pub trait Buffer {
   /// Return the nearest previous/following index in the selection than contains the regex pattern
   fn get_matching(&self, pattern: &str, curr_line: usize, backwards: bool)
     -> Result<usize, &'static str> ;
-  /// Return the indices in the selection whose lines contain the regex pattern
-  fn get_all_matching(&self, pattern: &str, selection: (usize, usize), inverse: bool)
-    -> Result<Vec<usize>, &'static str> ;
+
+  // Regex matching for the macro commands ('g', 'v', 'G', 'V')
+  /// Set the matched flag on all lines matching given pattern
+  fn mark_matching(&mut self, pattern: &str, selection: (usize, usize), inverse: bool)
+    -> Result<(), &'static str> ;
+  /// Get a line with the matched flag set, clearing that line's flag
+  fn get_marked(&mut self)
+    -> Result<Option<usize>, &'static str> ;
 
   // Simple buffer modifications, but with possibly complex storage
   /// Mark a line with a letter, non letter chars should error
