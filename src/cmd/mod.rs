@@ -80,9 +80,11 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         // Non-editing commands
         '#' => {
           // Get and update selection (none given gives no change)
-          let sel = interpret_selection(selection, state.selection, state.buffer, false)?;
-          state.buffer.verify_selection(sel)?;
-          state.selection = Some(sel);
+          if selection.is_some() {
+            let sel = interpret_selection(selection, state.selection, state.buffer, false)?;
+            state.buffer.verify_selection(sel)?;
+            state.selection = Some(sel);
+          }
           Ok(false)
         },
         '=' => { // Print selection (can set selection)

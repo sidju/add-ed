@@ -49,8 +49,8 @@ impl <'a, B: Buffer> Ed <'a, B> {
       print_errors: true,
       error: None,
       s_args: None,
-      // We attempt to set a reasonable default selection
-      selection: Some((0, buffer.len().saturating_sub(1))),
+      // Trying to set a reasonable default tends to cause trouble
+      selection: None,
       // And the given values
       buffer: buffer,
       path: path,
