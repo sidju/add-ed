@@ -36,14 +36,12 @@ pub fn parse_index<'a> (
   input: &'a str,
 ) -> Result<(usize, Option<Ind<'a>>), &'static str> {
   // Set up state variables for one-pass parse
-  let mut i = 0;
+  let mut end = None;
   let mut state = State::Default(0);
   let mut current_ind = None;
   // Loop over chars and parse
-  let mut iter = input.char_indices().peekable();
-  while let Some((index, ch)) = iter.next() {
-    // Save over index into i
-    i = index;
+  let mut iter = input.char_indices();
+  while let Some((i, ch)) = iter.next() {
     // Handle based on state
     match state {
       // If a state change is coming, populate current ind and make the change
@@ -88,6 +86,8 @@ pub fn parse_index<'a> (
             // If not numeric (base 10) it must be the end of the index
             // Break the loop and handle the last outside
             if ! ch.is_digit(10) {
+              // Mark current character as the end of the index
+              end = Some(i);
               break;
             }
           },
@@ -131,7 +131,8 @@ pub fn parse_index<'a> (
           },
           x if x.is_ascii_digit() => {}, // Ignore until we find the end
           _ => { // Means this is the end
-            // Our parsing logic outside the loop does all we want, so just break
+            // The parsing logic outside the loop does what we need, so save index as end and break
+            end = Some(i);
             break;
           },
         } 
@@ -141,33 +142,39 @@ pub fn parse_index<'a> (
 
   // When we get here we have either gone through the whole buffer or
   // found a command/separator that marks the end of this index
+  // If end is none we reached the end, rather than a denoting character, and should set end to len()
+  let end = match end {
+    Some(i) => i,
+    None => input.len(),
+  };
 
   // Check the state
   match state {
     // If the string ends in Default mode its contents should be sane 
     State::Default(start) => {
-      if start != i {
+      if start < end {
         // If there is both a current ind and a numeral literal it is error
         if current_ind.is_some() { Err(INDEX_PARSE) }
         // Else we parse the literal and return it
         else {
-          let literal = input[start .. i].parse::<usize>().map_err(|_| INDEX_PARSE)?;
-          Ok((i, Some(Ind::Literal(literal))))
+          let literal = input[start .. end].parse::<usize>().map_err(|_| INDEX_PARSE)?;
+          Ok((end, Some(Ind::Literal(literal))))
         }
       }
       // If there is no literal we return current_ind as-is, since None is the correct return if nothing was parsed
       else {
-        Ok((i, current_ind))
+        Ok((end, current_ind))
       }
     },
     // If the string ended abruptly in offset mode the contents may be usable
     State::Offset(start, negative) => {
-      let offset = if start < i {
-        input[start .. i].parse::<usize>().map_err(|_| INDEX_PARSE)?
+      // If the string ends on a + we will have an incorrect i
+      let offset = if start < end {
+        input[start .. end].parse::<usize>().map_err(|_| INDEX_PARSE)?
       } else {
         1
       };
-      Ok((i, Some(
+      Ok((end, Some(
         if negative {
           Ind::Sub(Box::new(current_ind.unwrap_or(Ind::Selection)), offset)
         } else {

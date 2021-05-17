@@ -213,9 +213,8 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
               }
               else {
                 // Same as delete, use same post-selection logic
-                if sel.0 != 0 { Some((sel.0 - 1, sel.0)) }
-                else if sel.0 != state.buffer.len() { Some((sel.0, sel.0 + 1)) }
-                else { None }
+                if state.buffer.len() == 0 { None }
+                else {Some((sel.0, sel.0))}
               }
             }
             _ => { panic!("Unreachable code reached"); }
@@ -231,9 +230,8 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           state.buffer.cut(sel)?;
           // Try to figure out a selection after the deletion
           state.selection = 
-            if sel.0 != 0 { Some((sel.0 - 1, sel.0)) }
-            else if sel.0 != state.buffer.len() { Some((sel.0, sel.0 + 1)) }
-            else { None }
+            if state.buffer.len() == 0 { None }
+            else {Some((sel.0, sel.0))}
           ;
           Ok(false)
         },
@@ -344,20 +342,18 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           // We first try to mark all matching lines, to tell if there is any issue
           state.buffer.mark_matching(expressions[0], selection, ch == 'v')?;
           // Then we get the script to run against them, if not already given
-          let commands = if expressions.len() == 2 {
-            // Means the command input was left open, so accept more until terminated.
-            // (expression.len() == 2 implies at least 1 character in clean, so we can unwrap here
+          // First grab commands given on command line
+          let mut commands: Vec<String> = expressions.split_off(1).iter().map(|s| s.to_string()).collect();
+          // If the last command in that list is not empty it means the list was not terminated, so we take more from input
+          if commands.last().map(|s| s.trim()) != Some("") {
+            // expressions.len() would be 0 if no char, so safe to unwrap
             let mut input = ui.get_input(state.buffer, clean.chars().next().unwrap())?;
-            // If expression[1] is something add it, else discard to prevent unexpected prints
-            if expressions[1] != "\n" && expressions[1].len() != 0 {
-              input.insert(0, expressions[1].to_string());
-            }
-            input
+            commands.append(&mut input);
           }
-          // If more than 2 was given as arguments we use them as commands and take no further input
           else {
-            expressions.split_off(1).iter().map(|s| s.to_string()).collect()
-          };
+            // If the last command was empty we should pop it, since it will otherwise cause an unexpected print
+            commands.pop();
+          }
           // After command collection we get the matching lines to run them at and do so
           while let Some(index) = state.buffer.get_marked()? {
             // Use dummy UI to recurse while supporting text input
@@ -380,7 +376,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           // With all data gathered we fetch and iterate over the lines
           while let Some(index) = state.buffer.get_marked()? {
             // Print the line, so the user knows what they are changing
-            ui.print_selection(state.buffer, (index, index + 1), false, false)?;
+            ui.print_selection(state.buffer, (index, index), false, false)?;
             // Get input and create dummy-ui with it
             // expressions.len() == 2 implies that a separator was given
             let input = ui.get_input(state.buffer, clean.chars().next().unwrap())?;
@@ -388,7 +384,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
               input: input.into(),
               print_ui: Some(ui),
             };
-            state.selection = Some((index, index + 1));
+            state.selection = Some((index, index));
             state.run_macro(&mut dummy)?;
           }
           Ok(false)
