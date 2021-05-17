@@ -89,13 +89,12 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           let sel = interpret_selection(selection, state.selection, state.buffer, false)?;
           state.buffer.verify_selection(sel)?;
           state.selection = Some(sel);
-          ui.print( &format!("({},{})", sel.0, sel.1) )?;
+          ui.print( &format!("({},{})", sel.0 + 1, sel.1 + 1) )?;
           Ok(false)
         },
         // File commands
         'f' => { // Set or print filename
           if selection.is_some() { return Err(SELECTION_FORBIDDEN); }
-          parse_flags(clean, "")?;
           match parse_path(clean) {
             None => { // Print current filename
               if state.path.len() == 0 {
@@ -195,7 +194,14 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           let new_sel = match ch {
             'a' | 'i' => {
               if input.len() != 0 {
-                let start = if ch == 'a' { sel.1 } else { sel.0 };
+                let start = if ch == 'a' {
+                  // Only if the buffer is empty will the latter not work
+                  if state.buffer.len() == 0 { 0 }
+                  else { sel.1 + 1 }
+                }
+                else {
+                  sel.0
+                };
                 let end = start + input.len();
                 state.buffer.insert(&mut input, start)?;
                 Some((start, end))

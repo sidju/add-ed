@@ -8,7 +8,7 @@ impl UI for ClassicUI {
     &mut self,
     s: &str
   ) -> Result<(), &'static str> {
-    print!("{}", s);
+    println!("{}", s);
     Ok(())
   }
   fn get_command(
