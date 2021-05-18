@@ -18,10 +18,10 @@ include = [
 ]
 
 [features]
-vecbuffer = []
+vecbuffer = ["regex"]
 
 [dependencies]
-regex = "1.4"
+regex = { version = "1.4", optional = true }
 
 [[bin]]
 name = "classic"
