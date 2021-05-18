@@ -16,12 +16,6 @@ pub trait Buffer {
   /// Return the number of lines stored in the buffer
   fn len(&self)
     -> usize ;
-  /// Check that the index is safe to operate on
-  fn verify_index(&self, index: usize)
-    -> Result<(), &'static str> ;
-  /// Check that the selection is safe to operate on
-  fn verify_selection(&self, selection: (usize, usize))
-    -> Result<(), &'static str> ;
   /// Get line tagged with given letter. Not found is error
   fn get_tag(&self, tag: char)
     -> Result<usize, &'static str> ;
@@ -79,7 +73,7 @@ pub trait Buffer {
   fn read_from(&mut self, path: &str, index: Option<usize>, must_exist: bool)
     -> Result<usize, &'static str> ;
   /// Write the buffer to given path
-  fn write_to(&mut self, selection: (usize, usize), path: &str, append: bool)
+  fn write_to(&mut self, selection: Option<(usize, usize)>, path: &str, append: bool)
     -> Result<(), &'static str> ;
   /// Returns true if no changes have been made since last saving
   fn saved(&self)
@@ -89,4 +83,26 @@ pub trait Buffer {
   /// Return the given selection without any formatting
   fn get_selection<'a>(&'a self, selection: (usize, usize))
     -> Result<Box<dyn Iterator<Item = &'a str> + 'a>, &'static str> ;
+}
+
+// General index and selection validation functions
+// These are good to run before using arguments to your buffer
+pub fn verify_index(
+  buffer: &impl Buffer,
+  index: usize,
+) -> Result<(), &'static str> {
+  // Indices are valid at len, since that is needed to append to the buffer
+  if index > buffer.len() { return Err(crate::error_consts::INDEX_TOO_BIG); }
+  Ok(())
+}
+// If buffer size is 0 it will error, since there are no valid selections on an empty buffer
+pub fn verify_selection(
+  buffer: &impl Buffer,
+  selection: (usize, usize),
+) -> Result<(), &'static str> {
+  // A selection must contain something to be valid
+  if selection.0 >= selection.1 { return Err(crate::error_consts::SELECTION_EMPTY); }
+  // It cannot contain non-existent lines, such as index buffer.len() and beyond
+  if selection.1 >= buffer.len() { return Err(crate::error_consts::INDEX_TOO_BIG); }
+  Ok(())
 }

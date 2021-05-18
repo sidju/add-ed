@@ -1,7 +1,6 @@
 use core::iter::Iterator;
 
-use super::Buffer;
-use super::file;
+use super::*;
 use crate::error_consts::*;
 
 //#[test]
@@ -35,23 +34,6 @@ impl Buffer for VecBuffer {
   fn len(&self) -> usize {
       self.buffer.len()
   }
-  fn verify_index(&self, index: usize) -> Result<(), &'static str>
-  {
-    if index > self.buffer.len() {
-      return Err(INDEX_TOO_BIG);
-    }
-    Ok(())
-  }
-  fn verify_selection(&self, selection: (usize, usize)) -> Result<(), &'static str>
-  {
-    if selection.0 > selection.1 {
-      return Err(SELECTION_EMPTY);
-    }
-    if selection.1 >= self.buffer.len() {
-      return Err(INDEX_TOO_BIG);
-    }
-    Ok(())
-  }
   fn get_tag(&self, tag: char)
     -> Result<usize, &'static str>
   {
@@ -65,6 +47,7 @@ impl Buffer for VecBuffer {
   fn get_matching(&self, pattern: &str, curr_line: usize, backwards: bool)
     -> Result<usize, &'static str>
   {
+    verify_index(self, curr_line)?;
     use regex::RegexBuilder;
     let regex = RegexBuilder::new(pattern)
       .multi_line(true)
@@ -98,7 +81,7 @@ impl Buffer for VecBuffer {
     -> Result<(), &'static str>
   {
     use regex::RegexBuilder;
-    self.verify_selection(selection)?;
+    verify_selection(self, selection)?;
     let regex = RegexBuilder::new(pattern)
       .multi_line(true)
       .build()
@@ -139,7 +122,7 @@ impl Buffer for VecBuffer {
     -> Result<(), &'static str>
   {
     // Possible TODO: preallocate for the insert
-    self.verify_index(index)?;
+    verify_index(self, index)?;
     self.saved = false;
     // To minimise time complexity we split the vector immediately
     let mut tail = self.buffer.split_off(index);
@@ -153,7 +136,7 @@ impl Buffer for VecBuffer {
   }
   fn cut(&mut self, selection: (usize, usize)) -> Result<(), &'static str>
   {
-    self.verify_selection(selection)?;
+    verify_selection(self, selection)?;
     self.saved = false;
     let mut tail = self.buffer.split_off(selection.1 + 1);
     self.clipboard = self.buffer.split_off(selection.0);
@@ -163,7 +146,7 @@ impl Buffer for VecBuffer {
   fn change<'a>(&mut self, data: &mut dyn Iterator<Item = &'a str>, selection: (usize, usize))
     -> Result<(), &'static str>
   {
-    self.verify_selection(selection)?;
+    verify_selection(self, selection)?;
     self.saved = false;
     let mut tail = self.buffer.split_off(selection.1 + 1);
     self.clipboard = self.buffer.split_off(selection.0);
@@ -174,8 +157,8 @@ impl Buffer for VecBuffer {
     Ok(())
   }
   fn mov(&mut self, selection: (usize, usize), index: usize) -> Result<(), &'static str> {
-    self.verify_selection(selection)?;
-    self.verify_index(index)?;
+    verify_selection(self, selection)?;
+    verify_index(self, index)?;
     // Operation varies depending on moving forward or back
     if index <= selection.0 {
       // split out the relevant parts of the buffer
@@ -204,8 +187,8 @@ impl Buffer for VecBuffer {
     }
   }
   fn mov_copy(&mut self, selection: (usize, usize), index: usize) -> Result<(), &'static str> {
-    self.verify_selection(selection)?;
-    self.verify_index(index)?;
+    verify_selection(self, selection)?;
+    verify_index(self, index)?;
     // Get the data
     let mut data = Vec::new();
     for line in &self.buffer[selection.0 ..= selection.1] {
@@ -224,7 +207,7 @@ impl Buffer for VecBuffer {
     Ok(())
   }
   fn join(&mut self, selection: (usize, usize)) -> Result<(), &'static str> {
-    self.verify_selection(selection)?;
+    verify_selection(self, selection)?;
     // Take out the lines that should go away efficiently
     let mut tail = self.buffer.split_off(selection.1 + 1);
     let data = self.buffer.split_off(selection.0 + 1);
@@ -237,7 +220,7 @@ impl Buffer for VecBuffer {
     Ok(())
   }
   fn copy(&mut self, selection: (usize, usize)) -> Result<(), &'static str> {
-    self.verify_selection(selection)?;
+    verify_selection(self, selection)?;
     self.clipboard = Vec::new();
     // copy out each line in selection
     for line in &self.buffer[selection.0 ..= selection.1] {
@@ -246,7 +229,7 @@ impl Buffer for VecBuffer {
     Ok(())
   }
   fn paste(&mut self, index: usize) -> Result<usize, &'static str> {
-    self.verify_index(index)?;
+    verify_index(self, index)?;
     // Cut off the tail in one go, to reduce time complexity
     let mut tmp = self.buffer.split_off(index);
     // Then append copies of all lines in clipboard
@@ -261,7 +244,7 @@ impl Buffer for VecBuffer {
   {
     use regex::RegexBuilder;
     // ensure that the selection is valid
-    self.verify_selection(selection)?;
+    verify_selection(self, selection)?;
     self.saved = false; // TODO: actually check if changes are made
     // Compile the regex used to match/extract data
     let regex = RegexBuilder::new(pattern.0)
@@ -310,6 +293,7 @@ impl Buffer for VecBuffer {
   fn read_from(&mut self, path: &str, index: Option<usize>, must_exist: bool)
     -> Result<usize, &'static str>
   {
+    if let Some(i) = index { verify_index(self, i)?; }
     let data = file::read_file(path, must_exist)?;
     let len = data.len();
     let mut iter = data.iter().map(| string | &string[..]);
@@ -324,12 +308,15 @@ impl Buffer for VecBuffer {
     self.insert(&mut iter, i)?;
     Ok(len)
   }
-  fn write_to(&mut self, selection: (usize, usize), path: &str, append: bool)
+  fn write_to(&mut self, selection: Option<(usize, usize)>, path: &str, append: bool)
     -> Result<(), &'static str>
   {
-    let data = self.get_selection(selection)?;
+    let data = match selection {
+      Some(sel) => self.get_selection(sel)?,
+      None => Box::new(self.buffer[..].iter().map(|line| &line.text[..])),
+    };
     file::write_file(path, data, append)?;
-    if selection == (0, self.len().saturating_sub(1)) {
+    if selection == Some((0, self.len().saturating_sub(1))) || selection.is_none() {
       self.saved = true;
     }
     Ok(())
@@ -342,7 +329,7 @@ impl Buffer for VecBuffer {
   fn get_selection<'a>(&'a self, selection: (usize, usize))
     -> Result<Box<dyn Iterator<Item = &'a str> + 'a>, &'static str>
   {
-    self.verify_selection(selection)?;
+    verify_selection(self, selection)?;
     let tmp = self.buffer[selection.0 ..= selection.1].iter().map(|line| &line.text[..]);
     Ok(Box::new(tmp))
   }

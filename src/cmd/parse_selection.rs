@@ -223,10 +223,10 @@ pub fn parse_selection<'a>(
 // If buffer.len() is 0 or 1 it should return 0 under all circumstances.
 pub fn interpret_index<'a> (
   index: Ind<'a>,
-  buffer: &dyn Buffer,
+  buffer: &impl Buffer,
   old_selection: Option<usize>,
 ) -> Result<usize, &'static str> {
-  match index {
+  let ind = match index {
     // This should have been vetted before it was saved into state
     // Therefore expected to be valid
     Ind::Selection => match old_selection {
@@ -263,35 +263,31 @@ pub fn interpret_index<'a> (
       let inner = interpret_index(*inner, buffer, old_selection)?;
       Ok(inner.saturating_sub(offset))
     },
-  }
+  }?;
+  // Since index validation is the most permissive we run it on all indices
+  super::verify_index(buffer, ind)?;
+  Ok(ind)
 }
 
 // Interprets a given selection into two usize.
 // This function tries to make every selection inclusive towards its ending index
-// If buffer size is 0 it will create 0-sized selections, which is invalid for some commands
 pub fn interpret_selection<'a>(
   input: Option<Sel<'a>>,
   old_selection: Option<(usize, usize)>,
-  buffer: &dyn Buffer,
-  default_all: bool,
+  buffer: &impl Buffer,
 ) -> Result<(usize, usize), &'static str> {
-  let selection = if default_all {
-    input.unwrap_or(Sel::Pair( Ind::Literal(1), Ind::BufferLen ))
-  }
-  // If not default all default is old selection
-  else {
-    input.unwrap_or(Sel::Pair( Ind::Selection, Ind::Selection ))
-  };
-  match selection {
+  let selection = input.unwrap_or(Sel::Pair( Ind::Selection, Ind::Selection ));
+  let interpreted = match selection {
     Sel::Lone(ind) => {
       // Just interpret the lone index and make it a selection
       let i = interpret_index(ind, buffer, old_selection.map(|x| x.0) )?;
-      Ok((i, i))
+      (i, i)
     },
     Sel::Pair(ind1, ind2) => {
       let i = interpret_index(ind1, buffer, old_selection.map(|x| x.0) )?;
       let i2 = interpret_index(ind2, buffer, old_selection.map(|x| x.1) )?;
-      Ok((i, i2))
+      (i, i2)
     },
-  }
+  };
+  Ok(interpreted)
 }
