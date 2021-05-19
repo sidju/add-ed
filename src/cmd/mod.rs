@@ -14,6 +14,14 @@ mod parse_flags;
 use parse_flags::*;
 
 
+/// The horrifying piece that is command parsing and execution.
+///
+/// I tried to break it up, but since all commands require different subsequent parsing it is a lost cause.
+/// If someone manages to do it, a PR is more than welcome.
+///
+/// Important things to remember if modifying this are:
+/// * If taking input, verify everything you have first. Nothing is more annoying than entering a paragraph of text to be informed that the given index doesn't exist...
+/// * Forbid input you don't handle. This should prevent accidentally force exiting with ',Q file.txt' because you pressed 'Q' instead of 'W'.
 pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
   -> Result<bool, &'static str>
 {

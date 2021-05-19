@@ -1,6 +1,12 @@
-//! The base of the editor module
-//! This will declare the required traits and export functions for
-//! running this editor as a library
+//! Add-Ed is a library implementing the parsing and runtime for Ed in rust.
+//!
+//! It exports two traits, Buffer and UI, which define the exchangeable parts of the editor.
+//!
+//! An implementation of the UI trait is needed to support the 'g' command and similar, DummyUI.
+//! It is used for macro execution, by taking prepared input from a input list rather than prompting the user.
+//!
+//! Since the buffer is rather complex a standard Buffer implementation can be build in with the feature "vecbuffer".
+//! It is recommended to compare the behaviour of any Buffer implementation to the VecBuffer until Buffer tests are set up.
 
 pub mod error_consts;
 mod cmd;
@@ -13,29 +19,30 @@ use buffer::Buffer;
 
 /// The state variable used by the editor to track its internal state
 pub struct Ed <'a, B: Buffer> {
-  /// Track the currently selected lines in the buffer
-  /// This is usually separate from viewed lines in the UI
+  // Track the currently selected lines in the buffer
+  // This is usually separate from viewed lines in the UI
   selection: Option<(usize, usize)>,
-  /// A mutable reference to a Buffer implementor
-  /// The buffer implementor will handle most of the operations and store the data
+  // A mutable reference to a Buffer implementor
+  // The buffer implementor will handle most of the operations and store the data
   buffer: &'a mut B,
 
-  /// The path to the currently selected file
+  // The path to the currently selected file
   path: String,
 
-  /// The previous search_replace's arguments, to support repeating the last
+  // The previous search_replace's arguments, to support repeating the last
   s_args: Option<(String, String, bool)>,
 
-  /// Wether or not to print errors when they occur (if not, print ? instead of error)
+  // Wether or not to print errors when they occur (if not, print ? instead of error)
   print_errors: bool,
-  /// The previous error that occured, since we may not have printed it
+  // The previous error that occured, since we may not have printed it
   error: Option<&'static str>,
 }
 
 impl <'a, B: Buffer> Ed <'a, B> {
   /// Construct a new instance of Ed
-  /// An empty file string is recommended if no filepath is opened
-  /// Note that you can initialise the buffer with contents before this
+  ///
+  /// * An empty file string is recommended if no filepath is opened
+  /// * Note that you can initialise the buffer with contents before this
   pub fn new(
     buffer: &'a mut B,
     path: String,
@@ -59,8 +66,8 @@ impl <'a, B: Buffer> Ed <'a, B> {
   }
 
   /// Run the given command
+  ///
   /// Returns true if the command was to quit
-  /// The error is inherited from UI
   pub fn run_command(
     &mut self,
     ui: &mut dyn UI,
@@ -78,6 +85,7 @@ impl <'a, B: Buffer> Ed <'a, B> {
   }
 
   /// Run given instance of Ed until it receives a command to quit or errors
+  ///
   /// The returned error type could be improved, suggestions welcome.
   pub fn run_macro(
     &mut self,

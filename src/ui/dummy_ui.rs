@@ -7,12 +7,16 @@ use super::Buffer;
 
 use std::collections::VecDeque;
 
+/// This is a dummy UI. That means it simulates an UI without interfacing with any users.
+///
+/// How to use:
+/// * Put the input to simulate line-by-line in the input variable.
+/// * If you want output from print commands put the UI to print with in print_ui.
 pub struct DummyUI<'a> {
   pub input: VecDeque<String>,
   pub print_ui: Option<&'a mut dyn UI>,
 }
 impl <'a> UI for DummyUI<'a> {
-  /// Gets the next line of the input
   fn get_command(&mut self,
     _buffer: & dyn Buffer,
   ) -> Result<String, &'static str> {
@@ -22,8 +26,6 @@ impl <'a> UI for DummyUI<'a> {
       None => Ok("Q\n".to_string()),
     }
   }
-
-  /// Gets lines from input until one matches terminator
   fn get_input(&mut self,
     _buffer: & dyn Buffer,
     terminator: char,
@@ -41,8 +43,7 @@ impl <'a> UI for DummyUI<'a> {
       }
     }
   }
-
-  /// Printing is handed to the print_ui if one was given, else ignored
+  // Printing is handed to the print_ui if one was given, else ignored
   fn print(&mut self, text: &str) -> Result<(), &'static str> {
     match &mut self.print_ui {
       Some(ui) => ui.print(text),

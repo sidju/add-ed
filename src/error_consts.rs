@@ -1,3 +1,5 @@
+//! Current error handling hack. Const strings for error messages.
+
 // Relevant non-error consts
 pub const HELP_TEXT: &str = 
 "Application commands:
@@ -31,6 +33,7 @@ Regex commands:
 Special cases:
   No command: Takes the given selection (if any) and sets current selection to that.
 ";
+
 // Pre-command parsing errors
 pub const INDEX_PARSE: &str = "Could not parse given index.";
 pub const NO_COMMAND: &str = "No valid command given.";

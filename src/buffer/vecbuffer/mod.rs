@@ -1,3 +1,5 @@
+//! Holds the VecBuffer, a simple Vector based buffer implementation.
+
 use core::iter::Iterator;
 
 use super::*;
@@ -7,11 +9,16 @@ use crate::error_consts::*;
 //mod test;
 
 #[derive(Clone)]
-pub struct Line {
+struct Line {
   tag: char,
   matched: bool,
   text: String,
 }
+
+/// VecBuffer, the default Buffer implementation
+///
+/// It is based on storing the text in a Vector of lines.
+/// Regex functionality is imported from the Regex crate.
 pub struct VecBuffer {
   saved: bool,
   // Chars used for tagging. No tag equates to NULL in the char
@@ -19,6 +26,7 @@ pub struct VecBuffer {
   clipboard: Vec<Line>,
 }
 impl VecBuffer {
+  /// Create a new empty buffer. It is considered saved while unchanged.
   pub fn new() -> Self
   {
     Self{
@@ -29,7 +37,6 @@ impl VecBuffer {
   }
 }
 impl Buffer for VecBuffer {
-
   // Index operations, get and verify
   fn len(&self) -> usize {
       self.buffer.len()
@@ -290,6 +297,7 @@ impl Buffer for VecBuffer {
     Ok(selection_after)
   }
 
+  // File operations
   fn read_from(&mut self, path: &str, index: Option<usize>, must_exist: bool)
     -> Result<usize, &'static str>
   {

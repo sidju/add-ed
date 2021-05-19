@@ -1,5 +1,7 @@
+//! Contains the Buffer trait and any build in implementations.
+
 // Include a general file handler
-// Separate to enable URL based buffers and other creative solutions
+// Separated to enable URL based buffers and other creative solutions
 pub mod file;
 
 // Include the buffer implementations based on features
@@ -19,7 +21,7 @@ pub trait Buffer {
   /// Get line tagged with given letter. Not found is error
   fn get_tag(&self, tag: char)
     -> Result<usize, &'static str> ;
-  /// Return the nearest previous/following index in the selection than contains the regex pattern
+  /// Return the nearest previous/following index in the selection that contains the regex pattern
   fn get_matching(&self, pattern: &str, curr_line: usize, backwards: bool)
     -> Result<usize, &'static str> ;
 
@@ -87,6 +89,10 @@ pub trait Buffer {
 
 // General index and selection validation functions
 // These are good to run before using arguments to your buffer
+
+/// Verify that the index is between 0 and buffer.len() inclusive.
+///
+/// That means it is valid to move to the index in question, but may not be valid to read from.
 pub fn verify_index(
   buffer: &impl Buffer,
   index: usize,
@@ -95,7 +101,10 @@ pub fn verify_index(
   if index > buffer.len() { return Err(crate::error_consts::INDEX_TOO_BIG); }
   Ok(())
 }
-// If buffer size is 0 it will error, since there are no valid selections on an empty buffer
+
+/// Verify that all lines in the selection exist and that it isn't empty.
+///
+/// This will always error if buffer.len() == 0, since there are no lines that exist.
 pub fn verify_selection(
   buffer: &impl Buffer,
   selection: (usize, usize),

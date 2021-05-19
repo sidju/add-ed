@@ -1,7 +1,9 @@
+//! File IO abstractions to help in implementing custom buffers
+
 use std::io::ErrorKind;
 use crate::error_consts::*;
 
-/// File IO abstractions
+/// Read file from given path
 pub fn read_file(filepath: &str, must_exist: bool)
   -> Result<Vec<String>, &'static str>
 {
@@ -14,13 +16,12 @@ pub fn read_file(filepath: &str, must_exist: bool)
         else { Ok(Vec::with_capacity(0)) }
       }
       _ => {
-        #[cfg(feature = "debug")] // Debug printouts if debug flag
-        { println!("Error: {:?}", e); }
         Err(UNKNOWN)
       },
     },
   }
 }
+/// Write lines in iterator to given path.
 pub fn write_file<'a>(filepath: &str, data: impl Iterator<Item = &'a str>, append: bool)
   -> Result<(), &'static str>
 {
@@ -29,8 +30,6 @@ pub fn write_file<'a>(filepath: &str, data: impl Iterator<Item = &'a str>, appen
       ErrorKind::PermissionDenied => PERMISSION_DENIED,
       ErrorKind::NotFound => NOT_FOUND,
       _ => {
-        #[cfg(feature = "debug")] // Debug printouts if debug flag
-        { println!("Error: {:?}", e); }
         UNKNOWN
       },
     })
