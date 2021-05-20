@@ -2,7 +2,6 @@
 name = "add-ed"
 description = "Embeddable pure rust editor based on ED"
 version = "0.5.1"
-homepage = "https://github.com/sidju/add-ed"
 repository = "https://github.com/sidju/add-ed"
 readme = "README.md"
 categories = ["text-editors"]

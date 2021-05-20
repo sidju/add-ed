@@ -7,6 +7,8 @@
 //!
 //! Since the buffer is rather complex a standard Buffer implementation can be build in with the feature "vecbuffer".
 //! It is recommended to compare the behaviour of any Buffer implementation to the VecBuffer until Buffer tests are set up.
+//!
+//! An example of how to use this library is in src/bin/classic.rs
 
 pub mod error_consts;
 mod cmd;

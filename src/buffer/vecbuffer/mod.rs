@@ -8,7 +8,7 @@ use crate::error_consts::*;
 //#[test]
 //mod test;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 struct Line {
   tag: char,
   matched: bool,
@@ -19,6 +19,7 @@ struct Line {
 ///
 /// It is based on storing the text in a Vector of lines.
 /// Regex functionality is imported from the Regex crate.
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct VecBuffer {
   saved: bool,
   // Chars used for tagging. No tag equates to NULL in the char
