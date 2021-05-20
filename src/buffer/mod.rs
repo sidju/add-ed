@@ -110,7 +110,7 @@ pub fn verify_selection(
   selection: (usize, usize),
 ) -> Result<(), &'static str> {
   // A selection must contain something to be valid
-  if selection.0 >= selection.1 { return Err(crate::error_consts::SELECTION_EMPTY); }
+  if selection.0 > selection.1 { return Err(crate::error_consts::SELECTION_EMPTY); }
   // It cannot contain non-existent lines, such as index buffer.len() and beyond
   if selection.1 >= buffer.len() { return Err(crate::error_consts::INDEX_TOO_BIG); }
   Ok(())

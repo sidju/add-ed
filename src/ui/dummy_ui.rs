@@ -13,9 +13,8 @@ use std::collections::VecDeque;
 /// * Put the input to simulate line-by-line in the input variable.
 /// * If you want output from print commands put the UI to print with in print_ui.
 
-// Eq not derived since its intent is unclear and internals are public.
-// Compare the input and/or the print_ui individually instead.
-#[derive(Clone, Hash, Debug)]
+// Things not derived here since they would require the same being implemented on the UI trait,
+// which may be too extreme for me at this stage. If you have need, complain and I'll fix it.
 pub struct DummyUI<'a> {
   pub input: VecDeque<String>,
   pub print_ui: Option<&'a mut dyn UI>,
