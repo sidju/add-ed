@@ -3,36 +3,39 @@
 // Relevant non-error consts
 pub const HELP_TEXT: &str = 
 "Application commands:
-  q: Quit the application
-  Q: Quit the application regardless of unsaved changes
+  q: Quit the editor. Warns on unsaved changes.
   h: Print last occured error
-  H: Toggle printing errors as they occur
-  ?: Print this help text
+  H: Toggle printing errors vs just noting there was an error
+  help: Print this help text
+  =: Print current selection
+  #: Do nothing (start of comment)
 File commands:
-  f: If filepath is given, sets active file to that. Else prints current filepath.
-  e: Closes current file and opens given path.
-  E: Closes current file and opens given path regardless of unsaved changes
-  r: Append data from given path to selection.
-  w: Write the selection to given filepath. Default selection is whole file and default path active file.
-  W: Same as 'w' but appends to given filepath instead of overwriting.
-Print commands:
-  p: Print the selection.
-  n: Print the selection with line numbers.
-  l: Print the selection with escapes on some invisible characters.
-Basic editing commands:
-  a: Append lines entered after the command to selection. Stop line entry with only '.' on a line.
-  i: Insert. Same as 'a' but places before selection.
-  c: Change. Replace selection with lines entered after the command. Stop line ently with only '.' on a line.
-  d: Delete. Deletes the selection.
-Advanced editing commands:
-  m: Move selection to index given after command.
-  t: Transfer (copy) selection to index given after command.
-  j: Join selected lines into one line.
+  f: Print current filepath; or set filepath if one is given
+  e: Open given filepath for editing. If none given use current filepath. Warns on unsaved changes.
+  r: Append contents from given filepath to current selection. If none given use current filepath.
+  w: Write contents of buffer to given filepath. If none given use current filepath.
+  W: Append contents of buffer to given filepath. If none given use current filepath.
+Print command, (no command): Print selection.
+  Takes flags p (redundant to print), n (number lines), l (escape special characters)
+Editing commands:
+  a: Append lines entered after the command to selection. Stop line entry with lone '.' on a line.
+  i: Same as 'a' but places lines before selection.
+  c: Same as 'a' except it also cuts the selection into clipboard.
+  d: Cut the selection into clipboard.
+  y: Copy the selection into clipboard.
+  x/X: Append/prepend clipboard contents to selection.
+  m: Move the selection to index given after command.
+  t: Copy the selection to index given after command.
+  j: Join the selection into one line. (only removes newlines)
 Regex commands:
-  s: Substitute selection with regex replace very similar to 'sed'.
-Special cases:
-  No command: Takes the given selection (if any) and sets current selection to that.
-";
+  s: Uses the first character as a separator between a regex matching pattern and a replacement string.
+     If no arguments are given it re-uses the arguments given last execution.
+  g: Uses the first character as a separator between a regex matching pattern and any number of commands.
+     If the line doesn't end with the separator it takes input until the separator is given alone on a line.
+  G: Same as 'g' but only takes a pattern. The commands to run are requested for each matching line.
+     Input is terminated by the separator alone on a line, just as 'g' if command line isn't separator terminated.
+  v/V: Same as their 'g' counterparts except they invert the pattern."
+;
 
 // Pre-command parsing errors
 pub const INDEX_PARSE: &str = "Could not parse given index.";
