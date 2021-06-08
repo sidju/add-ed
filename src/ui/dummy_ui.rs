@@ -3,7 +3,7 @@
 //! It optionally takes a mutable UI reference, to support printing when the script requests it.
 
 use super::UI;
-use super::Buffer;
+use super::EdState;
 
 use std::collections::VecDeque;
 
@@ -21,7 +21,8 @@ pub struct DummyUI<'a> {
 }
 impl <'a> UI for DummyUI<'a> {
   fn get_command(&mut self,
-    _buffer: & dyn Buffer,
+    _ed: EdState,
+    _prefix: Option<char>
   ) -> Result<String, &'static str> {
     match self.input.pop_front() {
       Some(x) => Ok(x),
@@ -30,7 +31,7 @@ impl <'a> UI for DummyUI<'a> {
     }
   }
   fn get_input(&mut self,
-    _buffer: & dyn Buffer,
+    _ed: EdState,
     terminator: char,
   ) -> Result<Vec<String>, &'static str> {
     let mut ret = Vec::new();
@@ -47,21 +48,25 @@ impl <'a> UI for DummyUI<'a> {
     }
   }
   // Printing is handed to the print_ui if one was given, else ignored
-  fn print(&mut self, text: &str) -> Result<(), &'static str> {
+  fn print(
+    &mut self,
+    ed: EdState,
+    text: &str
+  ) -> Result<(), &'static str> {
     match &mut self.print_ui {
-      Some(ui) => ui.print(text),
+      Some(ui) => ui.print(ed, text),
       None => Ok(()),
     }
   }
   fn print_selection(&mut self,
-    buffer: & dyn Buffer,
+    ed: EdState,
     selection: (usize, usize),
     numbered: bool,
     literal: bool,
   ) -> Result<(), &'static str> {
     match &mut self.print_ui {
       Some(ui) => {
-        ui.print_selection(buffer, selection, numbered, literal)
+        ui.print_selection(ed, selection, numbered, literal)
       },
       None => Ok(()),
     }

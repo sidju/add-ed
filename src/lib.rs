@@ -19,6 +19,13 @@ pub mod buffer;
 use ui::UI;
 use buffer::Buffer;
 
+/// A small reference struct that gives insight into the editor's state
+pub struct EdState<'a> {
+  pub selection: &'a Option<(usize, usize)>,
+  pub buffer: &'a dyn Buffer,
+  pub path: &'a str,
+}
+
 /// The state variable used by the editor to track its internal state
 pub struct Ed <'a, B: Buffer> {
   // Track the currently selected lines in the buffer
@@ -33,6 +40,9 @@ pub struct Ed <'a, B: Buffer> {
 
   // The previous search_replace's arguments, to support repeating the last
   s_args: Option<(String, String, bool)>,
+
+  // Prefix for command input. Traditionally : but none by default
+  cmd_prefix: Option<char>,
 
   // Wether or not to print errors when they occur (if not, print ? instead of error)
   print_errors: bool,
@@ -58,6 +68,7 @@ impl <'a, B: Buffer> Ed <'a, B> {
       print_errors: true,
       error: None,
       s_args: None,
+      cmd_prefix: None,
       // Trying to set a reasonable default tends to cause trouble
       selection: None,
       // And the given values
@@ -95,7 +106,7 @@ impl <'a, B: Buffer> Ed <'a, B> {
   ) -> Result<(), &'static str> {
     // Loop until quit or error
     loop {
-      let cmd = match ui.get_command( self.buffer ) {
+      let cmd = match ui.get_command( self.see_state(), self.cmd_prefix ) {
         Err(e) => { self.error = Some(e); return Err(e) },
         Ok(x) => x,
       };
@@ -114,14 +125,23 @@ impl <'a, B: Buffer> Ed <'a, B> {
         Ok(()) => break,
         Err(_) => {
           if self.print_errors {
-            ui.print(self.error.unwrap())?;
+            ui.print(self.see_state(), self.error.unwrap())?;
           }
           else {
-            ui.print("?\n")?;
+            ui.print(self.see_state(), "?\n")?;
           }
         },
       }
     }
     Ok(())
+  }
+
+  /// Get an immutable reference to part of the editors state
+  pub fn see_state(&self) -> EdState {
+    EdState{
+      selection: &self.selection,
+      path: &self.path,
+      buffer: self.buffer,
+    }
   }
 }

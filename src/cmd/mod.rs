@@ -69,12 +69,12 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           if selection.is_some() { return Err(SELECTION_FORBIDDEN); }
           // If 'help' was entered, print held
           if clean == &"elp" {
-            ui.print(HELP_TEXT)?;
+            ui.print(state.see_state(), HELP_TEXT)?;
           }
           // Else no flags accepted and print last error
           else {
             parse_flags(clean, "")?;
-            ui.print(state.error.unwrap_or(NO_ERROR))?;
+            ui.print(state.see_state(), state.error.unwrap_or(NO_ERROR))?;
           }
           Ok(false)
         },
@@ -98,7 +98,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           let sel = interpret_selection(selection, state.selection, state.buffer)?;
           verify_selection(state.buffer, sel)?;
           state.selection = Some(sel);
-          ui.print( &format!("({},{})", sel.0 + 1, sel.1 + 1) )?;
+          ui.print(state.see_state(), &format!("({},{})", sel.0 + 1, sel.1 + 1) )?;
           Ok(false)
         },
         // File commands
@@ -107,10 +107,10 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           match parse_path(clean) {
             None => { // Print current filename
               if state.path.len() == 0 {
-                ui.print(NO_FILE)?;
+                ui.print(state.see_state(), NO_FILE)?;
               }
               else {
-                ui.print(&state.path)?;
+                ui.print(state.see_state(), &state.path)?;
               }
             },
             Some(x) => { // Set new filename
@@ -226,7 +226,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           // When all possible checks have been run, get input
           // Note that this thorough checking is to make sure the command goes through before taking more input
           // commands without input don't need this, since the buffer checks its input.
-          let tmp = ui.get_input(state.buffer, '.')?;
+          let tmp = ui.get_input(state.see_state(), '.')?;
           let mut input = tmp.iter().map(|string| &string[..]);
           let new_sel = match ch {
             'a' | 'i' => {
@@ -392,7 +392,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           // If the last command in that list is not empty it means the list was not terminated, so we take more from input
           if commands.last().map(|s| s.trim()) != Some("") {
             // expressions.len() would be 0 if no char, so safe to unwrap
-            let mut input = ui.get_input(state.buffer, clean.chars().next().unwrap())?;
+            let mut input = ui.get_input(state.see_state(), clean.chars().next().unwrap())?;
             commands.append(&mut input);
           }
           else {
@@ -423,10 +423,10 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           // With all data gathered we fetch and iterate over the lines
           while let Some(index) = state.buffer.get_marked()? {
             // Print the line, so the user knows what they are changing
-            ui.print_selection(state.buffer, (index, index), false, false)?;
+            ui.print_selection(state.see_state(), (index, index), false, false)?;
             // Get input and create dummy-ui with it
             // expressions.len() == 2 implies that a separator was given
-            let input = ui.get_input(state.buffer, clean.chars().next().unwrap())?;
+            let input = ui.get_input(state.see_state(), clean.chars().next().unwrap())?;
             let mut dummy = DummyUI{
               input: input.into(),
               print_ui: Some(ui),
@@ -446,7 +446,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
   // If print flags are set, print
   if p | n | l {
     if let Some(sel) = state.selection {
-      ui.print_selection(state.buffer, sel, n, l)?;
+      ui.print_selection(state.see_state(), sel, n, l)?;
     }
     else {
       Err(SELECTION_EMPTY)?

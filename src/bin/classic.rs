@@ -1,11 +1,12 @@
 /// A simple UI based on the original ED editor
-use add_ed::buffer::Buffer;
+use add_ed::EdState;
 use add_ed::ui::UI;
 use add_ed::error_consts::*;
 struct ClassicUI{}
 impl UI for ClassicUI {
     fn print(
     &mut self,
+    _ed: EdState,
     s: &str
   ) -> Result<(), &'static str> {
     println!("{}", s);
@@ -13,8 +14,12 @@ impl UI for ClassicUI {
   }
   fn get_command(
     &mut self,
-    _: & dyn Buffer,
+    _ed: EdState,
+    prefix: Option<char>,
   ) -> Result<String, &'static str> {
+    if let Some(pre) = prefix {
+      print!("{}", pre);
+    }
     let mut input = String::new();
     std::io::stdin().read_line(&mut input)
       .map_err(|_| TERMINAL_READ)?;
@@ -22,7 +27,7 @@ impl UI for ClassicUI {
   }
   fn get_input(
     &mut self,
-    _: & dyn Buffer,
+    _ed: EdState,
     terminator: char
   ) -> Result<Vec<String>, &'static str> {
     let mut input = Vec::new();
@@ -40,12 +45,12 @@ impl UI for ClassicUI {
   }
   fn print_selection(
     &mut self,
-    buffer: & dyn Buffer,
+    ed: EdState,
     selection: (usize, usize),
     numbered: bool,
     literal: bool,
   ) -> Result<(), &'static str> {
-    let selected = buffer.get_selection(selection)?;
+    let selected = ed.buffer.get_selection(selection)?;
     let mut line_nr = selection.0;
     for line in selected {
       if numbered {
