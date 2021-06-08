@@ -1,4 +1,7 @@
-# 7.0
+# 0.7.1
+* Configure the vec-buffer to consider itself saved immediately after opening a new file, until first edit.
+
+# 0.7.0
 Since this is a bit more public now it seems to be time to start with release notes, so that is the
 first change for this release. Beyond that there are some adjustments based on UIs I am trying to write,
 which cascade into quite big API changes.

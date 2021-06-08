@@ -306,15 +306,18 @@ impl Buffer for VecBuffer {
     let data = file::read_file(path, must_exist)?;
     let len = data.len();
     let mut iter = data.iter().map(| string | &string[..]);
+    let mut consider_saved = false; // If opening new file it is saved until changes are made
     let i = match index {
       Some(i) => i,
       // Since .change is not safe on an empty selection and we actually just wish to delete everything
       None => {
         self.buffer.clear();
+        consider_saved = true;
         0
       },
     };
     self.insert(&mut iter, i)?;
+    self.saved = consider_saved;
     Ok(len)
   }
   fn write_to(&mut self, selection: Option<(usize, usize)>, path: &str, append: bool)
