@@ -168,11 +168,12 @@ impl Buffer for VecBuffer {
     verify_selection(self, selection)?;
     verify_index(self, index)?;
     // Operation varies depending on moving forward or back
+    // Note that +1 is safe since all indices are smaller than bufferlen
     if index <= selection.0 {
       // split out the relevant parts of the buffer
       let mut tail = self.buffer.split_off(selection.1 + 1);
       let mut data = self.buffer.split_off(selection.0);
-      let mut middle = self.buffer.split_off(index.saturating_sub(1));
+      let mut middle = self.buffer.split_off(index);
       // Reassemble
       self.buffer.append(&mut data);
       self.buffer.append(&mut middle);
@@ -181,7 +182,7 @@ impl Buffer for VecBuffer {
     }
     else if index >= selection.1 {
       // split out the relevant parts of the buffer
-      let mut tail = self.buffer.split_off(index);
+      let mut tail = self.buffer.split_off(index + 1);
       let mut middle = self.buffer.split_off(selection.1 + 1);
       let mut data = self.buffer.split_off(selection.0);
       // Reassemble
@@ -292,7 +293,7 @@ impl Buffer for VecBuffer {
       self.buffer.push(Line{tag: '\0', matched: false, text: format!("{}\n", line)});
     }
     // Get the end of the affected area from current bufferlen
-    selection_after.1 = self.buffer.len(); 
+    selection_after.1 = self.buffer.len() - 1; // Due to inclusive indices
     // Then put the tail back
     self.buffer.append(&mut tail); 
     Ok(selection_after)
