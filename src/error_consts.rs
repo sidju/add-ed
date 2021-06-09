@@ -15,8 +15,11 @@ File commands:
   r: Append contents from given filepath to current selection. If none given use current filepath.
   w: Write contents of buffer to given filepath. If none given use current filepath.
   W: Append contents of buffer to given filepath. If none given use current filepath.
-Print command, (no command): Print selection.
-  Takes flags p (redundant to print), n (number lines), l (escape special characters)
+Print commands:
+  Most commands below take flags p (print), n (numbered print), l (escaped print).
+  (no command): Normal print by default. Also takes flags.
+  z: Scroll (and print) given number of lines down from end of selection. 
+  Z: Scroll (and print) given number of lines up from start of selection. 
 Editing commands:
   a: Append lines entered after the command to selection. Stop line entry with lone '.' on a line.
   i: Same as 'a' but places lines before selection.
@@ -72,6 +75,7 @@ pub const UNKNOWN: &str = "Unknown error while reading file.";
 
 // UI errors
 pub const NO_INPUT: &str = "Failed to get input."; // Probably only used by DummyUI, which has limited input.
+pub const ABORTED: &str = "Aborted. To close application use 'q'.";
 
 // Terminal interaction errors
 // No carriage returns, since only used through panic messages.

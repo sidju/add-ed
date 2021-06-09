@@ -213,6 +213,45 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           state.selection = Some(sel);
           Ok(false)
         }
+        'z' | 'Z' => {
+          // Depending on forward or backward we use start or end of selection as starting point
+          let sel = interpret_selection(selection, state.selection, state.buffer)?;
+          let index = if ch == 'z' {
+            sel.1
+          } else {
+            sel.0
+          };
+          verify_index(state.buffer, index)?;
+          // Parse the arguments to see how many lines to scroll
+          let nr_end = clean.find( | c: char | !c.is_numeric() ).unwrap_or(clean.len());
+          let nr = if nr_end == 0 {
+            3 // 3 is the default from ed, no reason to change
+          } else {
+            clean[.. nr_end].parse::<usize>().map_err(|_| INDEX_PARSE)?
+          };
+          // Check what isn't numeric for flags
+          let mut flags = parse_flags(&clean[nr_end ..], "pnl")?;
+          p = true; // This command should print, so p always true
+          n = flags.remove(&'n').unwrap();
+          l = flags.remove(&'l').unwrap();
+          // The real purpose is to update the selection, do that
+          let new_sel = if ch == 'z' {
+            // Gracefully handle overrunning bufferlen
+            let mut start = index + 1;
+            let mut end = index + 1 + nr;
+            if start >= state.buffer.len() { start = state.buffer.len().saturating_sub(1); }
+            if end >= state.buffer.len() { end = state.buffer.len().saturating_sub(1); }
+            (start, end)
+          } else {
+            // Gracefully handle going under 0
+            (index.saturating_sub(1 + nr), index.saturating_sub(1))
+          };
+          // Verify selection before applying. Probably only fails if buffer is empty.
+          verify_selection(state.buffer, new_sel)?;
+          // If all is well we set it and trust the p,n,l flag catcher to print for us
+          state.selection = Some(new_sel);
+          Ok(false)
+        }
         // Basic editing commands
         'a' | 'i' | 'c' => {
           let sel = interpret_selection(selection, state.selection, state.buffer)?;
