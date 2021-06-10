@@ -272,6 +272,8 @@ impl Buffer for VecBuffer {
     for line in before {
       tmp.text.push_str(&line.text);
     }
+    // Make it impossible to remove the last newline by not having it there when regexing
+    tmp.text.pop(); // remove last char, should be a newline if data is kept correctly
     // Run the search-replace over it
     let mut after = if global {
       regex.replace_all(&tmp.text, pattern.1).to_string()
@@ -279,16 +281,8 @@ impl Buffer for VecBuffer {
     else {
       regex.replace(&tmp.text, pattern.1).to_string()
     };
-    // If there is no newline at the end, join next line
-    if !after.ends_with('\n') {
-      if tail.len() > 0 {
-        after.push_str(&tail.remove(0).text);
-      }
-      else {
-        after.push('\n');
-      }
-    }
     // Split on newlines and add all lines to the buffer
+    // Implicitly puts back the previously removed newline
     for line in after.lines() {
       self.buffer.push(Line{tag: '\0', matched: false, text: format!("{}\n", line)});
     }

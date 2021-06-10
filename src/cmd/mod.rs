@@ -238,7 +238,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           let new_sel = if ch == 'z' {
             // Gracefully handle overrunning bufferlen
             let mut start = index + 1;
-            let mut end = index + 1 + nr;
+            let mut end = index + nr;
             if start >= state.buffer.len() { start = state.buffer.len().saturating_sub(1); }
             if end >= state.buffer.len() { end = state.buffer.len().saturating_sub(1); }
             (start, end)

@@ -1,4 +1,4 @@
-# 0.7.1 -> 0.7.4
+# 0.7.1 -> 0.7.5
 As it looks there will be many updates the coming month with minor fixes as I gradually clear up bugs
 using the editor itself. All these updates will be grouped in under this note
 
@@ -6,6 +6,8 @@ using the editor itself. All these updates will be grouped in under this note
 * Fix some off-by-one errors in vecbuffer coming from the recent change into inclusive indices.
 * Add a const string for aborted input. It is adjusted for use with ctrl-c capture and prints how to quit.
 * Add 'z' command and the same backwards under 'Z'. Tried to touch up the help text as well.
+* Fix off-by-one bug in 'z'
+* Exclude last newline in selection before running regex in vecbuffer. Less unexpected consequences from my experience.
 
 # 0.7.0
 Since this is a bit more public now it seems to be time to start with release notes, so that is the
