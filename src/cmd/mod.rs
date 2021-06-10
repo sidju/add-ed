@@ -271,7 +271,9 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
             'a' | 'i' => {
               if input.len() != 0 {
                 let start = if ch == 'a' {
-                  sel.1
+                  // Only if the buffer is empty will the latter not work
+                  if state.buffer.len() == 0 { 0 }
+                  else { sel.1 + 1 }
                 }
                 else {
                   sel.0
@@ -286,7 +288,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
               }
             }
             'c' => {
-              let end = sel.0 + input.len().saturating_sub(1); // since the selection bounds are inclusive
+              let end = sel.0 + input.len(); // Not -1 since 'c' has deleted the start line itself
               state.buffer.change(&mut input, sel)?;
               if input.len() != 0 {
                 Some((sel.0, end))

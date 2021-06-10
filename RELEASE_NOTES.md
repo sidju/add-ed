@@ -1,4 +1,4 @@
-# 0.7.1 -> 0.7.6
+# 0.7.1 -> 0.7.7
 As it looks there will be many updates the coming month with minor fixes as I gradually clear up bugs
 using the editor itself. All these updates will be grouped in under this note
 
