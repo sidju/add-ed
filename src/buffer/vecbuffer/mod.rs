@@ -205,10 +205,10 @@ impl Buffer for VecBuffer {
     }
     // Insert it, subtract one if copying to before selection
     let i = if index <= selection.0 {
-      index.saturating_sub(1)
+      index
     }
     else {
-      index
+      index + 1 // Safe since verifying index ensures it is smaller than bufferlen
     };
     let mut tail = self.buffer.split_off(i);
     self.buffer.append(&mut data);
@@ -275,7 +275,7 @@ impl Buffer for VecBuffer {
     // Make it impossible to remove the last newline by not having it there when regexing
     tmp.text.pop(); // remove last char, should be a newline if data is kept correctly
     // Run the search-replace over it
-    let mut after = if global {
+    let after = if global {
       regex.replace_all(&tmp.text, pattern.1).to_string()
     }
     else {

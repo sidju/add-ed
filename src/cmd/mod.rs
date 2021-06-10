@@ -271,14 +271,12 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
             'a' | 'i' => {
               if input.len() != 0 {
                 let start = if ch == 'a' {
-                  // Only if the buffer is empty will the latter not work
-                  if state.buffer.len() == 0 { 0 }
-                  else { sel.1 + 1 }
+                  sel.1
                 }
                 else {
                   sel.0
                 };
-                let end = start + input.len();
+                let end = start + input.len().saturating_sub(1); // since the selection bounds are inclusive
                 state.buffer.insert(&mut input, start)?;
                 Some((start, end))
               }
@@ -288,7 +286,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
               }
             }
             'c' => {
-              let end = sel.0 + input.len();
+              let end = sel.0 + input.len().saturating_sub(1); // since the selection bounds are inclusive
               state.buffer.change(&mut input, sel)?;
               if input.len() != 0 {
                 Some((sel.0, end))
@@ -407,7 +405,8 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
             let mut flags = parse_flags(&(expressions[2]), "gpnl")?;
             let g = flags.remove(&'g').unwrap();
             p = flags.remove(&'p').unwrap();
-            // TODO, regex in 'n' and 'l'
+            n = flags.remove(&'n').unwrap();
+            l = flags.remove(&'l').unwrap();
             let substituted = substitute::substitute(expressions[1]);
             state.selection = Some(
               state.buffer.search_replace((expressions[0], &substituted), selection, g)?
