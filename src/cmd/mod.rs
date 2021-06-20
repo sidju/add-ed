@@ -363,7 +363,14 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           l = flags.remove(&'l').unwrap();
           // Calculate the selection
           let selection = interpret_selection(selection, state.selection, state.buffer)?;
-          let end = index + (selection.1 - selection.0);
+          // If moving to after current selection subtract resulting address
+          let move_size = selection.1 - selection.0;
+          // Note that we subtract/add one to index to exclude index itself
+          let new_sel = if ch == 'm' && selection.1 < index {
+            (index - move_size, index)
+          } else {
+            (index, index + move_size)
+          };
           // Make the change
           if ch == 'm' {
             state.buffer.mov(selection, index)?;
@@ -372,7 +379,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
             state.buffer.mov_copy(selection, index)?;
           }
           // Update the selection
-          state.selection = Some((index, end));
+          state.selection = Some(new_sel);
           Ok(false)
         }
         'j' => {
