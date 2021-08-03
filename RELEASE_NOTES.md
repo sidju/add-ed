@@ -1,3 +1,7 @@
+# 0.8.0
+Add commands 'A' and 'I', which work as their 'a' and 'i' counterparts but join with the preceding/following line.
+Add command 'C' behind "initial_input_data" feature flag. Moves selection into input buffer, allowing per-character editing of selection.
+
 # 0.7.1 -> 0.7.7
 As it looks there will be many updates the coming month with minor fixes as I gradually clear up bugs
 using the editor itself. All these updates will be grouped in under this note

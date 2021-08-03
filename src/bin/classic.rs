@@ -28,8 +28,15 @@ impl UI for ClassicUI {
   fn get_input(
     &mut self,
     _ed: EdState,
-    terminator: char
+    terminator: char,
+    #[cfg(feature = "initial_input_data")]
+    initial_buffer: Option<Vec<String>>, // error if Some
   ) -> Result<Vec<String>, &'static str> {
+    #[cfg(feature = "initial_input_data")]
+    {
+      // If an initial buffer is given that is invalid
+      if initial_buffer.is_some() { return Err(add_ed::error_consts::UNSUPPORTED_INITIAL_DATA); }
+    }
     let mut input = Vec::new();
     let stdin = std::io::stdin();
     let terminator = format!("{}\n", terminator);

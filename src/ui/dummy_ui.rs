@@ -33,7 +33,13 @@ impl <'a> UI for DummyUI<'a> {
   fn get_input(&mut self,
     _ed: EdState,
     terminator: char,
+    #[cfg(feature = "initial_input_data")]
+    initial_buffer: Option<Vec<String>>, // Ignored
   ) -> Result<Vec<String>, &'static str> {
+    #[cfg(feature = "initial_input_data")]
+    {
+      if initial_buffer.is_some() { return Err(crate::error_consts::UNSUPPORTED_INITIAL_DATA); }
+    }
     let mut ret = Vec::new();
     let term = format!("{}\n", terminator);
     // Loop until we run out of data or find the terminator

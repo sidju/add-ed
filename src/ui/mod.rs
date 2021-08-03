@@ -34,6 +34,8 @@ pub trait UI {
   fn get_input(&mut self,
     ed: EdState,
     terminator: char,
+    #[cfg(feature = "initial_input_data")]
+    initial_buffer: Option<Vec<String>>,
   ) -> Result<Vec<String>, &'static str>;
 
   /// Print the given selection with the given options

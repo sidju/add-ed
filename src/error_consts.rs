@@ -76,6 +76,8 @@ pub const UNKNOWN: &str = "Unknown error while reading file.";
 // UI errors
 pub const NO_INPUT: &str = "Failed to get input."; // Probably only used by DummyUI, which has limited input.
 pub const ABORTED: &str = "Aborted. To close application use 'q'.";
+#[cfg(feature = "initial_input_data")]
+pub const UNSUPPORTED_INITIAL_DATA: &str = "Initial input data was given to UI input function that cannot handle it.";
 
 // Terminal interaction errors
 // No carriage returns, since only used through panic messages.

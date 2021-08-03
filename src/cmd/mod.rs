@@ -253,58 +253,120 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           Ok(false)
         }
         // Basic editing commands
-        'a' | 'i' | 'c' => {
+        'a' | 'i' | 'A' | 'I' => {
           let sel = interpret_selection(selection, state.selection, state.buffer)?;
-          // c requires a valid selection to exchange for the input
-          // i and a only require valid indices, which are checked by interpret_selection
-          if ch == 'c' { verify_selection(state.buffer, sel)? }
           let mut flags = parse_flags(clean, "pnl")?;
           p = flags.remove(&'p').unwrap();
           n = flags.remove(&'n').unwrap();
           l = flags.remove(&'l').unwrap();
-          // When all possible checks have been run, get input
-          // Note that this thorough checking is to make sure the command goes through before taking more input
-          // commands without input don't need this, since the buffer checks its input.
-          let tmp = ui.get_input(state.see_state(), '.')?;
+          // Now that we have checked that the command is valid, get input
+          // This is specifically done so that we never drop text input, that would be annoying
+          let tmp = ui.get_input(
+            state.see_state(),
+            '.',
+            #[cfg(feature = "initial_input_data")]
+            None,
+          )?;
+          // Input conversion, to follow buffer api
           let mut input = tmp.iter().map(|string| &string[..]);
-          let new_sel = match ch {
-            'a' | 'i' => {
-              if input.len() != 0 {
-                let start = if ch == 'a' {
-                  // Only if the buffer is empty will the latter not work
-                  if state.buffer.len() == 0 { 0 }
-                  else { sel.1 + 1 }
-                }
-                else {
-                  sel.0
-                };
-                let end = start + input.len().saturating_sub(1); // since the selection bounds are inclusive
-                state.buffer.insert(&mut input, start)?;
+          // Run the actual command and save returned selection to state
+          state.selection = if input.len() != 0 {
+            let start = if ch == 'a' || ch == 'A' {
+              // Unless the buffer is empty the latter will work
+              if state.buffer.len() == 0 { 0 }
+              else { sel.1 + 1 }
+            }
+            else {
+              sel.0
+            };
+            let end = start + input.len().saturating_sub(1); // Since selection bounds are inclusive
+            state.buffer.insert(&mut input, start)?;
+            // In the case of 'a', 'i' that is all
+            // 'A' and 'I' need a join
+            match ch {
+              // For 'A' we join the first input line with its preceeding, and thus reduce selection with 1
+              'A' => {
+                state.buffer.join((start.saturating_sub(1), start))?;
+                Some((start.saturating_sub(1), end.saturating_sub(1)))
+              },
+              // For 'I' we do the same with the last input line and the following line, requiring no selection change
+              'I' => {
+                // We must be careful not to join with non-existing lines
+                state.buffer.join((end, if end < state.buffer.len() { end + 1 } else { end }))?;
+                Some((start,end))
+              },
+              // 'a' and 'i' need only pass out start and end
+              'a' | 'i' => {
                 Some((start, end))
-              }
-              else {
-                // If no input the command was cancelled, keep the old selection
-                state.selection
-              }
+              },
+              _ => { panic!("Unreachable code reached"); }
             }
-            'c' => {
-              let end = sel.0 + input.len(); // Not -1 since 'c' has deleted the start line itself
-              state.buffer.change(&mut input, sel)?;
-              if input.len() != 0 {
-                Some((sel.0, end))
-              }
-              else {
-                // Same as delete, use same post-selection logic
-                if state.buffer.len() == 0 { None }
-                else {Some((sel.0, sel.0))}
-              }
-            }
-            _ => { panic!("Unreachable code reached"); }
+          }
+          // If no input is given, keep old selection
+          else {
+            state.selection
           };
-          // If resulting selection is empty, set original selection?
-          state.selection = new_sel;
           Ok(false)
-        }
+        },
+        'c' => {
+          let sel = interpret_selection(selection, state.selection, state.buffer)?;
+          verify_selection(state.buffer, sel)?;
+          let mut flags = parse_flags(clean, "pnl")?;
+          p = flags.remove(&'p').unwrap();
+          n = flags.remove(&'n').unwrap();
+          l = flags.remove(&'l').unwrap();
+          let tmp = ui.get_input(
+            state.see_state(),
+            '.',
+            #[cfg(feature = "initial_input_data")]
+            None,
+          )?;
+          let mut input = tmp.iter().map(|string| &string[..]);
+          let end = sel.0 + input.len();
+          state.buffer.change(&mut input, sel)?;
+          state.selection = if input.len() != 0 {
+            Some((sel.0, end))
+          }
+          else {
+            // Equivalent to delete, so use same post-selection logic
+            if state.buffer.len() == 0 { None }
+            else { Some((sel.0, sel.0)) }
+          };
+          Ok(false)
+        },
+        'C' => {
+          #[cfg(feature = "initial_input_data")]
+          {
+            let sel = interpret_selection(selection, state.selection, state.buffer)?;
+            let mut flags = parse_flags(clean, "pnl")?;
+            p = flags.remove(&'p').unwrap();
+            n = flags.remove(&'n').unwrap();
+            l = flags.remove(&'l').unwrap();
+            // Before getting input, get the selected area
+            let selected = state.buffer.get_selection(sel)?.map(|s| s.to_string()).collect();
+            // Then feed that to the input function as initial contents of the input buffer
+            let tmp = ui.get_input(
+              state.see_state(),
+              '.',
+              Some(selected),
+            )?;
+            let mut input = tmp.iter().map(|string| &string[..]);
+            let end = sel.0 + input.len();
+            state.buffer.change(&mut input, sel)?;
+            state.selection = if input.len() != 0 {
+              Some((sel.0, end))
+            }
+            else {
+              if state.buffer.len() == 0 { None }
+              else { Some((sel.0, sel.0)) }
+            };
+            Ok(false)
+          }
+          #[cfg(not(feature = "initial_input_data"))]
+          {
+            Err(UNDEFINED_COMMAND)
+          }
+        },
         'd' => { // Cut
           let sel = interpret_selection(selection, state.selection, state.buffer)?;
           // Since selection after execution can be 0 it isn't allowed to auto print after
@@ -439,7 +501,12 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           // If the last command in that list is not empty it means the list was not terminated, so we take more from input
           if commands.last().map(|s| s.trim()) != Some("") {
             // expressions.len() would be 0 if no char, so safe to unwrap
-            let mut input = ui.get_input(state.see_state(), clean.chars().next().unwrap())?;
+            let mut input = ui.get_input(
+              state.see_state(),
+              clean.chars().next().unwrap(),
+              #[cfg(feature = "initial_input_data")]
+              None,
+            )?;
             commands.append(&mut input);
           }
           else {
@@ -473,7 +540,12 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
             ui.print_selection(state.see_state(), (index, index), false, false)?;
             // Get input and create dummy-ui with it
             // expressions.len() == 2 implies that a separator was given
-            let input = ui.get_input(state.see_state(), clean.chars().next().unwrap())?;
+            let input = ui.get_input(
+              state.see_state(),
+              clean.chars().next().unwrap(),
+              #[cfg(feature = "initial_input_data")]
+              None,
+            )?;
             let mut dummy = DummyUI{
               input: input.into(),
               print_ui: Some(ui),
