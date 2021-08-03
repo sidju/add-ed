@@ -1,3 +1,6 @@
+# 0.8.1
+Add proper help text for 'A', 'I' and 'C'.
+
 # 0.8.0
 Add commands 'A' and 'I', which work as their 'a' and 'i' counterparts but join with the preceding/following line.
 Add command 'C' behind "initial_input_data" feature flag. Moves selection into input buffer, allowing per-character editing of selection.

@@ -1,44 +1,89 @@
 //! Current error handling hack. Const strings for error messages.
 
 // Relevant non-error consts
-pub const HELP_TEXT: &str = 
-"Application commands:
-  q: Quit the editor. Warns on unsaved changes.
-  h: Print last occured error
-  H: Toggle printing errors vs just noting there was an error
-  help: Print this help text
-  =: Print current selection
-  #: Do nothing (start of comment)
-File commands:
-  f: Print current filepath; or set filepath if one is given
-  e: Open given filepath for editing. If none given use current filepath. Warns on unsaved changes.
-  r: Append contents from given filepath to current selection. If none given use current filepath.
-  w: Write contents of buffer to given filepath. If none given use current filepath.
-  W: Append contents of buffer to given filepath. If none given use current filepath.
-Print commands:
-  Most commands below take flags p (print), n (numbered print), l (escaped print).
-  (no command): Normal print by default. Also takes flags.
-  z: Scroll (and print) given number of lines down from end of selection. 
-  Z: Scroll (and print) given number of lines up from start of selection. 
-Editing commands:
-  a: Append lines entered after the command to selection. Stop line entry with lone '.' on a line.
-  i: Same as 'a' but places lines before selection.
-  c: Same as 'a' except it also cuts the selection into clipboard.
-  d: Cut the selection into clipboard.
-  y: Copy the selection into clipboard.
-  x/X: Append/prepend clipboard contents to selection.
-  m: Move the selection to index given after command.
-  t: Copy the selection to index given after command.
-  j: Join the selection into one line. (only removes newlines)
-Regex commands:
-  s: Uses the first character as a separator between a regex matching pattern and a replacement string.
-     If no arguments are given it re-uses the arguments given last execution.
-  g: Uses the first character as a separator between a regex matching pattern and any number of commands.
-     If the line doesn't end with the separator it takes input until the separator is given alone on a line.
-  G: Same as 'g' but only takes a pattern. The commands to run are requested for each matching line.
-     Input is terminated by the separator alone on a line, just as 'g' if command line isn't separator terminated.
-  v/V: Same as their 'g' counterparts except they invert the pattern."
-;
+#[cfg(feature = "initial_input_data")]
+pub const HELP_TEXT: &str = concat!(
+"Application commands:\n",
+"  q: Quit the editor. Warns on unsaved changes.\n",
+"  h: Print last occured error\n",
+"  H: Toggle printing errors vs just noting there was an error\n",
+"  help: Print this help text\n",
+"  =: Print current selection\n",
+"  #: Do nothing (start of comment)\n",
+"File commands:\n",
+"  f: Print current filepath; or set filepath if one is given\n",
+"  e: Open given filepath for editing. If none given use current filepath. Warns on unsaved changes.\n",
+"  r: Append contents from given filepath to current selection. If none given use current filepath.\n",
+"  w: Write contents of buffer to given filepath. If none given use current filepath.\n",
+"  W: Append contents of buffer to given filepath. If none given use current filepath.\n",
+"Print commands:\n",
+"  Most commands below take flags p (print), n (numbered print), l (escaped print).\n",
+"  (no command): Normal print by default. Also takes flags.\n",
+"  z: Scroll (and print) given number of lines down from end of selection. \n",
+"  Z: Scroll (and print) given number of lines up from start of selection. \n",
+"Editing commands:\n",
+"  a: Append lines entered after the command to selection. Stop line entry with lone '.' on a line.\n",
+"  i: Same as 'a' but places lines before selection.\n",
+"  c: Same as 'a' except it also cuts the selection into clipboard.\n",
+"  A: Same as 'a', but joins the last input line with the line following the input (if any).\n",
+"  I: Same as 'i', but joins the first input line with the line preceding the input (if any).\n",
+"  C: Same as 'c', but the selection is copied into the input field, allowing direct modification.\n",
+"  d: Cut the selection into clipboard.\n",
+"  y: Copy the selection into clipboard.\n",
+"  x/X: Append/prepend clipboard contents to selection.\n",
+"  m: Move the selection to index given after command.\n",
+"  t: Copy the selection to index given after command.\n",
+"  j: Join the selection into one line. (only removes newlines)\n",
+"Regex commands:\n",
+"  s: Uses the first character as a separator between a regex matching pattern and a replacement string.\n",
+"     If no arguments are given it re-uses the arguments given last execution.\n",
+"  g: Uses the first character as a separator between a regex matching pattern and any number of commands.\n",
+"     If the line doesn't end with the separator it takes input until the separator is given alone on a line.\n",
+"  G: Same as 'g' but only takes a pattern. The commands to run are requested for each matching line.\n",
+"     Input is terminated by the separator alone on a line, just as 'g' if command line isn't separator terminated.\n",
+"  v/V: Same as their 'g' counterparts except they invert the pattern.\n",
+);
+#[cfg(not(feature = "initial_input_data"))]
+pub const HELP_TEXT: &str = concat!(
+"Application commands:\n",
+"  q: Quit the editor. Warns on unsaved changes.\n",
+"  h: Print last occured error\n",
+"  H: Toggle printing errors vs just noting there was an error\n",
+"  help: Print this help text\n",
+"  =: Print current selection\n",
+"  #: Do nothing (start of comment)\n",
+"File commands:\n",
+"  f: Print current filepath; or set filepath if one is given\n",
+"  e: Open given filepath for editing. If none given use current filepath. Warns on unsaved changes.\n",
+"  r: Append contents from given filepath to current selection. If none given use current filepath.\n",
+"  w: Write contents of buffer to given filepath. If none given use current filepath.\n",
+"  W: Append contents of buffer to given filepath. If none given use current filepath.\n",
+"Print commands:\n",
+"  Most commands below take flags p (print), n (numbered print), l (escaped print).\n",
+"  (no command): Normal print by default. Also takes flags.\n",
+"  z: Scroll (and print) given number of lines down from end of selection. \n",
+"  Z: Scroll (and print) given number of lines up from start of selection. \n",
+"Editing commands:\n",
+"  a: Append lines entered after the command to selection. Stop line entry with lone '.' on a line.\n",
+"  i: Same as 'a' but places lines before selection.\n",
+"  c: Same as 'a' except it also cuts the selection into clipboard.\n",
+"  A: Same as 'a', but joins the last input line with the line following the input (if any).\n",
+"  I: Same as 'i', but joins the first input line with the line preceding the input (if any).\n",
+"  d: Cut the selection into clipboard.\n",
+"  y: Copy the selection into clipboard.\n",
+"  x/X: Append/prepend clipboard contents to selection.\n",
+"  m: Move the selection to index given after command.\n",
+"  t: Copy the selection to index given after command.\n",
+"  j: Join the selection into one line. (only removes newlines)\n",
+"Regex commands:\n",
+"  s: Uses the first character as a separator between a regex matching pattern and a replacement string.\n",
+"     If no arguments are given it re-uses the arguments given last execution.\n",
+"  g: Uses the first character as a separator between a regex matching pattern and any number of commands.\n",
+"     If the line doesn't end with the separator it takes input until the separator is given alone on a line.\n",
+"  G: Same as 'g' but only takes a pattern. The commands to run are requested for each matching line.\n",
+"     Input is terminated by the separator alone on a line, just as 'g' if command line isn't separator terminated.\n",
+"  v/V: Same as their 'g' counterparts except they invert the pattern.\n",
+);
 
 // Pre-command parsing errors
 pub const INDEX_PARSE: &str = "Could not parse given index.";
