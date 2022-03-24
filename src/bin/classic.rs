@@ -15,11 +15,8 @@ impl UI for ClassicUI {
   fn get_command(
     &mut self,
     _ed: EdState,
-    prefix: Option<char>,
+    _prefix: Option<char>,
   ) -> Result<String, &'static str> {
-    if let Some(pre) = prefix {
-      print!("{}", pre);
-    }
     let mut input = String::new();
     std::io::stdin().read_line(&mut input)
       .map_err(|_| TERMINAL_READ)?;

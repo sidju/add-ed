@@ -41,7 +41,7 @@ pub struct Ed <'a, B: Buffer> {
   // The previous search_replace's arguments, to support repeating the last
   s_args: Option<(String, String, bool)>,
 
-  // Prefix for command input. Traditionally : but none by default
+  // Prefix for command input. Traditionally ':' so that by default
   cmd_prefix: Option<char>,
 
   // Wether or not to print errors when they occur (if not, print ? instead of error)
@@ -68,7 +68,7 @@ impl <'a, B: Buffer> Ed <'a, B> {
       print_errors: true,
       error: None,
       s_args: None,
-      cmd_prefix: None,
+      cmd_prefix: Some(':'),
       // Trying to set a reasonable default tends to cause trouble
       selection: None,
       // And the given values

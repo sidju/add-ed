@@ -206,7 +206,7 @@ pub fn parse_selection<'a>(
     // Unwraps nothing in the first index into start of buffer
     Some(',') => {
       let (offset2, ind2) = parse_index(&input[offset + 1 ..])?;
-      let unwrapped1 = ind.unwrap_or(Ind::Literal(0));
+      let unwrapped1 = ind.unwrap_or(Ind::Literal(1));
       let unwrapped2 = ind2.unwrap_or(Ind::BufferLen);
       Ok((offset2 + 1 + offset, Some(Sel::Pair(unwrapped1, unwrapped2))))
     },
@@ -218,9 +218,9 @@ pub fn parse_selection<'a>(
   }
 }
 
-// Interprets index struct into usize.
-// Should not be able to return a non-zero index equal to or bigger than buffer.len().
-// If buffer.len() is 0 or 1 it should return 0 under all circumstances.
+// Interprets index struct into 1-indexed usize.
+// (1-indexed so append operations can append to line 0 to insert before line 1)
+// Should not be able to return a index bigger than buffer.len().
 pub fn interpret_index<'a> (
   index: Ind<'a>,
   buffer: &impl Buffer,
@@ -233,11 +233,10 @@ pub fn interpret_index<'a> (
       Some(sel) => Ok(sel),
       None => Err(NO_SELECTION),
     },
-    // We saturating sub so it points at 0 and/or the last valid line
-    Ind::BufferLen => Ok(buffer.len().saturating_sub(1)),
-    // Sub 1 to make it 0-indexed. Limit it within valid index span.
-    Ind::Literal(index) => {
-      let i = index.saturating_sub(1);
+    // Since we want 1-indexed len() points at the last valid line or 0 if none
+    Ind::BufferLen => Ok(buffer.len()),
+    // Limit it within valid index span.
+    Ind::Literal(i) => {
       if i > buffer.len() {
         Ok(buffer.len())
       }
@@ -245,17 +244,28 @@ pub fn interpret_index<'a> (
         Ok(i)
       }
     },
-    // These come from the buffer, so they must be correctly indexed
-    Ind::Tag(tag) => buffer.get_tag(tag),
+    // These return values are 0 indexed like the rest of the Buffer API
+    // Subtract/add 1 on input/output
+    Ind::Tag(tag) => buffer.get_tag(tag).map(|i| i + 1),
     Ind::Pattern(pattern) =>
-      buffer.get_matching(pattern, old_selection.unwrap_or(0), false),
+      buffer.get_matching(
+        pattern,
+        old_selection
+          .map(|i| i.saturating_sub(1))
+          .unwrap_or(0),
+        false
+      ).map(|i| i + 1),
     Ind::RevPattern(pattern) =>
-      buffer.get_matching(pattern, old_selection.unwrap_or(buffer.len().saturating_sub(1)), true),
+      buffer.get_matching(
+        pattern,
+        old_selection.unwrap_or(buffer.len()).saturating_sub(1),
+        true
+      ).map(|i| i + 1),
     // These are relative to the prior, so have no indexing per-se
     // We do, however, limit their result between 0 and buffer.len()
     Ind::Add(inner, offset) => {
       let inner = interpret_index(*inner, buffer, old_selection)?;
-      let res = if inner + offset >= buffer.len() { buffer.len().saturating_sub(1) }
+      let res = if inner + offset > buffer.len() { buffer.len() }
       else { inner + offset };
       Ok(res)
     },
@@ -264,12 +274,11 @@ pub fn interpret_index<'a> (
       Ok(inner.saturating_sub(offset))
     },
   }?;
-  // Since index validation is the most permissive we run it on all indices
-  super::verify_index(buffer, ind)?;
   Ok(ind)
 }
 
 // Interprets a given selection into two usize.
+// 1-indexed just like indices, since 'i'/'a' use selection start/end as index
 // This function tries to make every selection inclusive towards its ending index
 pub fn interpret_selection<'a>(
   input: Option<Sel<'a>>,

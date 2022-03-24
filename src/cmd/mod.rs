@@ -3,7 +3,6 @@ use crate::buffer::{Buffer, verify_selection, verify_index};
 use crate::ui::{UI, DummyUI};
 use crate::error_consts::*;
 
-mod substitute;
 mod parse_selection;
 use parse_selection::*;
 mod parse_expressions;
@@ -36,7 +35,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
   // Use the cmd_i to get a clean selection  
   // Match the command and act upon it
   let ret = match command[cmd_i..].trim().chars().next() {
-    // No command is valid. It updates selection and thus works as a print when viewer is on
+    // No command is valid. It updates selection and prints
     None => {
       // Get and update the selection.
       let sel = interpret_selection(selection, state.selection, state.buffer)?;
@@ -49,20 +48,15 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
       let clean = &command[cmd_i + 1 ..].trim();
       match ch {
         // Quit commands
-        'q' => {
+        'q' | 'Q' => {
           if selection.is_some() { return Err(SELECTION_FORBIDDEN); }
           parse_flags(clean, "")?;
-          if state.buffer.saved() {
+          if state.buffer.saved() || ch == 'Q' {
             Ok(true)
           }
           else {
             Err(UNSAVED_CHANGES)
           }
-        }
-        'Q' => {
-          if selection.is_some() { return Err(SELECTION_FORBIDDEN); }
-          parse_flags(clean, "")?;
-          Ok(true)
         }
         // Help commands
         'h' => {
@@ -98,7 +92,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           let sel = interpret_selection(selection, state.selection, state.buffer)?;
           verify_selection(state.buffer, sel)?;
           state.selection = Some(sel);
-          ui.print(state.see_state(), &format!("({},{})", sel.0 + 1, sel.1 + 1) )?;
+          ui.print(state.see_state(), &format!("({},{})", sel.0, sel.1) )?;
           Ok(false)
         },
         // File commands
@@ -124,6 +118,8 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           let index = 
             if ch == 'r' {
               let i = interpret_selection(selection, state.selection, state.buffer)?.1;
+              // By not incrementing i when moving to 0-indexed in buffer API
+              // we append as expected by user through inserting in buffer
               Ok(Some(i))
             }
             else {
@@ -156,46 +152,42 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           // Since 'w' and 'W' should default to the whole buffer rather than previous selection
           // they get some custom code here
           let sel = match selection {
+            // If selection given we interpret it and convert it to 0-indexed
+            // (When explicit selection is whole buffer we change it to None to signal that)
             Some(s) => {
-              Some( interpret_selection(Some(s), state.selection, state.buffer)? )
+              let inter = interpret_selection(Some(s), state.selection, state.buffer)?;
+              let indexed = (inter.0.saturating_sub(1), inter.1.saturating_sub(1));
+              if indexed == (0, state.buffer.len().saturating_sub(1)) {
+                None
+              } else {
+                Some(indexed)
+              }
             },
+            // If no selection defaults to selecting the whole buffer
             None => None,
           };
+
           // If not wq, parse path
           let (q, path) = if clean != &"q" {
-            let path = parse_path(clean).unwrap_or(&state.path);
-            (false, path)
+            (false, parse_path(clean).unwrap_or(&state.path))
           }
           // If wq, use current file path
           else {
             (true, &state.path[..])
           };
-          // We need to know if the whole buffer is selected
-          let whole_buffer = match sel {
-            None => true,
-            Some(s) => {
-              if s == (0, state.buffer.len().saturating_sub(1)) {
-                true
-              }
-              else {
-                false
-              }
-            },
-          };
           // If the 'q' flag is set the whole buffer must be selected
-          if q && ! whole_buffer { return Err(UNSAVED_CHANGES); }
+          if q && sel.is_some() { return Err(UNSAVED_CHANGES); }
           // Write it into the file (append if 'W')
           let append = ch == 'W';
           state.buffer.write_to(sel, path, append)?;
-          // If all was written, update state.file
+          // If given path now contains only the whole buffer, update state.file
           // If selection was given, save that selection
           match sel {
             None => {
-              state.path = path.to_string();
+              if !append { state.path = path.to_string(); }
             },
             Some(s) => {
-              if whole_buffer { state.path = path.to_string(); }
-              state.selection = Some(s);
+              state.selection = Some((s.0 + 1, s.1 + 1));
             },
           }
           Ok(q)
@@ -227,7 +219,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           let nr = if nr_end == 0 {
             3 // 3 is the default from ed, no reason to change
           } else {
-            clean[.. nr_end].parse::<usize>().map_err(|_| INDEX_PARSE)?
+            clean[.. nr_end].parse::<usize>().map_err(|_| INTEGER_PARSE)?
           };
           // Check what isn't numeric for flags
           let mut flags = parse_flags(&clean[nr_end ..], "pnl")?;
@@ -239,11 +231,12 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
             // Gracefully handle overrunning bufferlen
             let mut start = index + 1;
             let mut end = index + nr;
-            if start >= state.buffer.len() { start = state.buffer.len().saturating_sub(1); }
-            if end >= state.buffer.len() { end = state.buffer.len().saturating_sub(1); }
+            if start > state.buffer.len() { start = state.buffer.len(); }
+            if end > state.buffer.len() { end = state.buffer.len(); }
             (start, end)
           } else {
             // Gracefully handle going under 0
+            // (If we end up under 1 that is handled by print logic below)
             (index.saturating_sub(1 + nr), index.saturating_sub(1))
           };
           // Verify selection before applying. Probably only fails if buffer is empty.
@@ -315,22 +308,22 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           p = flags.remove(&'p').unwrap();
           n = flags.remove(&'n').unwrap();
           l = flags.remove(&'l').unwrap();
-          let tmp = ui.get_input(
+          let input = ui.get_input(
             state.see_state(),
             '.',
             #[cfg(feature = "initial_input_data")]
             None,
           )?;
-          let mut input = tmp.iter().map(|string| &string[..]);
-          let end = sel.0 + input.len();
+          let inputlen = input.len();
+          let mut input = input.iter().map(|string| &string[..]);
           state.buffer.change(&mut input, sel)?;
-          state.selection = if input.len() != 0 {
-            Some((sel.0, end))
+          state.selection = if inputlen != 0 {
+            Some((sel.0, sel.0 + inputlen - 1))
           }
           else {
             // Equivalent to delete, so use same post-selection logic
             if state.buffer.len() == 0 { None }
-            else { Some((sel.0, sel.0)) }
+            else { Some((sel.0.saturating_sub(1), sel.0.saturating_sub(1))) }
           };
           Ok(false)
         },
@@ -350,15 +343,16 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
               '.',
               Some(selected),
             )?;
-            let mut input = tmp.iter().map(|string| &string[..]);
-            let end = sel.0 + input.len();
+            let inputlen = input.len();
+            let mut input = input.iter().map(|string| &string[..]);
             state.buffer.change(&mut input, sel)?;
-            state.selection = if input.len() != 0 {
-              Some((sel.0, end))
+            state.selection = if inputlen != 0 {
+              Some((sel.0, sel.0 + inputlen - 1))
             }
             else {
+              // Equivalent to delete, so use same post-selection logic
               if state.buffer.len() == 0 { None }
-              else { Some((sel.0, sel.0)) }
+              else { Some((sel.0.saturating_sub(1), sel.0.saturating_sub(1))) }
             };
             Ok(false)
           }
@@ -375,7 +369,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           // Try to figure out a selection after the deletion
           state.selection = 
             if state.buffer.len() == 0 { None }
-            else {Some((sel.0, sel.0))}
+            else {Some((sel.0.saturating_sub(1), sel.0.saturating_sub(1)))}
           ;
           Ok(false)
         },
@@ -390,12 +384,25 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           l = flags.remove(&'l').unwrap();
           Ok(false)
         },
-        'x' | 'X' => { // Append/prepend (respectively) clipboard contents to index
+        'x' | 'X' => { // Append/prepend (respectively) clipboard contents to selection
           let sel = interpret_selection(selection, state.selection, state.buffer)?;
           let mut flags = parse_flags(clean, "pnl")?;
-          let index = if ch == 'X' { sel.0 } else { sel.1 + 1 }; // Append or prepend based on command
+          // Append or prepend based on command
+          let index = 
+            if ch == 'X' { sel.0 }
+            else {
+              if sel.1 < state.buffer.len() { sel.1 + 1 }
+              else { state.buffer.len() }
+            }
+          ;
           let length = state.buffer.paste(index)?;
-          state.selection = if length != 0 { Some((index, index + length)) } else { None };
+          state.selection =
+            if length != 0 {
+              if ch == 'X' { Some((index, index + length)) }
+              else { Some((index, index + length - 1)) }
+            }
+            else { None }
+          ;
           p = flags.remove(&'p').unwrap();
           n = flags.remove(&'n').unwrap();
           l = flags.remove(&'l').unwrap();
@@ -425,11 +432,15 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           l = flags.remove(&'l').unwrap();
           // Calculate the selection
           let selection = interpret_selection(selection, state.selection, state.buffer)?;
-          // If moving to after current selection subtract resulting address
-          let move_size = selection.1 - selection.0;
+          let move_size = selection.1 - selection.0; // Beware, is actually 1 less than move size due to inclusive bounds
           // Note that we subtract/add one to index to exclude index itself
-          let new_sel = if ch == 'm' && selection.1 < index {
-            (index - move_size, index)
+          let new_sel = if ch == 'm' {
+            if selection.1 >= index {
+              (index, index + move_size)
+            } else {
+              // If moving forward detract moved lines from resulting selection
+              (index - move_size, index)
+            }
           } else {
             (index, index + move_size)
           };
@@ -471,19 +482,18 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
             }
           }
           else {
-            let expressions = parse_expressions(clean);
+            let expressions = parse_expressions(clean)?;
             if expressions.len() != 3 { return Err(EXPRESSION_TOO_SHORT); }
             let mut flags = parse_flags(&(expressions[2]), "gpnl")?;
             let g = flags.remove(&'g').unwrap();
             p = flags.remove(&'p').unwrap();
             n = flags.remove(&'n').unwrap();
             l = flags.remove(&'l').unwrap();
-            let substituted = substitute::substitute(expressions[1]);
             state.selection = Some(
-              state.buffer.search_replace((expressions[0], &substituted), selection, g)?
+              state.buffer.search_replace((&expressions[0], &expressions[1]), selection, g)?
             );
             // If that was valid we save all the arguments to support lone 's'
-            state.s_args = Some((expressions[0].to_string(), substituted, g));
+            state.s_args = Some((expressions[0].to_string(), expressions[1].to_string(), g));
           }
           Ok(false)
         },
@@ -491,10 +501,10 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           let selection = interpret_selection(selection, state.selection, state.buffer)?;
           // Since this command may take input we need to check just as carefully as with a, i, c
           verify_selection(state.buffer, selection)?;
-          let mut expressions = parse_expressions(clean);
+          let mut expressions = parse_expressions(clean)?;
           if expressions.len() < 2 { return Err(EXPRESSION_TOO_SHORT); }
           // We first try to mark all matching lines, to tell if there is any issue
-          state.buffer.mark_matching(expressions[0], selection, ch == 'v')?;
+          state.buffer.mark_matching(&expressions[0], selection, ch == 'v')?;
           // Then we get the script to run against them, if not already given
           // First grab commands given on command line
           let mut commands: Vec<String> = expressions.split_off(1).iter().map(|s| s.to_string()).collect();
@@ -529,11 +539,11 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           let selection = interpret_selection(selection, state.selection, state.buffer)?;
           // Since this command takes input we need to check just as carefully as with a, i, c
           verify_selection(state.buffer, selection)?;
-          let expressions = parse_expressions(clean);
+          let expressions = parse_expressions(clean)?;
           if expressions.len() != 2 { return Err(EXPRESSION_TOO_SHORT); }
           if expressions[1].len() != 0 && expressions[1] != "\n" { return Err(UNDEFINED_FLAG); }
           // Mark first, to check if the expression is valid
-          state.buffer.mark_matching(expressions[0], selection, ch == 'V')?;
+          state.buffer.mark_matching(&expressions[0], selection, ch == 'V')?;
           // With all data gathered we fetch and iterate over the lines
           while let Some(index) = state.buffer.get_marked()? {
             // Print the line, so the user knows what they are changing
