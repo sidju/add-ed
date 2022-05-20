@@ -147,7 +147,7 @@ impl Buffer for VecBuffer {
     verify_index(self, index)?;
     self.saved = false;
     // To minimise time complexity we split the vector immediately
-    let mut tail = self.buffer.split_off(index.saturating_sub(1));
+    let mut tail = self.buffer.split_off(index);
     // Then append the insert data
     for line in data {
       self.buffer.push(Line{tag: '\0', matched: false, text: line.to_string()});

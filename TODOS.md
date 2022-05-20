@@ -1,4 +1,5 @@
 # Todos:
+- Check that e and E and r give correct selections after running.
 - Handle accidentally opening a dir. (Diffcult until std::io::ErrorKind::IsADirectory stabilises.)
 - 'J' to reflow to width? Maybe?
 - Create buffer tests.

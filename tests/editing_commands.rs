@@ -38,11 +38,11 @@ fn insert() {
     assert_eq!(
       ed.see_state().selection,
       &Some((1,6)),
-      "Wrong selection after run. (note 1 indexed except for buffer API)"
+      "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
   assert_eq!(
-    buffer.get_selection((0,buffer.len()-1)).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -63,11 +63,11 @@ fn insert() {
     assert_eq!(
       ed.see_state().selection,
       &Some((2,2)),
-      "Wrong selection after run. (note 1 indexed except for buffer API)"
+      "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
   assert_eq!(
-    buffer.get_selection((0,buffer.len()-1)).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
     vec!["1\n","1.5\n","2\n","3\n","4\n","5\n","6\n"],
     "Wrong buffer state after run."
   );
@@ -99,7 +99,7 @@ fn change_and_paste() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((0,buffer.len()-1)).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -119,8 +119,8 @@ fn change_and_paste() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((1,1)),
-      "Wrong selection after run. (note 0 indexed in storage, 1 indexed in UI)"
+      &Some((2,2)),
+      "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
     // Also paste right before new line
     let mut ui = DummyUI{
@@ -132,16 +132,15 @@ fn change_and_paste() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((1,4)),
-      "Wrong selection after run. (note 0 indexed in storage, 1 indexed in UI)"
+      &Some((2,4)),
+      "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
   assert_eq!(
-    buffer.get_selection((0,buffer.len()-1)).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","3\n","5\n","6\n"]
   );
 }
-
 #[test]
 fn delete_and_paste() {
   // Create the testing editor
@@ -168,7 +167,7 @@ fn delete_and_paste() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((0,buffer.len()-1)).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -186,8 +185,8 @@ fn delete_and_paste() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((0,0)),
-      "Wrong selection after run. (note 0 indexed in storage, 1 indexed in UI)"
+      &Some((1,1)),
+      "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
     // Also paste at end of buffer
     let mut ui = DummyUI{
@@ -199,16 +198,15 @@ fn delete_and_paste() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((3,5)),
-      "Wrong selection after run. (note 0 indexed in storage, 1 indexed in UI)"
+      &Some((4,6)),
+      "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
   assert_eq!(
-    buffer.get_selection((0,buffer.len()-1)).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
     vec!["1\n","5\n","6\n","2\n","3\n","4\n"]
   );
 }
-
 #[test]
 fn copy_and_paste() {
   // Create the testing editor
@@ -235,7 +233,7 @@ fn copy_and_paste() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((0,buffer.len()-1)).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -253,8 +251,8 @@ fn copy_and_paste() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((1,3)),
-      "Wrong selection after run. (note 0 indexed in storage, 1 indexed in UI)"
+      &Some((2,4)),
+      "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
     // Also paste at end of buffer
     let mut ui = DummyUI{
@@ -266,16 +264,15 @@ fn copy_and_paste() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((6,8)),
-      "Wrong selection after run. (note 0 indexed in storage, 1 indexed in UI)"
+      &Some((7,9)),
+      "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
   assert_eq!(
-    buffer.get_selection((0,buffer.len()-1)).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n","2\n","3\n","4\n"]
   );
 }
-
 #[test]
 fn mov_copy() {
   // Create the testing editor
@@ -302,7 +299,7 @@ fn mov_copy() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((0,buffer.len()-1)).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -320,8 +317,8 @@ fn mov_copy() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((6,8)),
-      "Wrong selection after run. (note 0 indexed in storage, 1 indexed in UI)"
+      &Some((7,9)),
+      "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
 
@@ -338,13 +335,13 @@ fn mov_copy() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((0,2)),
-      "Wrong selection after run. (note 0 indexed in storage, 1 indexed in UI)"
+      &Some((1,3)),
+      "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
   assert_eq!(
-    buffer.get_selection((0,buffer.len()-1)).unwrap().collect::<Vec<&str>>(),
-    vec!["1\n","2\n","3\n","4\n","5\n","6\n","2\n","3\n","4\n"]
+    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    vec!["2\n","3\n","4\n","1\n","2\n","3\n","4\n","5\n","6\n","2\n","3\n","4\n"]
   );
 }
 
@@ -374,7 +371,7 @@ fn mov() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((0,buffer.len()-1)).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -390,9 +387,14 @@ fn mov() {
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
+    assert_eq!(
+      ed.see_state().selection,
+      &Some((4,5)),
+      "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
+    );
   }
   assert_eq!(
-    buffer.get_selection((0,buffer.len()-1)).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
     vec!["1\n","4\n","5\n","2\n","3\n","6\n"],
     "Moving forward didn't yield expected result."
   );
@@ -400,7 +402,7 @@ fn mov() {
   {
     let mut ui = DummyUI{
       input: vec![
-        "3,4m1\n".to_string(),
+        "3,4m0\n".to_string(),
       ].into(),
       print_ui: None,
     };
@@ -408,9 +410,14 @@ fn mov() {
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
+    assert_eq!(
+      ed.see_state().selection,
+      &Some((1,2)),
+      "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
+    );
   }
   assert_eq!(
-    buffer.get_selection((0,buffer.len()-1)).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
     vec!["5\n","2\n","1\n","4\n","3\n","6\n"],
     "Moving backwards didn't yield expected result."
   );
@@ -442,7 +449,7 @@ fn join() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((0,buffer.len()-1)).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -458,9 +465,14 @@ fn join() {
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
+    assert_eq!(
+      ed.see_state().selection,
+      &Some((2,2)),
+      "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
+    );
   }
   assert_eq!(
-    buffer.get_selection((0,buffer.len()-1)).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
     vec!["1\n","234\n","5\n","6\n"]
   );
 }
