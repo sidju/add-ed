@@ -255,8 +255,7 @@ impl Buffer for VecBuffer {
     self.buffer.append(&mut tmp);
     Ok(self.clipboard.len())
   }
-// ----------------THIS FAR-----------------------------
-  fn search_replace(&mut self, pattern: (&str, &str), selection: (usize, usize), global: bool) -> Result<(usize, usize), &'static str>
+  fn search_replace(&mut self, pattern: (&str, &str), selection: (usize, usize), global: bool) -> Result<usize, &'static str>
   {
     use regex::RegexBuilder;
     // ensure that the selection is valid
@@ -269,10 +268,9 @@ impl Buffer for VecBuffer {
       .map_err(|_| INVALID_REGEX)
     ?;
 
-    let mut selection_after = selection;
     // Cut out the whole selection from buffer
-    let mut tail = self.buffer.split_off(selection.1 + 1);
-    let before = self.buffer.split_off(selection.0 + 1);
+    let mut tail = self.buffer.split_off(selection.1);
+    let before = self.buffer.split_off(selection.0);
     // Save ourselves a little bit of copying/allocating
     let mut tmp = self.buffer.pop().unwrap();
     // Then join all selected lines together
@@ -294,10 +292,10 @@ impl Buffer for VecBuffer {
       self.buffer.push(Line{tag: '\0', matched: false, text: format!("{}\n", line)});
     }
     // Get the end of the affected area from current bufferlen
-    selection_after.1 = self.buffer.len() - 1; // Due to inclusive indices
+    let end = self.buffer.len();
     // Then put the tail back
     self.buffer.append(&mut tail); 
-    Ok(selection_after)
+    Ok(end)
   }
 
   // File operations
@@ -330,7 +328,7 @@ impl Buffer for VecBuffer {
       None => Box::new(self.buffer[..].iter().map(|line| &line.text[..])),
     };
     file::write_file(path, data, append)?;
-    if selection == Some((0, self.len().saturating_sub(1))) || selection.is_none() {
+    if selection == Some((1, self.len())) || selection.is_none() {
       self.saved = true;
     }
     Ok(())

@@ -74,9 +74,10 @@ pub trait Buffer {
   /// Perform regex search and replace on the selection changing pattern.0 to pattern.1
   /// Should interpret escape sequences in both patterns. At minimum \n and \\.
   /// If pattern is empty, should re-use stored pattern from previous s command
-  /// Returns selection, since it may delete or add lines
+  /// Returns new end of selection, since it may delete or add lines
+  /// Beware that it may delete the whole selection just as 'c'
   fn search_replace(&mut self, pattern: (&str, &str), selection: (usize, usize), global: bool)
-    -> Result<(usize, usize), &'static str> ;
+    -> Result<usize, &'static str> ;
 
   // Save/load commands. Here to enable creative Buffers, such as ssh+sed for remote editing
   /// Read to the buffer from given path

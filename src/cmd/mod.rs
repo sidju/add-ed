@@ -476,9 +476,16 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
             match &state.s_args {
               None => return Err(NO_PRIOR_S),
               Some((pattern, replacement, global)) => {
-                state.selection = Some(
-                  state.buffer.search_replace((pattern, replacement), selection, *global)?
-                );
+                let end = state.buffer.search_replace((pattern, replacement), selection, *global)?;
+                state.selection = if end < selection.0 {
+                  if end == 0 {
+                    None
+                  } else {
+                    Some((end, end))
+                  }
+                } else {
+                  Some((selection.0, end))
+                };
               }
             }
           }
@@ -490,9 +497,16 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
             p = flags.remove(&'p').unwrap();
             n = flags.remove(&'n').unwrap();
             l = flags.remove(&'l').unwrap();
-            state.selection = Some(
-              state.buffer.search_replace((&expressions[0], &expressions[1]), selection, g)?
-            );
+            let end = state.buffer.search_replace((&expressions[0], &expressions[1]), selection, g)?;
+            state.selection = if end < selection.0 {
+              if end == 0 {
+                None
+              } else {
+                Some((end, end))
+              }
+            } else {
+              Some((selection.0, end))
+            };
             // If that was valid we save all the arguments to support lone 's'
             state.s_args = Some((expressions[0].to_string(), expressions[1].to_string(), g));
           }

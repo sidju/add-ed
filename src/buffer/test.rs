@@ -105,7 +105,11 @@ pub fn api_validation(buffer: &mut impl Buffer) {
   );
 
   // Test search_replace as a way to clean up
-  buffer.search_replace((r"3\n3\n",r"3\n"), (2,3), true).unwrap();
+  assert_eq!(
+    buffer.search_replace((r"3\n",""), (3,3), true).unwrap(),
+    2,
+    "After removing line with regex selection wasn't the prior line."
+  );
   let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().collect();
   assert_eq!(output, data,
     concat!(
