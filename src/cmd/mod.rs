@@ -49,7 +49,11 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
       Ok(false)
     },
     Some(ch) => {
-      let clean = &command[cmd_i + 1 ..].trim();
+      let clean = {
+        let mut x = 1;
+        while ! command.is_char_boundary(cmd_i + x) { x += 1; }
+        &command[cmd_i + x ..].trim()
+      };
       match ch {
         // Quit commands
         'q' | 'Q' => {

@@ -15,10 +15,18 @@ pub fn parse_expressions(input: &str)
   // Assumes that the underlying system converts r"\\" into r"\"
   let mut expressions = Vec::new();
   let mut partial: Option<String> = None;
-  for chunk in input[1..].split(separator) {
+  for chunk in input[separator.len_utf8()..].split(separator) {
     // Some fancy code to handle escaping in case chunk ends with \\\
     // First get the coordinate of the last non '\\' char, if any
-    let last_non_escape = chunk.rfind(|c| c!= '\\');
+    let last_non_escape = chunk
+      .rfind(|c| c!= '\\')
+      .map(|last_i|
+        last_i +
+        // Handle if last non-escape character is more than one byte long
+        // Next can be unwrapped since execution of map implies its existence
+        chunk[last_i..].chars().next().unwrap().len_utf8() - 1
+      )
+    ;
     let nr_of_escapes = match last_non_escape {
       // If none, number of '\\' is chunk.len()
       None => chunk.len(),
@@ -30,6 +38,8 @@ pub fn parse_expressions(input: &str)
       // If separator is escaped we hold the chunk in partial
       // (after replacing escaped separator with separator)
       let mut tmp = match partial {
+        // Safe to slice with -1 here, since the if above only passes if the
+        // last character is '\\'
         Some(mut x) => { x.push_str(&chunk[..chunk.len() - 1]); x },
         None => chunk[..chunk.len() - 1].to_string(),
       };
