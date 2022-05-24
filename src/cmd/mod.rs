@@ -421,9 +421,9 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
         'k' | 'K' => { // Tag first (k) or last (K) line in selection
           let sel = interpret_selection(selection, state.selection, state.buffer)?;
           // Expect only the tag, no flags
-          if clean.len() != 1 { return Err(INVALID_TAG); }
+          if clean.len() > 1 { return Err(INVALID_TAG); }
           let index = if ch == 'k' { sel.0 } else { sel.1 };
-          state.buffer.tag_line(index, clean.chars().next().unwrap())?;
+          state.buffer.tag_line(index, clean.chars().next().unwrap_or('\0'))?;
           state.selection = Some(sel);
           Ok(false)
         },

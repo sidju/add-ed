@@ -43,7 +43,7 @@ pub trait Buffer {
     -> Result<Option<usize>, &'static str> ;
 
   // Simple buffer modifications, but with possibly complex storage
-  /// Mark a line with a letter, non letter chars should error
+  /// Mark a line with a letter, mark with '\0' to clear
   fn tag_line(&mut self, index: usize, tag: char) 
     -> Result<(), &'static str> ;
   /// Takes a iterator over lines in strings and inserts after given index
