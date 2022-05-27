@@ -1,14 +1,14 @@
 [package]
 name = "add-ed"
 description = "Embeddable pure rust editor based on ED"
-version = "0.8.1"
+version = "0.9.0-alpha"
 repository = "https://github.com/sidju/add-ed"
 readme = "README.md"
 categories = ["text-editors"]
 keywords = ["ed"]
 authors = ["sidju <contact@sidju.se>"]
 license = "MIT"
-edition = "2018"
+edition = "2021"
 
 include = [
   "assets/*",
