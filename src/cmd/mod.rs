@@ -351,7 +351,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
             // Before getting input, get the selected area
             let selected = state.buffer.get_selection(sel)?.map(|s| s.to_string()).collect();
             // Then feed that to the input function as initial contents of the input buffer
-            let tmp = ui.get_input(
+            let input = ui.get_input(
               state.see_state(),
               '.',
               Some(selected),
