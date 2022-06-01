@@ -58,8 +58,8 @@ impl UI for ClassicUI {
     let mut line_nr = selection.0;
     for line in selected {
       if numbered {
-        line_nr += 1;
         print!("{}: ", line_nr);
+        line_nr += 1;
       }
       for ch in line.chars() {
         match ch {

@@ -238,7 +238,7 @@ pub fn interpret_index<'a> (
     // Limit it within valid index span.
     Ind::Literal(i) => {
       if i > buffer.len() {
-        Ok(buffer.len())
+        Err(INDEX_TOO_BIG)
       }
       else {
         Ok(i)
