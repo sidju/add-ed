@@ -64,7 +64,7 @@ impl UI for ClassicUI {
       for ch in line.chars() {
         match ch {
           '\n' => {
-            if literal { print!("$\n") } else { print!("\n") }
+            if literal { println!("$") } else { println!() }
           },
           '$' => {
             if literal { print!("\\$") } else { print!("$") }

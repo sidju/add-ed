@@ -228,46 +228,34 @@ pub fn interpret_index<'a> (
 ) -> Result<usize, &'static str> {
   let ind = match index {
     // This should have been vetted before it was saved into state
-    // Therefore expected to be valid
+    // Therefore expected to be valid if it exists
     Ind::Selection => match old_selection {
       Some(sel) => Ok(sel),
       None => Err(NO_SELECTION),
     },
     // Since we want 1-indexed len() points at the last valid line or 0 if none
     Ind::BufferLen => Ok(buffer.len()),
-    // Limit it within valid index span.
-    Ind::Literal(i) => {
-      if i > buffer.len() {
-        Err(INDEX_TOO_BIG)
-      }
-      else {
-        Ok(i)
-      }
-    },
+    // May be invalid, buffer is expected to check
+    Ind::Literal(i) => Ok(i),
     // These return values are 0 indexed like the rest of the Buffer API
     // Subtract/add 1 on input/output
     Ind::Tag(tag) => buffer.get_tag(tag).map(|i| i + 1),
     Ind::Pattern(pattern) =>
       buffer.get_matching(
         pattern,
-        old_selection
-          .map(|i| i.saturating_sub(1))
-          .unwrap_or(0),
+        old_selection.unwrap_or(0),
         false
-      ).map(|i| i + 1),
+      ),
     Ind::RevPattern(pattern) =>
       buffer.get_matching(
         pattern,
-        old_selection.unwrap_or(buffer.len()).saturating_sub(1),
+        old_selection.unwrap_or(buffer.len()),
         true
-      ).map(|i| i + 1),
+      ),
     // These are relative to the prior, so have no indexing per-se
-    // We do, however, limit their result between 0 and buffer.len()
     Ind::Add(inner, offset) => {
       let inner = interpret_index(*inner, buffer, old_selection)?;
-      let res = if inner + offset > buffer.len() { buffer.len() }
-      else { inner + offset };
-      Ok(res)
+      Ok(inner+offset)
     },
     Ind::Sub(inner, offset) => {
       let inner = interpret_index(*inner, buffer, old_selection)?;
