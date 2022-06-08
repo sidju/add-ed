@@ -83,7 +83,7 @@ fn regex_rfind_line() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -97,11 +97,14 @@ fn regex_rfind_line() {
   {
     let mut ui = DummyUI{
       input: vec![
+        // Needed since default startup selection is 1,bufferlen
+        // Forward happens to work since default index is the start of sel index
+        "6".to_string(),
         "?3?".to_string(),
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
