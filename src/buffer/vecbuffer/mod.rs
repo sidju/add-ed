@@ -270,21 +270,30 @@ impl Buffer for VecBuffer {
 
     // Cut out the whole selection from buffer
     let mut tail = self.buffer.split_off(selection.1);
-    let before = self.buffer.split_off(selection.0);
-    // Save ourselves a little bit of copying/allocating
-    let mut tmp = self.buffer.pop().unwrap();
+    let mut before = self.buffer.split_off(selection.0.saturating_sub(1));
+    let mut tmp = String::new();
     // Then join all selected lines together
-    for line in before {
-      tmp.text.push_str(&line.text);
+    for line in &before {
+      tmp.push_str(&line.text);
     }
+
+    // First check if there exists a match in the selection
+    // If not we return error
+    if ! regex.is_match(&tmp) {
+      // Re-assemble the lines just as they were
+      self.buffer.append(&mut before);
+      self.buffer.append(&mut tail);
+      return Err(NO_MATCH);
+    }
+
     // Run the search-replace over it
     // Interpret escape sequences in the replace pattern
     let replace = super::substitute::substitute(pattern.1);
     let after = if global {
-      regex.replace_all(&tmp.text, replace).to_string()
+      regex.replace_all(&tmp, replace).to_string()
     }
     else {
-      regex.replace(&tmp.text, replace).to_string()
+      regex.replace(&tmp, replace).to_string()
     };
     // Split on newlines and add all lines to the buffer
     // lines iterator doesn't care if the last newline is there or not

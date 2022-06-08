@@ -18,6 +18,14 @@
 - Add utility substitute module to buffer module, for buffer implementations.
 - Add buffer api tests, to verify buffer implementation behaviours.
 - Add add_ed integration tests, to avoid breaking our API in the future.
+- Add fuzzing support, which caught 2 string slicing errors.
+- Correct handling for lone 's' to apply flags from last proper 's' invocation.
+- Fix so that 's' return error if no selected line matched the pattern.
+- Rename UI function print to print_message, to make its use more clear.
+- Remove EdState from print_message, as the UI will normally be called through
+  get_command immediately thereafter (any UI updates can wait 'til then).
+- Implement the possibility to change default of printing literal and numbered.
+  Both via Ed constructor and via 'L' and 'N' commands.
 
 # 0.8.1
 - Add proper help text for 'A', 'I' and 'C'.

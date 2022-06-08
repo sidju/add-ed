@@ -31,7 +31,7 @@ fn insert() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -56,7 +56,7 @@ fn insert() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -93,7 +93,7 @@ fn change_and_paste() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -113,7 +113,7 @@ fn change_and_paste() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -161,7 +161,7 @@ fn delete_and_paste() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -179,7 +179,7 @@ fn delete_and_paste() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -227,7 +227,7 @@ fn copy_and_paste() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -245,7 +245,7 @@ fn copy_and_paste() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -293,7 +293,7 @@ fn mov_copy() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -311,7 +311,7 @@ fn mov_copy() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -329,7 +329,7 @@ fn mov_copy() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -365,7 +365,7 @@ fn mov() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -383,7 +383,7 @@ fn mov() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -406,7 +406,7 @@ fn mov() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -443,7 +443,7 @@ fn join() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -461,7 +461,7 @@ fn join() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -497,7 +497,7 @@ fn insert_inline() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -517,7 +517,7 @@ fn insert_inline() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -554,7 +554,7 @@ fn append_inline() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -574,7 +574,7 @@ fn append_inline() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");

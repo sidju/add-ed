@@ -5,8 +5,8 @@
 //! An implementation of the UI trait is needed to support the 'g' command and similar, DummyUI.
 //! It is used for macro execution, by taking prepared input from a input list rather than prompting the user.
 //!
-//! Since the buffer is rather complex a standard Buffer implementation can be build in with the feature "vecbuffer".
-//! It is recommended to compare the behaviour of any Buffer implementation to the VecBuffer until Buffer tests are set up.
+//! Since the buffer is rather complex a standard Buffer implementation is included in the feature "vecbuffer".
+//! It is recommended to compare the behaviour of any Buffer implementation to the VecBuffer in addition to the api tests.
 //!
 //! An example of how to use this library is in src/bin/classic.rs
 
@@ -26,6 +26,16 @@ pub struct EdState<'a> {
   pub path: &'a str,
 }
 
+/// A ready parsed 's' invocation
+struct Substitution {
+  pattern: String,
+  substitute: String,
+  global: bool,
+  p: bool,
+  n: bool,
+  l: bool,
+}
+
 /// The state variable used by the editor to track its internal state
 pub struct Ed <'a, B: Buffer> {
   // Track the currently selected lines in the buffer
@@ -39,10 +49,15 @@ pub struct Ed <'a, B: Buffer> {
   path: String,
 
   // The previous search_replace's arguments, to support repeating the last
-  s_args: Option<(String, String, bool)>,
+  prev_s: Option<Substitution>,
 
   // Prefix for command input. Traditionally ':' so that by default
   cmd_prefix: Option<char>,
+
+  // Default states for printing flags
+  // Allows to print numbered or literal by default
+  n: bool,
+  l: bool,
 
   // Wether or not to print errors when they occur (if not, print ? instead of error)
   print_errors: bool,
@@ -54,26 +69,30 @@ impl <'a, B: Buffer> Ed <'a, B> {
   /// Construct a new instance of Ed
   ///
   /// * An empty file string is recommended if no filepath is opened
-  /// * Note that you can initialise the buffer with contents before this
+  /// * Note that you _can_ initialise the buffer with contents before this, but
+  ///   those contents will be overwritten if a path is given.
   pub fn new(
     buffer: &'a mut B,
     path: String,
+    n: bool,
+    l: bool,
   ) -> Result<Self, &'static str> {
-    let len = path.len();
-    if len != 0 {
+    if ! path.is_empty() {
       buffer.read_from(&path, None, false)?;
     }
+    let selection = Some((1,buffer.len())); // If empty that is handled by cmd
     let tmp = Self {
       // Sane defaults for initial settings
       print_errors: true,
       error: None,
-      s_args: None,
+      prev_s: None,
       cmd_prefix: Some(':'),
-      // Trying to set a reasonable default tends to cause trouble
-      selection: None,
+      selection,
       // And the given values
-      buffer: buffer,
-      path: path,
+      buffer,
+      path,
+      n,
+      l,
     };
     Ok(tmp)
   }
@@ -123,12 +142,12 @@ impl <'a, B: Buffer> Ed <'a, B> {
     loop {
       match self.run_macro(ui) {
         Ok(()) => break,
-        Err(_) => {
+        Err(e) => {
           if self.print_errors {
-            ui.print(self.see_state(), self.error.unwrap())?;
+            ui.print_message(e)?;
           }
           else {
-            ui.print(self.see_state(), "?\n")?;
+            ui.print_message("?\n")?;
           }
         },
       }

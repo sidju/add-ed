@@ -1,4 +1,4 @@
-use crate::Ed;
+use crate::{Ed, Substitution};
 use crate::buffer::{Buffer, verify_selection, verify_index, verify_line};
 use crate::ui::{UI, DummyUI};
 use crate::error_consts::*;
@@ -71,12 +71,12 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           if selection.is_some() { return Err(SELECTION_FORBIDDEN); }
           // If 'help' was entered, print held
           if clean == &"elp" {
-            ui.print(state.see_state(), HELP_TEXT)?;
+            ui.print_message(HELP_TEXT)?;
           }
           // Else no flags accepted and print last error
           else {
             parse_flags(clean, "")?;
-            ui.print(state.see_state(), state.error.unwrap_or(NO_ERROR))?;
+            ui.print_message(state.error.unwrap_or(NO_ERROR))?;
           }
           Ok(false)
         },
@@ -100,7 +100,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           let sel = interpret_selection(selection, state.selection, state.buffer)?;
           verify_selection(state.buffer, sel)?;
           state.selection = Some(sel);
-          ui.print(state.see_state(), &format!("({},{})", sel.0, sel.1) )?;
+          ui.print_message(&format!("({},{})", sel.0, sel.1) )?;
           Ok(false)
         },
         // File commands
@@ -109,10 +109,10 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           match parse_path(clean) {
             None => { // Print current filename
               if state.path.len() == 0 {
-                ui.print(state.see_state(), NO_FILE)?;
+                ui.print_message(NO_FILE)?;
               }
               else {
-                ui.print(state.see_state(), &state.path)?;
+                ui.print_message(&state.path)?;
               }
             },
             Some(x) => { // Set new filename
@@ -210,6 +210,9 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           state.selection = Some(sel);
           Ok(false)
         }
+        // Toggles printing with/without numbering/literal by default
+        'N' => { state.n = !state.n; Ok(false) },
+        'L' => { state.l = !state.l; Ok(false) },
         'z' | 'Z' => {
           // Depending on forward or backward we use start or end of selection as starting point
           let sel = interpret_selection(selection, state.selection, state.buffer)?;
@@ -477,10 +480,13 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           // switch based on if clean was given or not
           if clean.len() == 0 {
             // This means we use the arguments stored in state.s_args
-            match &state.s_args {
+            match &state.prev_s {
               None => return Err(NO_PRIOR_S),
-              Some((pattern, replacement, global)) => {
-                let end = state.buffer.search_replace((pattern, replacement), selection, *global)?;
+              Some(s) => {
+                p = s.p;
+                n = s.n;
+                l = s.l;
+                let end = state.buffer.search_replace((&s.pattern, &s.substitute), selection, s.global)?;
                 state.selection = if end < selection.0 {
                   if end == 0 {
                     None
@@ -512,7 +518,14 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
               Some((selection.0, end))
             };
             // If that was valid we save all the arguments to support lone 's'
-            state.s_args = Some((expressions[0].to_string(), expressions[1].to_string(), g));
+            state.prev_s = Some(Substitution{
+              pattern: expressions[0].to_string(),
+              substitute: expressions[1].to_string(),
+              global: g,
+              p,
+              n,
+              l,
+            });
           }
           Ok(false)
         },
@@ -566,7 +579,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           // With all data gathered we fetch and iterate over the lines
           while let Some(index) = state.buffer.get_marked()? {
             // Print the line, so the user knows what they are changing
-            ui.print_selection(state.see_state(), (index, index), false, false)?;
+            ui.print_selection(state.see_state(), (index, index), state.n, state.l)?;
             // Get input and create dummy-ui with it
             // expressions.len() == 2 implies that a separator was given
             let input = ui.get_input(
@@ -594,7 +607,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
   // If print flags are set, print
   if p | n | l {
     if let Some(sel) = state.selection {
-      ui.print_selection(state.see_state(), sel, n, l)?;
+      ui.print_selection(state.see_state(), sel, state.n^n, state.l^l)?;
     }
     else {
       Err(SELECTION_EMPTY)?

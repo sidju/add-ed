@@ -34,7 +34,7 @@ impl <'a> UI for DummyUI<'a> {
     _ed: EdState,
     terminator: char,
     #[cfg(feature = "initial_input_data")]
-    initial_buffer: Option<Vec<String>>, // Ignored
+    initial_buffer: Option<Vec<String>>, // causes error
   ) -> Result<Vec<String>, &'static str> {
     #[cfg(feature = "initial_input_data")]
     {
@@ -54,13 +54,12 @@ impl <'a> UI for DummyUI<'a> {
     }
   }
   // Printing is handed to the print_ui if one was given, else ignored
-  fn print(
+  fn print_message(
     &mut self,
-    ed: EdState,
     text: &str
   ) -> Result<(), &'static str> {
     match &mut self.print_ui {
-      Some(ui) => ui.print(ed, text),
+      Some(ui) => ui.print_message(text),
       None => Ok(()),
     }
   }

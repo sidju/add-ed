@@ -10,10 +10,7 @@ pub use dummy_ui::DummyUI;
 /// The UI trait used to abstract all common UI operations
 pub trait UI {
   /// A basic print for output of commands
-  /// 
-  /// * EdState passed in for interactive viewing and status printouts. Ignore if unused.
-  fn print(&mut self,
-    ed: EdState,
+  fn print_message(&mut self,
     data: &str,
   ) -> Result<(), &'static str>;
 

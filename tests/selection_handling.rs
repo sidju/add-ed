@@ -27,7 +27,7 @@ fn comment_selection() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -45,7 +45,7 @@ fn comment_selection() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -80,7 +80,7 @@ fn printsel_selection() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -98,7 +98,7 @@ fn printsel_selection() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string())
+    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");

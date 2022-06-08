@@ -4,9 +4,8 @@ use add_ed::ui::UI;
 use add_ed::error_consts::*;
 struct ClassicUI{}
 impl UI for ClassicUI {
-    fn print(
+    fn print_message(
     &mut self,
-    _ed: EdState,
     s: &str
   ) -> Result<(), &'static str> {
     println!("{}", s);
@@ -83,7 +82,7 @@ fn main() {
   let mut ui = ClassicUI{};
   let mut buffer = add_ed::buffer::VecBuffer::new();
   // Read in the file given and instantiate the editor
-  let mut ed = add_ed::Ed::new(&mut buffer, path).expect("Failed to open file.");
+  let mut ed = add_ed::Ed::new(&mut buffer, path, false, false).expect("Failed to open file.");
   // Run the editor with the created UI
   ed.run(&mut ui).unwrap();
 }
