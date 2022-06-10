@@ -27,6 +27,9 @@ pub trait Buffer {
   /// Return the number of lines stored in the buffer
   fn len(&self)
     -> usize ;
+  /// Return true if the buffer is empty
+  fn is_empty(&self)
+    -> bool ;
   /// Get line tagged with given letter. Not found is error
   fn get_tag(&self, tag: char)
     -> Result<usize, &'static str> ;

@@ -24,13 +24,11 @@ pub fn substitute(input: &str) -> String {
       escaped = false;
     }
     // If not escaped check if is escaping
+    else if ch == '\\' {
+      escaped = true;
+    }
     else {
-      if ch == '\\' {
-        escaped = true;
-      }
-      else {
-        out.push(ch);
-      }
+      out.push(ch);
     }
   }
   out

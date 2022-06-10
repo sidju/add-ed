@@ -40,8 +40,8 @@ pub fn parse_index<'a> (
   let mut state = State::Default(0);
   let mut current_ind = None;
   // Loop over chars and parse
-  let mut iter = input.char_indices();
-  while let Some((i, ch)) = iter.next() {
+  let iter = input.char_indices();
+  for (i, ch) in iter {
     // Handle based on state
     match state {
       // If a state change is coming, populate current ind and make the change
@@ -213,7 +213,7 @@ pub fn parse_selection<'a>(
     _ => { // Either no more input or the command char itself
       // This means it is a lone index
       // Map the potential index to a Sel::Lone, since None should remain None
-      Ok(( offset, ind.map(|i| Sel::Lone(i)) ))
+      Ok(( offset, ind.map(Sel::Lone) ))
     },
   }
 }
@@ -224,32 +224,27 @@ pub fn parse_selection<'a>(
 pub fn interpret_index<'a> (
   index: Ind<'a>,
   buffer: &impl Buffer,
-  old_selection: Option<usize>,
+  old_selection: usize,
 ) -> Result<usize, &'static str> {
   let ind = match index {
-    // This should have been vetted before it was saved into state
-    // Therefore expected to be valid if it exists
-    Ind::Selection => match old_selection {
-      Some(sel) => Ok(sel),
-      None => Err(NO_SELECTION),
-    },
+    Ind::Selection => Ok(old_selection),
     // Since we want 1-indexed len() points at the last valid line or 0 if none
     Ind::BufferLen => Ok(buffer.len()),
     // May be invalid, buffer is expected to check
     Ind::Literal(i) => Ok(i),
     // These return values are 0 indexed like the rest of the Buffer API
     // Subtract/add 1 on input/output
-    Ind::Tag(tag) => buffer.get_tag(tag).map(|i| i + 1),
+    Ind::Tag(tag) => buffer.get_tag(tag),
     Ind::Pattern(pattern) =>
       buffer.get_matching(
         pattern,
-        old_selection.unwrap_or(0),
+        old_selection,
         false
       ),
     Ind::RevPattern(pattern) =>
       buffer.get_matching(
         pattern,
-        old_selection.unwrap_or(buffer.len()),
+        old_selection,
         true
       ),
     // These are relative to the prior, so have no indexing per-se
@@ -270,19 +265,19 @@ pub fn interpret_index<'a> (
 // This function tries to make every selection inclusive towards its ending index
 pub fn interpret_selection<'a>(
   input: Option<Sel<'a>>,
-  old_selection: Option<(usize, usize)>,
+  old_selection: (usize, usize),
   buffer: &impl Buffer,
 ) -> Result<(usize, usize), &'static str> {
   let selection = input.unwrap_or(Sel::Pair( Ind::Selection, Ind::Selection ));
   let interpreted = match selection {
     Sel::Lone(ind) => {
       // Just interpret the lone index and make it a selection
-      let i = interpret_index(ind, buffer, old_selection.map(|x| x.0) )?;
+      let i = interpret_index(ind, buffer, old_selection.0 )?;
       (i, i)
     },
     Sel::Pair(ind1, ind2) => {
-      let i = interpret_index(ind1, buffer, old_selection.map(|x| x.0) )?;
-      let i2 = interpret_index(ind2, buffer, old_selection.map(|x| x.1) )?;
+      let i = interpret_index(ind1, buffer, old_selection.0 )?;
+      let i2 = interpret_index(ind2, buffer, old_selection.1 )?;
       (i, i2)
     },
   };

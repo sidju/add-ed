@@ -37,7 +37,7 @@ fn insert() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((1,6)),
+      (1,6),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
@@ -62,7 +62,7 @@ fn insert() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((2,2)),
+      (2,2),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
@@ -119,7 +119,7 @@ fn change_and_paste() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((2,2)),
+      (2,2),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
     // Also paste right before new line
@@ -132,7 +132,7 @@ fn change_and_paste() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((2,4)),
+      (2,4),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
@@ -185,7 +185,7 @@ fn delete_and_paste() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((1,1)),
+      (1,1),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
     // Also paste at end of buffer
@@ -198,7 +198,7 @@ fn delete_and_paste() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((4,6)),
+      (4,6),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
@@ -251,7 +251,7 @@ fn copy_and_paste() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((2,4)),
+      (2,4),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
     // Also paste at end of buffer
@@ -264,7 +264,7 @@ fn copy_and_paste() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((7,9)),
+      (7,9),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
@@ -317,7 +317,7 @@ fn mov_copy() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((7,9)),
+      (7,9),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
@@ -335,7 +335,7 @@ fn mov_copy() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((1,3)),
+      (1,3),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
@@ -389,7 +389,7 @@ fn mov() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((4,5)),
+      (4,5),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
@@ -412,7 +412,7 @@ fn mov() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((1,2)),
+      (1,2),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
@@ -467,7 +467,7 @@ fn join() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((2,2)),
+      (2,2),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
@@ -523,7 +523,7 @@ fn insert_inline() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((2,2)),
+      (2,2),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
@@ -580,7 +580,7 @@ fn append_inline() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((2,2)),
+      (2,2),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }

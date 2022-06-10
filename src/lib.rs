@@ -21,7 +21,7 @@ use buffer::Buffer;
 
 /// A small reference struct that gives insight into the editor's state
 pub struct EdState<'a> {
-  pub selection: &'a Option<(usize, usize)>,
+  pub selection: (usize, usize),
   pub buffer: &'a dyn Buffer,
   pub path: &'a str,
 }
@@ -40,7 +40,7 @@ struct Substitution {
 pub struct Ed <'a, B: Buffer> {
   // Track the currently selected lines in the buffer
   // This is usually separate from viewed lines in the UI
-  selection: Option<(usize, usize)>,
+  selection: (usize, usize),
   // A mutable reference to a Buffer implementor
   // The buffer implementor will handle most of the operations and store the data
   buffer: &'a mut B,
@@ -80,7 +80,7 @@ impl <'a, B: Buffer> Ed <'a, B> {
     if ! path.is_empty() {
       buffer.read_from(&path, None, false)?;
     }
-    let selection = Some((1,buffer.len())); // If empty that is handled by cmd
+    let selection = (1,0); // Empty, but that is handled in cmd module
     let tmp = Self {
       // Sane defaults for initial settings
       print_errors: true,
@@ -158,7 +158,7 @@ impl <'a, B: Buffer> Ed <'a, B> {
   /// Get an immutable reference to part of the editors state
   pub fn see_state(&self) -> EdState {
     EdState{
-      selection: &self.selection,
+      selection: self.selection,
       path: &self.path,
       buffer: self.buffer,
     }

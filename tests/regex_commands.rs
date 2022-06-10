@@ -53,7 +53,7 @@ fn regex_find_line() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((3,3)),
+      (3,3),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
@@ -110,7 +110,7 @@ fn regex_rfind_line() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((3,3)),
+      (3,3),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
@@ -164,7 +164,7 @@ fn regex_removing_line() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((2,3)),
+      (2,3),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
@@ -218,7 +218,7 @@ fn multiline_regex_removing_lines() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      &Some((1,1)),
+      (1,1),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }

@@ -24,8 +24,8 @@ pub const HELP_TEXT: &str = concat!(
 "Print commands:\n",
 "  Most commands take flags p (print), n (numbered print), l (escaped print).\n",
 "  (no command): Normal print by default. Also accepts print flags.\n",
-"  N: Toggles if the 'n' flag is included in prints by default\n.",
-"  L: Toggles if the 'l' flag is included in prints by default\n.",
+"  N: Toggles if the 'n' flag is included in prints by default.\n",
+"  L: Toggles if the 'l' flag is included in prints by default.\n",
 "  z: Scroll (and print) given number of lines down from end of selection.\n",
 "  Z: Scroll (and print) given number of lines up from start of selection.\n",
 "Editing commands:\n",
@@ -82,8 +82,8 @@ pub const HELP_TEXT: &str = concat!(
 "Print commands:\n",
 "  Most commands take flags p (print), n (numbered print), l (escaped print).\n",
 "  (no command): Normal print by default. Also accepts print flags.\n",
-"  N: Toggles if the 'n' flag is included in prints by default\n.",
-"  L: Toggles if the 'l' flag is included in prints by default\n.",
+"  N: Toggles if the 'n' flag is included in prints by default.\n",
+"  L: Toggles if the 'l' flag is included in prints by default.\n",
 "  z: Scroll (and print) given number of lines down from end of selection.\n",
 "  Z: Scroll (and print) given number of lines up from start of selection.\n",
 "Editing commands:\n",
@@ -119,7 +119,6 @@ pub const HELP_TEXT: &str = concat!(
 // Pre-command parsing errors
 pub const INDEX_PARSE: &str = "Could not parse given index.";
 pub const NO_COMMAND: &str = "No valid command given.";
-pub const NO_SELECTION: &str = "No prior selection exists.";
 pub const NEGATIVE_INDEX: &str = "Resulting index is negative.";
 
 // Command handling errors

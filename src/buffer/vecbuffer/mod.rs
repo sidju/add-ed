@@ -36,6 +36,9 @@ pub struct VecBuffer {
   buffer: Vec<Line>,
   clipboard: Vec<Line>,
 }
+impl Default for VecBuffer {
+  fn default() -> Self { Self::new() }
+}
 impl VecBuffer {
   /// Create a new empty buffer. It is considered saved while unchanged.
   pub fn new() -> Self
@@ -49,16 +52,13 @@ impl VecBuffer {
 }
 impl Buffer for VecBuffer {
   // Index operations, get and verify
-  fn len(&self) -> usize {
-      self.buffer.len()
-  }
+  fn len(&self) -> usize { self.buffer.len() }
+  fn is_empty(&self) -> bool { self.buffer.is_empty() }
   fn get_tag(&self, tag: char)
     -> Result<usize, &'static str>
   {
-    let mut index = 0;
-    for line in &self.buffer[..] {
-      if &tag == &line.tag { return Ok(index + 1); } // Add one for 1-indexing
-      index += 1;
+    for (index, line) in self.buffer[..].iter().enumerate() {
+      if tag == line.tag { return Ok(index + 1); } // Add one for 1-indexing
     }
     Err(NO_MATCH)
   }

@@ -3,7 +3,7 @@ pub fn parse_path(input: &str)
   -> Option<&str>
 {
   let trimmed = input.trim_start();
-  if trimmed.len() == 0 {
+  if trimmed.is_empty() {
     None
   }
   else {
