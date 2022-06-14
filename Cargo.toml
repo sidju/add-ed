@@ -1,7 +1,7 @@
 [package]
 name = "add-ed"
 description = "Embeddable pure rust editor based on ED"
-version = "0.9.0-alpha2"
+version = "0.9.0-alpha3"
 repository = "https://github.com/sidju/add-ed"
 readme = "README.md"
 categories = ["text-editors"]
