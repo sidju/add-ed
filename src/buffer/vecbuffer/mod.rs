@@ -276,6 +276,8 @@ impl Buffer for VecBuffer {
     for line in &before {
       tmp.push_str(&line.text);
     }
+    // Remove the trailing newline, so the whole selection cannot be deleted
+    tmp.pop();
 
     // First check if there exists a match in the selection
     // If not we return error
@@ -295,6 +297,8 @@ impl Buffer for VecBuffer {
     else {
       regex.replace(&tmp, replace).to_string()
     };
+    // Put back the removed newline
+    tmp.push('\n');
     // Split on newlines and add all lines to the buffer
     // lines iterator doesn't care if the last newline is there or not
     for line in after.lines() {

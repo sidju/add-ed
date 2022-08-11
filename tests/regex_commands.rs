@@ -218,13 +218,13 @@ fn multiline_regex_removing_lines() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      (1,1),
+      (2,2),
       "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
   assert_eq!(
     buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
-    vec!["1\n","5\n","6\n"]
+    vec!["1\n","4\n","5\n","6\n"]
   );
 }
 

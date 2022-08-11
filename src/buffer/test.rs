@@ -106,9 +106,9 @@ pub fn api_validation(buffer: &mut impl Buffer) {
 
   // Test search_replace as a way to clean up
   assert_eq!(
-    buffer.search_replace((r"3\n",""), (3,3), true).unwrap(),
-    2,
-    "After removing line with regex selection wasn't the prior line."
+    buffer.search_replace((r"3\n",""), (4,5), true).unwrap(),
+    4,
+    "Regex cannot remove all lines in selection, selection should only shrink."
   );
   let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().collect();
   assert_eq!(output, data,
@@ -119,8 +119,9 @@ pub fn api_validation(buffer: &mut impl Buffer) {
   );
 
   // Check that search_replace errors when it finds nothing to replace
+  // Also checks that last newline in selection isn't match/replace-able
   assert_eq!(
-    buffer.search_replace((r"6\n",""), (3,3), true),
+    buffer.search_replace((r".*\n",""), (3,3), true),
     Err(crate::error_consts::NO_MATCH),
     "If search_replace doesn't find anything to replace it should error to show this."
   );
