@@ -53,7 +53,9 @@ impl UI for ClassicUI {
     numbered: bool,
     literal: bool,
   ) -> Result<(), &'static str> {
-    let selected = ed.buffer.get_selection(selection)?;
+    let selected = ed.buffer
+      .get_selection(selection)?
+      .map(|(_, t)| t);
     let mut line_nr = selection.0;
     for line in selected {
       if numbered {

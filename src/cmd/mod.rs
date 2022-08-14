@@ -48,11 +48,17 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
   let ret = match command[cmd_i..].trim().chars().next() {
     // No command is valid. It updates selection and prints
     None => {
-      // Get and update the selection.
-      let sel = interpret_selection(selection, state.selection, state.buffer)?;
-      verify_selection(state.buffer, sel)?;
-      state.selection = sel;
-      pflags.p = true; // Default command is 'p'
+      if selection.is_some() {
+        // Get and update the selection.
+        let sel = interpret_selection(selection, state.selection, state.buffer)?;
+        verify_selection(state.buffer, sel)?;
+        state.selection = sel;
+        pflags.p = true; // Default command is 'p'
+      } else {
+        scroll(state, &mut pflags, selection, 'z', "",
+          state.selection.1 - state.selection.0 + 1,
+        )?;
+      }
       Ok(false)
     },
     Some(ch) => {

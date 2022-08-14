@@ -338,9 +338,11 @@ impl Buffer for VecBuffer {
   {
     let data = match selection {
       Some(sel) => self.get_selection(sel)?,
-      None => Box::new(self.buffer[..].iter().map(|line| &line.text[..])),
+      None => Box::new(self.buffer[..].iter().map(
+        |line| (line.tag, &line.text[..])
+      )),
     };
-    file::write_file(path, data, append)?;
+    file::write_file(path, data.map(|(_,x)| x), append)?;
     if selection == Some((1, self.len())) || selection.is_none() {
       self.saved = true;
     }
@@ -352,12 +354,12 @@ impl Buffer for VecBuffer {
 
   // The output command
   fn get_selection<'a>(&'a self, selection: (usize, usize))
-    -> Result<Box<dyn Iterator<Item = &'a str> + 'a>, &'static str>
+    -> Result<Box<dyn Iterator<Item = (char, &'a str)> + 'a>, &'static str>
   {
     verify_selection(self, selection)?;
     let tmp = self.buffer[selection.0 - 1 .. selection.1]
       .iter()
-      .map(|line| &line.text[..])
+      .map(|line| (line.tag, &line.text[..]))
     ;
     Ok(Box::new(tmp))
   }

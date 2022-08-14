@@ -97,9 +97,10 @@ pub trait Buffer {
     -> bool ;
 
   // Finally, the basic output command.
-  /// Return the given selection without any formatting
+  /// Return selection as line iterator giving tag and text
+  /// ('\0' as tag value represents absence of tag)
   fn get_selection<'a>(&'a self, selection: (usize, usize))
-    -> Result<Box<dyn Iterator<Item = &'a str> + 'a>, &'static str> ;
+    -> Result<Box<dyn Iterator<Item = (char, &'a str)> + 'a>, &'static str> ;
 }
 
 // General index, line and selection validation functions
