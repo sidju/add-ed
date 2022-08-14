@@ -42,7 +42,7 @@ fn insert() {
     );
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -67,7 +67,7 @@ fn insert() {
     );
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","1.5\n","2\n","3\n","4\n","5\n","6\n"],
     "Wrong buffer state after run."
   );
@@ -99,7 +99,7 @@ fn change_and_paste() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -137,7 +137,7 @@ fn change_and_paste() {
     );
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","3\n","5\n","6\n"]
   );
 }
@@ -167,7 +167,7 @@ fn delete_and_paste() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -203,7 +203,7 @@ fn delete_and_paste() {
     );
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","5\n","6\n","2\n","3\n","4\n"]
   );
 }
@@ -233,7 +233,7 @@ fn copy_and_paste() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -269,7 +269,7 @@ fn copy_and_paste() {
     );
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n","2\n","3\n","4\n"]
   );
 }
@@ -299,7 +299,7 @@ fn mov_copy() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -340,7 +340,7 @@ fn mov_copy() {
     );
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["2\n","3\n","4\n","1\n","2\n","3\n","4\n","5\n","6\n","2\n","3\n","4\n"]
   );
 }
@@ -371,7 +371,7 @@ fn mov() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -394,7 +394,7 @@ fn mov() {
     );
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","4\n","5\n","2\n","3\n","6\n"],
     "Moving forward didn't yield expected result."
   );
@@ -417,7 +417,7 @@ fn mov() {
     );
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["5\n","2\n","1\n","4\n","3\n","6\n"],
     "Moving backwards didn't yield expected result."
   );
@@ -449,7 +449,7 @@ fn join() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -472,7 +472,7 @@ fn join() {
     );
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","234\n","5\n","6\n"]
   );
 }
@@ -503,7 +503,7 @@ fn insert_inline() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -528,7 +528,7 @@ fn insert_inline() {
     );
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","5.2\n","3\n","4\n","5\n","6\n"],
     "Wrong buffer state after run."
   );
@@ -560,7 +560,7 @@ fn append_inline() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -585,7 +585,7 @@ fn append_inline() {
     );
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2.5\n","3\n","4\n","5\n","6\n"],
     "Wrong buffer state after run."
   );

@@ -35,7 +35,7 @@ fn regex_find_line() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -58,7 +58,7 @@ fn regex_find_line() {
     );
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"]
   );
 }
@@ -89,7 +89,7 @@ fn regex_rfind_line() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -115,7 +115,7 @@ fn regex_rfind_line() {
     );
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"]
   );
 }
@@ -146,7 +146,7 @@ fn regex_removing_line() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -169,7 +169,7 @@ fn regex_removing_line() {
     );
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","3\n","4\n","5\n","6\n"]
   );
 }
@@ -200,7 +200,7 @@ fn multiline_regex_removing_lines() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -223,7 +223,7 @@ fn multiline_regex_removing_lines() {
     );
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","4\n","5\n","6\n"]
   );
 }
@@ -254,7 +254,7 @@ fn regex_substitute_no_match() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -277,7 +277,7 @@ fn regex_substitute_no_match() {
     );
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );

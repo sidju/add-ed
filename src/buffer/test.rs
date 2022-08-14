@@ -24,7 +24,7 @@ pub fn api_validation(buffer: &mut impl Buffer) {
     "9\n"
   ];
   buffer.insert(&mut data.clone().into_iter(), 0).unwrap();
-  let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().collect();
+  let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect();
   assert_eq!(output, data,
     ".get_selection((0,buffer.len()-1)) didn't return the data we put in."
   );
@@ -34,11 +34,11 @@ pub fn api_validation(buffer: &mut impl Buffer) {
 
   // Test move, since we use it in tag testing
   buffer.mov((1,1), 4).unwrap();
-  assert_eq!(buffer.get_selection((4,4)).unwrap().next().unwrap(), "1\n",
+  assert_eq!(buffer.get_selection((4,4)).unwrap().next().unwrap().1, "1\n",
     "Moving forward didn't place moved line as expected. Remember that moving appends."
   );
   buffer.mov((4,4), 0).unwrap();
-  assert_eq!(buffer.get_selection((1,1)).unwrap().next().unwrap(), "1\n",
+  assert_eq!(buffer.get_selection((1,1)).unwrap().next().unwrap().1, "1\n",
     "Moving backward didn't place moved line as expected. Remember that moving appends."
   );
 
@@ -63,28 +63,28 @@ pub fn api_validation(buffer: &mut impl Buffer) {
 
   // Test copy
   buffer.mov_copy((3,3), 7).unwrap();
-  assert_eq!(buffer.get_selection((8,8)).unwrap().next().unwrap(), data[2],
+  assert_eq!(buffer.get_selection((8,8)).unwrap().next().unwrap().1, data[2],
     "Copying forward didn't place new line as expected. Remember that copying appends."
   );
 
   // Test cut as a way to cleanup
   buffer.cut((8,8)).unwrap();
   // Verify the cleanup by checking the full buffer contents
-  let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().collect();
+  let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect();
   assert_eq!(output, data,
     "After deleting with .cut didn't get the buffer contents we expected."
   );
 
   // Test join
   buffer.join((3,6)).unwrap();
-  assert_eq!(buffer.get_selection((3,3)).unwrap().next().unwrap(), "3456\n",
+  assert_eq!(buffer.get_selection((3,3)).unwrap().next().unwrap().1, "3456\n",
     "Joining didn't create the expected contents on the expected line."
   );
 
   // Test change as a way to cleanup
   buffer.change(&mut vec!["3\n","4\n","5\n","6\n"].into_iter(), (3,3)).unwrap();
   // Verify the cleanup by checking the full buffer contents
-  let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().collect();
+  let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect();
   assert_eq!(output, data,
     "After deleting with .cut didn't get the buffer contents we expected."
   );
@@ -92,7 +92,7 @@ pub fn api_validation(buffer: &mut impl Buffer) {
   // Test that pasting after cutting puts back the cut lines
   buffer.cut((2,8)).unwrap();
   buffer.paste(1).unwrap();
-  let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().collect();
+  let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect();
   assert_eq!(output, data,
     "After cutting and pasting back the buffer contents had changed."
   );
@@ -100,7 +100,7 @@ pub fn api_validation(buffer: &mut impl Buffer) {
   // Test copy by emulating mov_copy
   buffer.copy((3,3)).unwrap();
   buffer.paste(3).unwrap();
-  assert_eq!(buffer.get_selection((3,3)).unwrap().next().unwrap(), "3\n",
+  assert_eq!(buffer.get_selection((3,3)).unwrap().next().unwrap().1, "3\n",
     "after copying and pasting the buffer contents weren't as expected."
   );
 
@@ -110,7 +110,7 @@ pub fn api_validation(buffer: &mut impl Buffer) {
     4,
     "Regex cannot remove all lines in selection, selection should only shrink."
   );
-  let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().collect();
+  let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect();
   assert_eq!(output, data,
     concat!(
       "After substituting to remove a duplicate line the buffer contents weren't as expected. ",
@@ -125,7 +125,7 @@ pub fn api_validation(buffer: &mut impl Buffer) {
     Err(crate::error_consts::NO_MATCH),
     "If search_replace doesn't find anything to replace it should error to show this."
   );
-  let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().collect();
+  let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect();
   assert_eq!(output, data,
     "After search_replacing with a pattern that shouldn't match the buffer had changed."
   );

@@ -40,7 +40,7 @@ impl UI for AggregatorUI {
     self.prints_history.push(
       Print{
         text: ed.buffer.get_selection(selection)?
-          .map(|s|s.to_string())
+          .map(|(_, s)|s.to_string())
           .collect()
         ,
         n: numbered,

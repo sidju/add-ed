@@ -37,7 +37,7 @@ fn print() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -55,7 +55,7 @@ fn print() {
     ed.run_macro(&mut ui).expect("Error running test.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"]
   );
   assert_eq!(
@@ -99,7 +99,7 @@ fn printing_flags() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -119,7 +119,7 @@ fn printing_flags() {
     ed.run_macro(&mut ui).expect("Error running test.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"]
   );
   assert_eq!(
@@ -187,7 +187,7 @@ fn change_printing_defaults() {
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
     "Initialising buffer didn't yield expected buffer contents."
   );
@@ -210,7 +210,7 @@ fn change_printing_defaults() {
     ed.run_macro(&mut ui).expect("Error running test.");
   }
   assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().collect::<Vec<&str>>(),
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
     vec!["1\n","2\n","3\n","4\n","5\n","6\n"]
   );
   assert_eq!(
