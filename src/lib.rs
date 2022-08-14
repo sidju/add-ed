@@ -10,6 +10,8 @@
 //!
 //! An example of how to use this library is in src/bin/classic.rs
 
+use std::collections::HashMap;
+
 pub mod error_consts;
 mod cmd;
 
@@ -59,6 +61,9 @@ pub struct Ed <'a, B: Buffer> {
   n: bool,
   l: bool,
 
+  // Map of macro name to macro script
+  macros: HashMap<String, String>,
+
   // Wether or not to print errors when they occur (if not, print ? instead of error)
   print_errors: bool,
   // The previous error that occured, since we may not have printed it
@@ -71,9 +76,12 @@ impl <'a, B: Buffer> Ed <'a, B> {
   /// * An empty file string is recommended if no filepath is opened
   /// * Note that you _can_ initialise the buffer with contents before this, but
   ///   those contents will be overwritten if a path is given.
+  /// * macros behave like scripts given to the 'g' command
+  ///   an example is "a\n\n.\n" which appends an empty line
   pub fn new(
     buffer: &'a mut B,
     path: String,
+    macros: HashMap<String, String>,
     n: bool,
     l: bool,
   ) -> Result<Self, &'static str> {
@@ -93,6 +101,7 @@ impl <'a, B: Buffer> Ed <'a, B> {
       path,
       n,
       l,
+      macros,
     };
     Ok(tmp)
   }

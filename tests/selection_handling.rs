@@ -6,6 +6,7 @@ use add_ed::{
   ui::DummyUI,
   Ed,
 };
+use std::collections::HashMap;
 
 #[test]
 fn comment_selection() {
@@ -27,7 +28,7 @@ fn comment_selection() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
+    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -45,7 +46,7 @@ fn comment_selection() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
+    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     let res = ed.run_macro(&mut ui);
@@ -76,7 +77,7 @@ fn printsel_selection() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
+    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -94,7 +95,7 @@ fn printsel_selection() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
+    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -129,7 +130,7 @@ fn tag_line() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
+    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -151,7 +152,7 @@ fn tag_line() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),false,false)
+    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");

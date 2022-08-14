@@ -20,6 +20,16 @@ The library has been designed with clear traits to enable changing out most comp
 For example it should be somewhat easy to create a SSH+sed Buffer implementation for remote editing,
 or a GUI frontend implementing the UI trait.
 
+## New features compared to Ed
+- 'A' and 'I' commands, which act as 'a'/'i' and then 'j' the preceding/following line.
+  Perfect for commenting out a single line or adding a forgotten ;.
+- 'C' command, acts as 'c' but hands out previous value to the Ui's input method.
+  This enables you to edit the selection instead of replacing it (depends on Ui).
+- 'N' and 'L' commands, toggle the default print conf. Line numbers and escapes respectively.
+- 'K' command tags the last line in selection (instead of first as 'k'). (selection adjustment)
+- ':' command, runs the macro with the name given as argument (whitespace trimmed).
+  Macro execution behaves like 'g' execution. 'q' or error returns early.
+
 ## Feature flags:
 ### vecbuffer:
 Include and expose a simple in-memory buffer implementation
@@ -27,5 +37,4 @@ Include and expose a simple in-memory buffer implementation
 Add 'C' command. This modifies the UI trait.
 
 ## Attributions:
-This project has greatly benefited from regex.
-Not only in use of this incredible crate but also through some advice in less than fully thought out issues.
+This project is essentially built upon the regex crate, as regex is the heart of Ed.

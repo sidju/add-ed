@@ -6,6 +6,7 @@ use add_ed::{
   ui::DummyUI,
   Ed,
 };
+use std::collections::HashMap;
 
 #[test]
 fn test_name() {
@@ -41,16 +42,19 @@ fn test_name() {
   {
     let mut ui = DummyUI{
       input: vec![
+        "2,3:test\n".to_string(),
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut macros = HashMap::new();
+    macros.insert("test".to_string(), "i\na\n.".to_string());
+    let mut ed = Ed::new(&mut buffer, "".to_string(),macros,false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
   }
   assert_eq!(
     buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
-    vec!["1\n","2\n","3\n","4\n","5\n","6\n"]
+    vec!["1\n","a\n","2\n","3\n","4\n","5\n","6\n"]
   );
 }

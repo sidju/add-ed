@@ -1,7 +1,10 @@
-/// A simple UI based on the original ED editor
+use std::collections::HashMap;
+
 use add_ed::EdState;
 use add_ed::ui::UI;
 use add_ed::error_consts::*;
+
+/// A simple UI based on the original ED editor
 struct ClassicUI{}
 impl UI for ClassicUI {
     fn print_message(
@@ -84,7 +87,7 @@ fn main() {
   let mut ui = ClassicUI{};
   let mut buffer = add_ed::buffer::VecBuffer::new();
   // Read in the file given and instantiate the editor
-  let mut ed = add_ed::Ed::new(&mut buffer, path, false, false).expect("Failed to open file.");
+  let mut ed = add_ed::Ed::new(&mut buffer, path, HashMap::new(), false, false).expect("Failed to open file.");
   // Run the editor with the created UI
   ed.run(&mut ui).unwrap();
 }

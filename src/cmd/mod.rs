@@ -248,6 +248,22 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           global_inv(state, ui, selection, ch, clean)?;
           Ok(false)
         },
+        ':' => {
+          let selection = interpret_selection(selection, state.selection, state.buffer)?;
+          verify_selection(state.buffer, selection)?;
+          match state.macros.get(clean) {
+            Some(m) => {
+              let mut dummy = DummyUI{
+                input: m.lines().map(|x| format!("{}\n",x)).collect(),
+                print_ui: Some(ui),
+              };
+              state.selection = selection;
+              state.run_macro(&mut dummy)?;
+            },
+            None => return Err(UNDEFINED_MACRO),
+          }
+          Ok(false)
+        },
         _cmd => {
           Err(UNDEFINED_COMMAND)
         }

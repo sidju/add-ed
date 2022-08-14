@@ -123,6 +123,7 @@ pub const NEGATIVE_INDEX: &str = "Resulting index is negative.";
 
 // Command handling errors
 pub const UNDEFINED_COMMAND: &str = "Command not defined.";
+pub const UNDEFINED_MACRO: &str = "Macro not defined.";
 pub const SELECTION_FORBIDDEN: &str = "That command doesn't take a selection.";
 pub const UNSAVED_CHANGES: &str = "Unsaved changes. Force with the capitalised version of your command or save with 'w'.";
 pub const NO_ERROR: &str = "No errors recorded.";
