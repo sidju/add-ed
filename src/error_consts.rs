@@ -146,6 +146,8 @@ pub const MOVE_INTO_SELF: &str = "Cannot move selection into itself.";
 pub const INVALID_TAG: &str = "Invalid line tag entered.";
 pub const INVALID_REGEX: &str = "Invalid regex entered.";
 pub const NO_MATCH: &str = "No line matched requirements.";
+pub const UNDO_HISTORY_TOO_LARGE: &str = "Too many changes in undo history.";
+pub const INVALID_UNDO_STEPS: &str = "Cannot undo/redo beyond existing command history's start/end.";
 
 // File interaction errors
 pub const PERMISSION_DENIED: &str = "Could not open file. Permission denied.";

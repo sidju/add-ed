@@ -62,6 +62,30 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
       Ok(false)
     },
     Some(ch) => {
+      // If command isn't excluded from undoing or state.dont_snapshot, snapshot
+      match ch {
+        // The following commands don't modify the buffer, therefore creating
+        // undo snapshots in the buffer for them is only confusing
+        'q' | 'Q' |
+        'h' | 'H' |
+        '#' |
+        '=' |
+        'N' | 'L' |
+        'f' |
+        'e' | 'E' | 'r' |
+        'w' | 'W' |
+        'p' | 'n' | 'l' |
+        'z' | 'Z' |
+        // If undo creates snapshots then history is changed by "viewing", which
+        // becomes too complex
+        'u' | 'U' => {},
+        // If not in match arm above we check if we may snapshot
+        _ => {
+          if ! state.dont_snapshot {
+            state.buffer.snapshot()?;
+          }
+        },
+      }
       let tail = {
         let mut x = 1;
         while ! command.is_char_boundary(cmd_i + x) { x += 1; }
@@ -210,6 +234,19 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           ;
           Ok(false)
         },
+        'u' | 'U' => {
+          if selection.is_some() {return Err(SELECTION_FORBIDDEN); }
+          // A undo steps parsing not unlike index parsing would be good later
+          // ie. relative AND shorthand for start and end of history
+          let steps = if clean.is_empty() { 1 }
+          else { clean.parse::<isize>().map_err(|_| INTEGER_PARSE)? };
+          if ch == 'U' {
+            state.buffer.undo( -steps )?;
+          } else {
+            state.buffer.undo( steps )?;
+          }
+          Ok(false)
+        },
         // Advanced editing commands
         'k' | 'K' => { // Tag first (k) or last (K) line in selection
           let sel = interpret_selection(selection, state.selection, state.buffer)?;
@@ -234,18 +271,44 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           state.buffer.join(selection)?;
           state.selection = (selection.0, selection.0);
           Ok(false)
-        }
+        },
+        'J' => {
+          let selection = interpret_selection(selection, state.selection, state.buffer)?;
+          let nr_end = clean.find( | c: char | !c.is_numeric() ).unwrap_or(clean.len());
+          let width = if nr_end == 0 {
+            80
+          } else {
+            clean[.. nr_end].parse::<usize>().map_err(|_| INTEGER_PARSE)?
+          };
+          let mut flags = parse_flags(&clean[.. nr_end], "pnl")?;
+          pflags.p = flags.remove(&'p').unwrap();
+          pflags.n = flags.remove(&'n').unwrap();
+          pflags.l = flags.remove(&'l').unwrap();
+          let end = state.buffer.reflow(selection, width)?;
+          // selection.0 must be less than or equal end and bigger be than 1, to
+          // handle a reflow without any words, which may delete the selection
+          state.selection = (selection.0.min(end).max(1), end);
+          Ok(false)
+        },
         // Pattern commands
         's' => {
           substitute(state, &mut pflags, selection, tail)?;
           Ok(false)
         },
         'g' | 'v' => {
-          global(state, ui, selection, ch, clean)?;
+          // Disable snapshotting during execution
+          state.dont_snapshot = true;
+          let res = global(state, ui, selection, ch, clean);
+          state.dont_snapshot = false;
+          res?;
           Ok(false)
         },
         'G' | 'V' => {
-          global_inv(state, ui, selection, ch, clean)?;
+          // Disable snapshotting during execution
+          state.dont_snapshot = true;
+          let res = global_inv(state, ui, selection, ch, clean);
+          state.dont_snapshot = false;
+          res?;
           Ok(false)
         },
         ':' => {
@@ -253,12 +316,17 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           verify_selection(state.buffer, selection)?;
           match state.macros.get(clean) {
             Some(m) => {
+              // Disable undo snapshotting during macro execution
+              state.dont_snapshot = true;
               let mut dummy = DummyUI{
                 input: m.lines().map(|x| format!("{}\n",x)).collect(),
                 print_ui: Some(ui),
               };
               state.selection = selection;
-              state.run_macro(&mut dummy)?;
+              let res = state.run_macro(&mut dummy);
+              // Re-enable snapshotting after
+              state.dont_snapshot = false;
+              res?;
             },
             None => return Err(UNDEFINED_MACRO),
           }

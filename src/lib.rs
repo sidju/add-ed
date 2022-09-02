@@ -46,24 +46,21 @@ pub struct Ed <'a, B: Buffer> {
   // A mutable reference to a Buffer implementor
   // The buffer implementor will handle most of the operations and store the data
   buffer: &'a mut B,
-
   // The path to the currently selected file
   path: String,
-
   // The previous search_replace's arguments, to support repeating the last
   prev_s: Option<Substitution>,
+  // Flag to prevent auto-creating undo-points when running macros or the like
+  dont_snapshot: bool,
 
   // Prefix for command input. Traditionally ':' so that by default
   cmd_prefix: Option<char>,
-
   // Default states for printing flags
   // Allows to print numbered or literal by default
   n: bool,
   l: bool,
-
   // Map of macro name to macro script
   macros: HashMap<String, String>,
-
   // Wether or not to print errors when they occur (if not, print ? instead of error)
   print_errors: bool,
   // The previous error that occured, since we may not have printed it
@@ -96,6 +93,7 @@ impl <'a, B: Buffer> Ed <'a, B> {
       prev_s: None,
       cmd_prefix: Some(':'),
       selection,
+      dont_snapshot: false,
       // And the given values
       buffer,
       path,

@@ -67,6 +67,10 @@ pub trait Buffer {
   /// Join all lines in selection into one line
   fn join(&mut self, selection: (usize, usize))
     -> Result<(), &'static str> ;
+  /// Join all lines to one and split into lines of less than given width
+  /// Returns end of selection after change
+  fn reflow(&mut self, selection: (usize, usize), width: usize)
+    -> Result<usize, &'static str> ;
   /// Copy selected lines into clipboard
   fn copy(&mut self, selection: (usize, usize))
     -> Result<(), &'static str> ;
@@ -95,6 +99,17 @@ pub trait Buffer {
   /// Returns true if no changes have been made since last saving
   fn saved(&self)
     -> bool ;
+
+  // Undo/Redo
+  /// Undo to given numbers of snapshots back (limited by snapshots created)
+  /// If negative: redo that number of snapshots instead (limited by undone snapshots)
+  /// Returns error if steps move to invalid snapshot, use undo_range to get limits
+  fn undo(&mut self, steps: isize) -> Result<(), &'static str> ;
+  /// Get how far forward/backward redo/undo is possible
+  /// Returns range of allowed undo arguments
+  fn undo_range(&self) -> Result<std::ops::Range<isize>, &'static str>;
+  /// Create a checkpoint to undo/redo to
+  fn snapshot(&mut self) -> Result<(), &'static str> ;
 
   // Finally, the basic output command.
   /// Return selection as line iterator giving tag and text

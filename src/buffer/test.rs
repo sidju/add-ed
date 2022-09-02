@@ -26,7 +26,7 @@ pub fn api_validation(buffer: &mut impl Buffer) {
   buffer.insert(&mut data.clone().into_iter(), 0).unwrap();
   let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect();
   assert_eq!(output, data,
-    ".get_selection((0,buffer.len()-1)) didn't return the data we put in."
+    ".get_selection((1,buffer.len())) didn't return the data we put in."
   );
   assert_eq!(buffer.len(), data.len(),
     "Length of buffer didn't match length of inserted data."
@@ -129,4 +129,74 @@ pub fn api_validation(buffer: &mut impl Buffer) {
   assert_eq!(output, data,
     "After search_replacing with a pattern that shouldn't match the buffer had changed."
   );
+
+  // Test undo redo
+  assert_eq!(
+    buffer.undo_range().unwrap(),
+    0..1,
+    "Before creating undo checkpoints the undo range should be 0..1."
+  );
+  buffer.snapshot().unwrap();
+  buffer.cut((1,buffer.len())).unwrap();
+  assert_eq!(
+    buffer.len(),
+    0,
+    "After deleting whole buffer no data should remain."
+  );
+  assert_eq!(
+    buffer.undo_range().unwrap(),
+    0..2,
+    "After creating a checkpoint the undo range should be 0..2."
+  );
+  buffer.undo(1).unwrap();
+  assert_eq!(
+    buffer.undo_range().unwrap(),
+    -1..1,
+    "After undoing x checkpoints range should begin at -x."
+  );
+  let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect();
+  assert_eq!(output, data,
+    "After undoing to a snapshot the state of the buffer should be same as before."
+  );
+
+  // Test text wrapping
+  // Requires different buffer contents, snapshot/undo to reset test data after
+  buffer.snapshot().unwrap();
+  {
+    let lorem = vec![
+      "Vero et quia ad repellendus. Voluptas debitis id consequatur doloremque sed suscipit et tempora. Odit sed est hic non error. Sint itaque et ut alias voluptatem sit. Et sunt totam amet doloribus unde nam velit voluptatem. Odit nisi ut eius et temporibus et.\n",
+      "Enim asperiores sit aut et fugit omnis. Quos tenetur cupiditate velit excepturi est autem dolor. Est earum quidem dolorem. Adipisci earum vero ab enim. Qui rerum sit illum esse deserunt.\n",
+      "Eos voluptatem vel corrupti reprehenderit. Voluptas quisquam fuga esse tenetur nesciunt sit corrupti. Odio corporis rerum est sed. Dicta ipsam modi minus voluptas.\n"
+    ];
+    buffer.change(&mut lorem.clone().into_iter(), (1,buffer.len())).unwrap();
+    let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect();
+    assert_eq!(
+      lorem, output,
+      "Changing buffer contents to lorem ipsum failed."
+    );
+    let end = buffer.reflow((2,buffer.len()), 55).unwrap();
+    assert_eq!(
+      end, 8,
+      "Returned new end of selection from buffer.reflow is wrong."
+    );
+    let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect();
+    assert_eq!(
+      output, vec![
+        "Vero et quia ad repellendus. Voluptas debitis id consequatur doloremque sed suscipit et tempora. Odit sed est hic non error. Sint itaque et ut alias voluptatem sit. Et sunt totam amet doloribus unde nam velit voluptatem. Odit nisi ut eius et temporibus et.\n",
+        "Enim asperiores sit aut et fugit omnis. Quos tenetur\n",
+        "cupiditate velit excepturi est autem dolor. Est earum\n",
+        "quidem dolorem. Adipisci earum vero ab enim. Qui rerum\n",
+        "sit illum esse deserunt. Eos voluptatem vel corrupti\n",
+        "reprehenderit. Voluptas quisquam fuga esse tenetur\n",
+        "nesciunt sit corrupti. Odio corporis rerum est sed.\n",
+        "Dicta ipsam modi minus voluptas.\n",
+      ],
+      "Buffer contents after reflow weren't as expected."
+    );
+    buffer.undo(1).unwrap();
+    let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect();
+    assert_eq!(output, data,
+      "After undoing to a snapshot the state of the buffer should be same as before."
+    );
+  }
 }
