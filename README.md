@@ -1,6 +1,6 @@
 # Add-ED
 ## The standard editor, now as a library
-Some time ago I decided to write an ED clone with syntax highlighting, (hired)[https://github.com/sidju/hired].
+Some time ago I decided to write an ED clone with syntax highlighting, [hired](https://github.com/sidju/hired).
 On my way to that I found that the macro commands ('g', 'v', 'G', 'V') pretty much require that you write an ED library for them.
 So I did, and here it is.
 
