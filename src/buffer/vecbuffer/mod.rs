@@ -272,13 +272,17 @@ impl Buffer for VecBuffer {
     // Remove trailing newline, which is now an unnecesary space
     joined.pop();
     // Then replace space nearest before selected width with newline
-    let mut w = 0;
+    let mut w = 0; // character width of current line
+    let mut ch_w = 0; // byte width of current character
     let mut latest_space = None;
     for i in 0 .. joined.len() {
       // If not a character boundary we skip this loop
-      if !joined.is_char_boundary(i) { continue; }
+      if !joined.is_char_boundary(i) {
+        ch_w += 1;
+        continue;
+      }
       w += 1;
-      if &joined[i..=i] == " " {
+      if &joined[i - ch_w..=i] == " " {
         latest_space = Some(i);
       }
       if w > width {
@@ -289,6 +293,7 @@ impl Buffer for VecBuffer {
           latest_space = None;
         }
       }
+      ch_w = 0; // Since we read the character this loop, reset for next
     }
     // Finally we split into different strings on newlines and add to buffer
     for line in joined.lines() {

@@ -164,7 +164,7 @@ pub fn api_validation(buffer: &mut impl Buffer) {
   buffer.snapshot().unwrap();
   {
     let lorem = vec![
-      "Vero et quia ad repellendus. Voluptas debitis id consequatur doloremque sed suscipit et tempora. Odit sed est hic non error. Sint itaque et ut alias voluptatem sit. Et sunt totam amet doloribus unde nam velit voluptatem. Odit nisi ut eius et temporibus et.\n",
+      "Verå et quia ad repellendus. Voluptas debitis id consequatur doloremque sed suscipit et tempora. Odit sed est hic non error. Sint itaque et ut alias voluptatem sit. Et sunt totam amet doloribus unde nam velit voluptatem. Odit nisi ut eius et temporibus et.\n",
       "Enim asperiores sit aut et fugit omnis. Quos tenetur cupiditate velit excepturi est autem dolor. Est earum quidem dolorem. Adipisci earum vero ab enim. Qui rerum sit illum esse deserunt.\n",
       "Eos voluptatem vel corrupti reprehenderit. Voluptas quisquam fuga esse tenetur nesciunt sit corrupti. Odio corporis rerum est sed. Dicta ipsam modi minus voluptas.\n"
     ];
@@ -182,7 +182,7 @@ pub fn api_validation(buffer: &mut impl Buffer) {
     let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect();
     assert_eq!(
       output, vec![
-        "Vero et quia ad repellendus. Voluptas debitis id consequatur doloremque sed suscipit et tempora. Odit sed est hic non error. Sint itaque et ut alias voluptatem sit. Et sunt totam amet doloribus unde nam velit voluptatem. Odit nisi ut eius et temporibus et.\n",
+        "Verå et quia ad repellendus. Voluptas debitis id consequatur doloremque sed suscipit et tempora. Odit sed est hic non error. Sint itaque et ut alias voluptatem sit. Et sunt totam amet doloribus unde nam velit voluptatem. Odit nisi ut eius et temporibus et.\n",
         "Enim asperiores sit aut et fugit omnis. Quos tenetur\n",
         "cupiditate velit excepturi est autem dolor. Est earum\n",
         "quidem dolorem. Adipisci earum vero ab enim. Qui rerum\n",
