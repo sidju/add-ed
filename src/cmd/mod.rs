@@ -280,7 +280,7 @@ pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
           } else {
             clean[.. nr_end].parse::<usize>().map_err(|_| INTEGER_PARSE)?
           };
-          let mut flags = parse_flags(&clean[.. nr_end], "pnl")?;
+          let mut flags = parse_flags(&clean[nr_end ..], "pnl")?;
           pflags.p = flags.remove(&'p').unwrap();
           pflags.n = flags.remove(&'n').unwrap();
           pflags.l = flags.remove(&'l').unwrap();
