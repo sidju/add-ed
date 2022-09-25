@@ -188,6 +188,7 @@ impl Buffer for VecBuffer {
   fn mov(&mut self, selection: (usize, usize), index: usize) -> Result<(), &'static str> {
     verify_selection(self, selection)?;
     verify_index(self, index)?;
+    self.saved = false;
     // Operation varies depending on moving forward or back
     if index < selection.0 {
       // split out the relevant parts of the buffer
@@ -218,6 +219,7 @@ impl Buffer for VecBuffer {
   fn mov_copy(&mut self, selection: (usize, usize), index: usize) -> Result<(), &'static str> {
     verify_selection(self, selection)?;
     verify_index(self, index)?;
+    self.saved = false;
     // Get the data
     let mut data = Vec::new();
     for line in &self.history[self.buffer_i][selection.0.saturating_sub(1) .. selection.1] {
@@ -230,6 +232,7 @@ impl Buffer for VecBuffer {
   }
   fn join(&mut self, selection: (usize, usize)) -> Result<(), &'static str> {
     verify_selection(self, selection)?;
+    self.saved = false;
     // Take out the lines that should go away efficiently
     let mut tail = self.history[self.buffer_i].split_off(selection.1);
     let data = self.history[self.buffer_i].split_off(selection.0);
@@ -252,6 +255,7 @@ impl Buffer for VecBuffer {
     width: usize,
   ) -> Result<usize, &'static str> {
     verify_selection(self, selection)?;
+    self.saved = false;
     // Take out the selected lines
     let mut tail = self.history[self.buffer_i].split_off(selection.1);
     let data = self.history[self.buffer_i].split_off(selection.0.saturating_sub(1));
@@ -309,6 +313,7 @@ impl Buffer for VecBuffer {
   }
   fn paste(&mut self, index: usize) -> Result<usize, &'static str> {
     verify_index(self, index)?;
+    self.saved = false;
     // Cut off the tail in one go, to reduce time complexity
     let mut tmp = self.history[self.buffer_i].split_off(index);
     // Then append copies of all lines in clipboard
@@ -423,16 +428,14 @@ impl Buffer for VecBuffer {
   fn undo(&mut self, steps: isize)
     -> Result<(), &'static str>
   {
-    if !self.undo_range()?.contains(&steps) {
-      Err(INVALID_UNDO_STEPS)
+    if !self.undo_range()?.contains(&steps) { return Err(INVALID_UNDO_STEPS); }
+    self.saved = false;
+    if steps.is_negative() {
+      self.buffer_i += (-steps) as usize;
     } else {
-      if steps.is_negative() {
-        self.buffer_i += (-steps) as usize;
-      } else {
-        self.buffer_i -= steps as usize;
-      }
-      Ok(())
+      self.buffer_i -= steps as usize;
     }
+    Ok(())
   }
 
   fn undo_range(&self)
