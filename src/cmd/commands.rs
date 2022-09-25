@@ -236,7 +236,7 @@ pub(super) fn change<B: Buffer>(
   let initial_input_data: Option<Vec<String>> = if command == 'C' {
     #[cfg(feature = "initial_input_data")]
     {
-      Some(state.buffer.get_selection(sel)?.map(|s| s.to_string()).collect())
+      Some(state.buffer.get_selection(sel)?.map(|s| s.1.to_string()).collect())
     }
     #[cfg(not(feature = "initial_input_data"))]
     {
