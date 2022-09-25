@@ -165,7 +165,7 @@ pub fn api_validation(buffer: &mut impl Buffer) {
   {
     let lorem = vec![
       "Verå et quia ad repellendus. Voluptas debitis id consequatur doloremque sed suscipit et tempora. Odit sed est hic non error. Sint itaque et ut alias voluptatem sit. Et sunt totam amet doloribus unde nam velit voluptatem. Odit nisi ut eius et temporibus et.\n",
-      "Enim asperiores sit aut et fugit omnis. Quos tenetur cupiditate velit excepturi est autem dolor. Est earum quidem dolorem. Adipisci earum vero ab enim. Qui rerum sit illum esse deserunt.\n",
+      "Enim asperiores sit åt et fugit omnis. Quos tenetur cupiditate velit excepturi est autem dolor. Est earum quidem dolorem. Adipisci earum vero ab enim. Qui rerum sit illum esse deserunt.\n",
       "Eos voluptatem vel corrupti reprehenderit. Voluptas quisquam fuga esse tenetur nesciunt sit corrupti. Odio corporis rerum est sed. Dicta ipsam modi minus voluptas.\n"
     ];
     buffer.change(&mut lorem.clone().into_iter(), (1,buffer.len())).unwrap();
@@ -183,7 +183,7 @@ pub fn api_validation(buffer: &mut impl Buffer) {
     assert_eq!(
       output, vec![
         "Verå et quia ad repellendus. Voluptas debitis id consequatur doloremque sed suscipit et tempora. Odit sed est hic non error. Sint itaque et ut alias voluptatem sit. Et sunt totam amet doloribus unde nam velit voluptatem. Odit nisi ut eius et temporibus et.\n",
-        "Enim asperiores sit aut et fugit omnis. Quos tenetur\n",
+        "Enim asperiores sit åt et fugit omnis. Quos tenetur\n",
         "cupiditate velit excepturi est autem dolor. Est earum\n",
         "quidem dolorem. Adipisci earum vero ab enim. Qui rerum\n",
         "sit illum esse deserunt. Eos voluptatem vel corrupti\n",

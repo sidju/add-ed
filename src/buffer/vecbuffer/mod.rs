@@ -273,27 +273,23 @@ impl Buffer for VecBuffer {
     joined.pop();
     // Then replace space nearest before selected width with newline
     let mut w = 0; // character width of current line
-    let mut ch_w = 0; // byte width of current character
     let mut latest_space = None;
     for i in 0 .. joined.len() {
       // If not a character boundary we skip this loop
-      if !joined.is_char_boundary(i) {
-        ch_w += 1;
-        continue;
-      }
+      if !joined.is_char_boundary(i) { continue; }
       w += 1;
-      if &joined[i - ch_w..=i] == " " {
+      if &joined[i..].chars().next().unwrap() == &' ' {
         latest_space = Some(i);
       }
       if w > width {
         if let Some(s) = latest_space {
           // Split of line by replacing latest space with newline
+          // Only safe because we know it is a space
           joined.replace_range(s..=s, "\n");
           w = i - s;
           latest_space = None;
         }
       }
-      ch_w = 0; // Since we read the character this loop, reset for next
     }
     // Finally we split into different strings on newlines and add to buffer
     for line in joined.lines() {
