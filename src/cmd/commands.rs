@@ -311,6 +311,8 @@ pub(super) fn substitute<B: Buffer>(
   tail: &str,
 ) -> Result<(), &'static str> {
   let selection = interpret_selection(selection, state.selection, state.buffer)?;
+  // Clip newline from tail if any
+  let tail = tail.trim_end_matches('\n');
   // switch based on if tail was given or not
   if tail.is_empty() {
     // This means we use the arguments stored in state.s_args
