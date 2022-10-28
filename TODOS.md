@@ -7,6 +7,8 @@
 - Support % as whole buffer? (redundant with ',')
 - Have some variant of a ed.hup file
   (try to write buffer to it before panicking)
+- 'j' should put the replaced lines in the clipboard
+  (look over clipboard interactions in ed docs)
 
 # vim examples with !:
 
