@@ -2,6 +2,8 @@
 // If this approach doesn't work for you, create an issue. I have some ideas for
 // solutions that I could put behind a feature if I get some API design help.
 
+use std::process::Child;
+
 pub struct LocalIO {
 }
 impl LocalIO {

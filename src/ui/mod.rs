@@ -4,6 +4,9 @@
 
 use super::EdState;
 
+mod lock;
+pub use lock::UILock;
+
 mod dummy_ui;
 pub use dummy_ui::DummyUI;
 
@@ -47,4 +50,15 @@ pub trait UI {
     numbered: bool,
     literal: bool,
   ) -> Result<(), &'static str>;
+
+  /// Prepare UI before handing down stdin/out/err to child process
+  ///
+  /// The returned UIHandle should hold a mutable reference to its parent UI.
+  /// Using that reference the UIHandle calls unlock_ui() when being dropped.
+  fn lock_ui(&mut self) -> UILock<'_>;
+
+  /// Resume UI after lock_ui has been called
+  ///
+  /// This method shouldn't be called except by UIHandle's Drop implementation.
+  fn unlock_ui(&mut self);
 }

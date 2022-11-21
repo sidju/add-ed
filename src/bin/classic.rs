@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use add_ed::EdState;
-use add_ed::ui::UI;
+use add_ed::ui::{UI, UILock};
 use add_ed::error_consts::*;
 
 /// A simple UI based on the original ED editor
@@ -79,6 +79,11 @@ impl UI for ClassicUI {
     }
     Ok(())
   }
+  // Requires no additional code for locking and unlocking
+  fn lock_ui(&mut self) -> UILock<'_> {
+    UILock::new(self)
+  }
+  fn unlock_ui(&mut self) {}
 }
 
 fn main() {

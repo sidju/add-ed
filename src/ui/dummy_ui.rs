@@ -2,7 +2,7 @@
 //! The entire script is put into a vector of strings and treated as input.
 //! It optionally takes a mutable UI reference, to support printing when the script requests it.
 
-use super::UI;
+use super::{UI, UILock};
 use super::EdState;
 
 use std::collections::VecDeque;
@@ -76,4 +76,9 @@ impl <'a> UI for DummyUI<'a> {
       None => Ok(()),
     }
   }
+  // Locking and unlocking require no additional actions
+  fn lock_ui(&mut self) -> UILock<'_> {
+    UILock::new(self)
+  }
+  fn unlock_ui(&mut self) {}
 }

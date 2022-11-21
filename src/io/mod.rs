@@ -34,6 +34,7 @@ pub trait IO {
   /// Run a write command, receiving part of buffer via stdin
   ///
   /// Stdout and Stderr should be passed through to UI
+  /// Returns number of bytes written
   fn run_write_command(
     /// UI handle. Created by setting up the UI for passing through std-in/-err
     /// to child process.
@@ -42,7 +43,7 @@ pub trait IO {
     command: String,
     /// Iterator over string slices to send over stdin
     input: impl Iterator<Item = &str>,
-  ) -> Result<(), &'static str>;
+  ) -> Result<usize, &'static str>;
 
   /// Run a transform command, taking part of buffer via stdin and returning it
   /// via stdout.
@@ -59,6 +60,7 @@ pub trait IO {
   ) -> Result<String, &'static str>;
 
   /// Normal file write
+  /// Returns number of bytes written
   fn write_file(
     /// Path to file as give by user. Not checked beyond shell escape parsing
     path: &str,
@@ -66,7 +68,7 @@ pub trait IO {
     data: impl Iterator<Item = &str>,
     /// If appending
     append: bool,
-  ) -> Result<(), &'static str>;
+  ) -> Result<usize, &'static str>;
 
   /// Normal file read
   fn read_file(
