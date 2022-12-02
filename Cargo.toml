@@ -18,8 +18,9 @@ include = [
 
 [features]
 vecbuffer = ["regex"]
+local_io = []
 initial_input_data = []
-default = ["vecbuffer"]
+default = ["vecbuffer", "local_io"]
 
 [dependencies]
 regex = { version = "1", optional = true }

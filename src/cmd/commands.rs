@@ -2,8 +2,8 @@
 
 use super::*;
 
-pub(super) fn filename<B: Buffer>(
-  state: &mut Ed<'_, B>,
+pub(super) fn filename<B: Buffer, I: IO>(
+  state: &mut Ed<'_, B, I>,
   ui: &mut dyn UI,
   path: &str,
 ) -> Result<(), &'static str> {
@@ -21,8 +21,8 @@ pub(super) fn filename<B: Buffer>(
   Ok(())
 }
 
-pub(super) fn read_from_file<B: Buffer>(
-  state: &mut Ed<'_, B>,
+pub(super) fn read_from_file<B: Buffer, I: IO>(
+  state: &mut Ed<'_, B, I>,
   selection: Option<Sel<'_>>,
   command: char,
   path: &str,
@@ -53,8 +53,8 @@ pub(super) fn read_from_file<B: Buffer>(
     Ok(())
   }
 }
-pub(super) fn write_to_file<B: Buffer>(
-  state: &mut Ed<'_, B>,
+pub(super) fn write_to_file<B: Buffer, I: IO>(
+  state: &mut Ed<'_, B, I>,
   selection: Option<Sel<'_>>,
   command: char,
   path: &str,
@@ -102,8 +102,8 @@ pub(super) fn write_to_file<B: Buffer>(
   Ok(q)
 }
 
-pub(super) fn scroll<B: Buffer>(
-  state: &mut Ed<'_, B>,
+pub(super) fn scroll<B: Buffer, I: IO>(
+  state: &mut Ed<'_, B, I>,
   pflags: &mut PrintingFlags,
   selection: Option<Sel<'_>>,
   command: char,
@@ -148,8 +148,8 @@ pub(super) fn scroll<B: Buffer>(
   Ok(())
 }
 
-pub(super) fn input<B: Buffer>(
-  state: &mut Ed<'_, B>,
+pub(super) fn input<B: Buffer, I: IO>(
+  state: &mut Ed<'_, B, I>,
   ui: &mut dyn UI,
   pflags: &mut PrintingFlags,
   selection: Option<Sel<'_>>,
@@ -219,8 +219,8 @@ pub(super) fn input<B: Buffer>(
   Ok(())
 }
 
-pub(super) fn change<B: Buffer>(
-  state: &mut Ed<'_, B>,
+pub(super) fn change<B: Buffer, I: IO>(
+  state: &mut Ed<'_, B, I>,
   ui: &mut dyn UI,
   pflags: &mut PrintingFlags,
   selection: Option<Sel<'_>>,
@@ -267,8 +267,8 @@ pub(super) fn change<B: Buffer>(
   Ok(())
 }
 
-pub(super) fn transfer<B: Buffer>(
-  state: &mut Ed<'_, B>,
+pub(super) fn transfer<B: Buffer, I: IO>(
+  state: &mut Ed<'_, B, I>,
   pflags: &mut PrintingFlags,
   selection: Option<Sel<'_>>,
   command: char,
@@ -304,8 +304,8 @@ pub(super) fn transfer<B: Buffer>(
   Ok(())
 }
 
-pub(super) fn substitute<B: Buffer>(
-  state: &mut Ed<'_, B>,
+pub(super) fn substitute<B: Buffer, I: IO>(
+  state: &mut Ed<'_, B, I>,
   pflags: &mut PrintingFlags,
   selection: Option<Sel<'_>>,
   tail: &str,
@@ -358,8 +358,8 @@ pub(super) fn substitute<B: Buffer>(
   Ok(())
 }
 
-pub(super) fn global<B: Buffer>(
-  state: &mut Ed<'_, B>,
+pub(super) fn global<B: Buffer, I: IO>(
+  state: &mut Ed<'_, B, I>,
   ui: &mut dyn UI,
   selection: Option<Sel<'_>>,
   command: char,
@@ -404,8 +404,8 @@ pub(super) fn global<B: Buffer>(
   Ok(())
 }
 
-pub(super) fn global_inv<B: Buffer>(
-  state: &mut Ed<'_, B>,
+pub(super) fn global_inv<B: Buffer, I: IO>(
+  state: &mut Ed<'_, B, I>,
   ui: &mut dyn UI,
   selection: Option<Sel<'_>>,
   command: char,

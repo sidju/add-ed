@@ -1,5 +1,6 @@
 use crate::{Ed, Substitution};
 use crate::buffer::{Buffer, verify_selection, verify_index, verify_line};
+use crate::io::IO;
 use crate::ui::{UI, DummyUI};
 use crate::error_consts::*;
 
@@ -34,7 +35,7 @@ struct PrintingFlags {
 ///   index doesn't exist...
 /// * Forbid input you don't handle. This should prevent accidentally force
 ///   exiting with ',Q file.txt' because you pressed 'Q' instead of 'W'.
-pub fn run<B: Buffer>(state: &mut Ed<'_,B>, ui: &mut dyn UI, command: &str)
+pub fn run<B: Buffer, I: IO>(state: &mut Ed<'_,B,I>, ui: &mut dyn UI, command: &str)
   -> Result<bool, &'static str>
 {
   // Declare flags for printing after the command has been executed.

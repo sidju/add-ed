@@ -3,6 +3,7 @@
 use add_ed::{
   EdState,
   ui::UI,
+  ui::UILock,
 };
 
 pub struct Print {
@@ -67,4 +68,9 @@ impl UI for AggregatorUI {
   ) -> Result<Vec<String>, &'static str> {
     panic!("get_input not implemented on aggregator ui")
   }
+
+  fn lock_ui(&mut self) -> UILock<'_> {
+    UILock::new(self)
+  }
+  fn unlock_ui(&mut self){}
 }

@@ -17,9 +17,11 @@ mod cmd;
 
 pub mod ui;
 pub mod buffer;
+pub mod io;
 
-use ui::UI;
+use ui::{UI, UILock};
 use buffer::Buffer;
+use io::IO;
 
 /// A small reference struct that gives insight into the editor's state
 pub struct EdState<'a> {
@@ -39,7 +41,7 @@ struct Substitution {
 }
 
 /// The state variable used by the editor to track its internal state
-pub struct Ed <'a, B: Buffer> {
+pub struct Ed <'a, B: Buffer, I: IO> {
   // Track the currently selected lines in the buffer
   // This is usually separate from viewed lines in the UI
   selection: (usize, usize),
@@ -48,6 +50,9 @@ pub struct Ed <'a, B: Buffer> {
   buffer: &'a mut B,
   // The path to the currently selected file
   path: String,
+  // A mutable reference to an IO implementor
+  // It will handle file interactions and command execution
+  io: &'a mut I,
   // The previous search_replace's arguments, to support repeating the last
   prev_s: Option<Substitution>,
   // Flag to prevent auto-creating undo-points when running macros or the like
@@ -67,7 +72,7 @@ pub struct Ed <'a, B: Buffer> {
   error: Option<&'static str>,
 }
 
-impl <'a, B: Buffer> Ed <'a, B> {
+impl <'a, B: Buffer, I: IO> Ed <'a, B, I> {
   /// Construct a new instance of Ed
   ///
   /// * An empty file string is recommended if no filepath is opened
@@ -77,6 +82,7 @@ impl <'a, B: Buffer> Ed <'a, B> {
   ///   an example is "a\n\n.\n" which appends an empty line
   pub fn new(
     buffer: &'a mut B,
+    io: &'a mut I,
     path: String,
     macros: HashMap<String, String>,
     n: bool,
@@ -96,6 +102,7 @@ impl <'a, B: Buffer> Ed <'a, B> {
       dont_snapshot: false,
       // And the given values
       buffer,
+      io,
       path,
       n,
       l,
