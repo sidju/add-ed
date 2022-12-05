@@ -13,8 +13,12 @@ use parse_path::*;
 mod parse_flags;
 use parse_flags::*;
 
-mod commands;
-use commands::*;
+mod io_commands;
+use io_commands::*;
+mod editing_commands;
+use editing_commands::*;
+mod regex_commands;
+use regex_commands::*;
 
 #[derive(Default)]
 struct PrintingFlags {
@@ -35,9 +39,11 @@ struct PrintingFlags {
 ///   index doesn't exist...
 /// * Forbid input you don't handle. This should prevent accidentally force
 ///   exiting with ',Q file.txt' because you pressed 'Q' instead of 'W'.
-pub fn run<B: Buffer, I: IO>(state: &mut Ed<'_,B,I>, ui: &mut dyn UI, command: &str)
-  -> Result<bool, &'static str>
-{
+pub fn run<I: IO>(
+  state: &mut Ed<'_,I>,
+  ui: &mut dyn UI,
+  command: &str,
+) -> Result<bool, &'static str> {
   // Declare flags for printing after the command has been executed.
   let mut pflags = PrintingFlags::default();
 
@@ -158,7 +164,7 @@ pub fn run<B: Buffer, I: IO>(state: &mut Ed<'_,B,I>, ui: &mut dyn UI, command: &
           Ok(false)
         }
         'e' | 'E' | 'r' => {
-          read_from_file(state, selection, ch, clean)?;
+          read_from_file(state, ui, selection, ch, clean)?;
           Ok(false)
         },
         'w' | 'W' => {

@@ -223,7 +223,7 @@ pub fn parse_selection<'a>(
 // Should not be able to return a index bigger than buffer.len().
 pub fn interpret_index<'a> (
   index: Ind<'a>,
-  buffer: &impl Buffer,
+  buffer: &Buffer,
   old_selection: usize,
 ) -> Result<usize, &'static str> {
   let ind = match index {
@@ -266,7 +266,7 @@ pub fn interpret_index<'a> (
 pub fn interpret_selection<'a>(
   input: Option<Sel<'a>>,
   old_selection: (usize, usize),
-  buffer: &impl Buffer,
+  buffer: &Buffer,
 ) -> Result<(usize, usize), &'static str> {
   let selection = input.unwrap_or(Sel::Pair( Ind::Selection, Ind::Selection ));
   let interpreted = match selection {

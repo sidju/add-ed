@@ -1,4 +1,6 @@
 # Todos:
+- Consider types in traits.
+  Maybe let UI hand in String for input?
 - Shell interaction. ('!' as usual)
 - Inject context environment variables into shell interaction. File, lines, etc.
 - Expand 'r' and 'w' to allow reading from/writing to stdout/in

@@ -26,7 +26,7 @@ use io::IO;
 /// A small reference struct that gives insight into the editor's state
 pub struct EdState<'a> {
   pub selection: (usize, usize),
-  pub buffer: &'a dyn Buffer,
+  pub buffer: &'a Buffer,
   pub path: &'a str,
 }
 
@@ -41,13 +41,13 @@ struct Substitution {
 }
 
 /// The state variable used by the editor to track its internal state
-pub struct Ed <'a, B: Buffer, I: IO> {
+pub struct Ed <'a, I: IO> {
   // Track the currently selected lines in the buffer
   // This is usually separate from viewed lines in the UI
   selection: (usize, usize),
   // A mutable reference to a Buffer implementor
   // The buffer implementor will handle most of the operations and store the data
-  buffer: &'a mut B,
+  buffer: &'a mut Buffer,
   // The path to the currently selected file
   path: String,
   // A mutable reference to an IO implementor
@@ -72,25 +72,21 @@ pub struct Ed <'a, B: Buffer, I: IO> {
   error: Option<&'static str>,
 }
 
-impl <'a, B: Buffer, I: IO> Ed <'a, B, I> {
+impl <'a, I: IO> Ed <'a, I> {
   /// Construct a new instance of Ed
   ///
   /// * An empty file string is recommended if no filepath is opened
-  /// * Note that you _can_ initialise the buffer with contents before this, but
-  ///   those contents will be overwritten if a path is given.
+  /// * Note that you can initialise the buffer with contents before this.
   /// * macros behave like scripts given to the 'g' command
   ///   an example is "a\n\n.\n" which appends an empty line
   pub fn new(
-    buffer: &'a mut B,
+    buffer: &'a mut Buffer,
     io: &'a mut I,
     path: String,
     macros: HashMap<String, String>,
     n: bool,
     l: bool,
   ) -> Result<Self, &'static str> {
-    if ! path.is_empty() {
-      buffer.read_from(&path, None, false)?;
-    }
     let selection = (1,0); // Empty, but that is handled in cmd module
     let tmp = Self {
       // Sane defaults for initial settings

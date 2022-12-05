@@ -90,7 +90,7 @@ fn main() {
   // Here one should add command line argument parsing, to get the filename
   let path = "".to_string();
   let mut ui = ClassicUI{};
-  let mut buffer = add_ed::buffer::VecBuffer::new();
+  let mut buffer = add_ed::buffer::Buffer::new();
   let mut io = add_ed::io::LocalIO::new();
   // Read in the file given and instantiate the editor
   let mut ed = add_ed::Ed::new(&mut buffer, &mut io, path, HashMap::new(), false, false)
