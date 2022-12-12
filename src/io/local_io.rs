@@ -2,11 +2,27 @@
 // If this approach doesn't work for you, create an issue. I have some ideas for
 // solutions that I could put behind a feature if I get some API design help.
 
-use std::process::Child;
+use std::process::{
+  Command,
+  Stdio,
+};
 use crate::IO;
 use crate::UILock;
 use crate::error_consts::*;
 
+fn spawn_transfer<'a, O>(
+  i: Vec<String>,
+  mut o: O,
+) -> std::thread::JoinHandle<()> where
+  O: std::io::Write + std::marker::Send + 'static,
+{
+  std::thread::spawn(move || {
+    use std::io::{Read, Write, copy};
+    for line in i {
+      o.write_all(line.as_bytes()).expect("Pipe forwarding failed.");
+    }
+  })
+}
 pub struct LocalIO {
 }
 impl LocalIO {
@@ -41,7 +57,17 @@ impl IO for LocalIO {
     _ui: &mut UILock,
     command: String,
   ) -> Result<(), &'static str> {
-    todo!()
+    let shell = std::env::var("SHELL").unwrap_or("sh".to_owned());
+    // Create and run child process, passing through all io
+    let _child_result = Command::new(shell)
+      .arg("-c")
+      .arg(command)
+      .spawn() // When spawn io defaults to inherited
+      .map_err(|_| "Failed to spawn child process.")?
+      .wait()
+      .map_err(|_| "Child process failed to start.")?
+    ;
+    Ok(())
   }
 
   fn run_read_command(&mut self,
@@ -64,7 +90,30 @@ impl IO for LocalIO {
     command: String,
     input: impl Iterator<Item = &'a str>,
   ) -> Result<String, &'static str> {
-    todo!()
+    let shell = std::env::var("SHELL").unwrap_or("sh".to_owned());
+    // Create child process
+    let mut child = Command::new(shell)
+      .arg("-c")
+      .arg(command)
+      .stdin(Stdio::piped())
+      .stdout(Stdio::piped())
+      .spawn()
+      .map_err(|_| CHILD_CREATION_FAILED)?
+    ;
+    let input_vec: Vec<String> = input.map(|s| s.to_owned()).collect();
+    let i = spawn_transfer(
+      input_vec,
+      child.stdin.take().unwrap(),
+    );
+    // Blocks until child has finished running
+    let res = child.wait_with_output()
+      .map_err(|_| CHILD_FAILED_TO_START)?
+    ;
+    if !(res.status.success()) {
+      return Err(CHILD_EXIT_ERROR)
+    }
+    let output = String::from_utf8_lossy(&res.stdout).into_owned();
+    Ok(output)
   }
 
   fn write_file<'a>(&mut self,

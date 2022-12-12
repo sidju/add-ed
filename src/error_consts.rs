@@ -153,6 +153,9 @@ pub const INVALID_UNDO_STEPS: &str = "Cannot undo/redo beyond existing command h
 pub const PERMISSION_DENIED: &str = "Could not open file. Permission denied.";
 pub const NOT_FOUND: &str = "Could not open file. Not found or invalid path.";
 pub const UNKNOWN: &str = "Unknown error while reading file.";
+pub const CHILD_CREATION_FAILED: &str = "Failed to create child process.";
+pub const CHILD_FAILED_TO_START: &str = "Child process failed to start.";
+pub const CHILD_EXIT_ERROR: &str = "Child process returned error after running.";
 
 // UI errors
 pub const NO_INPUT: &str = "Failed to get input."; // Probably only used by DummyUI, which has limited input.
