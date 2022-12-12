@@ -1,17 +1,18 @@
 use add_ed::{
-  buffer::{
-    VecBuffer,
-    Buffer,
-  },
+  buffer::Buffer,
   ui::DummyUI,
   Ed,
 };
 use std::collections::HashMap;
 
+mod dummy_io;
+use dummy_io::DummyIO;
+
 #[test]
 fn comment_selection() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
 
   {
     let mut ui = DummyUI{
@@ -28,7 +29,7 @@ fn comment_selection() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -46,7 +47,7 @@ fn comment_selection() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     let res = ed.run_macro(&mut ui);
@@ -60,7 +61,8 @@ fn comment_selection() {
 #[test]
 fn printsel_selection() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
 
   {
     let mut ui = DummyUI{
@@ -77,7 +79,7 @@ fn printsel_selection() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -95,7 +97,7 @@ fn printsel_selection() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -113,7 +115,8 @@ fn printsel_selection() {
 #[test]
 fn tag_line() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
 
   {
     let mut ui = DummyUI{
@@ -130,7 +133,7 @@ fn tag_line() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -152,7 +155,7 @@ fn tag_line() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");

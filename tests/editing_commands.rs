@@ -1,12 +1,12 @@
 use add_ed::{
-  buffer::{
-    VecBuffer,
-    Buffer,
-  },
+  buffer::Buffer,
   ui::DummyUI,
   Ed,
 };
 use std::collections::HashMap;
+
+mod dummy_io;
+use dummy_io::DummyIO;
 
 /// Application, file and print commands not tested here. Manual testing adviced.
 
@@ -15,7 +15,8 @@ use std::collections::HashMap;
 #[test]
 fn insert() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
 
   {
     let mut ui = DummyUI{
@@ -32,7 +33,7 @@ fn insert() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -57,7 +58,7 @@ fn insert() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -77,7 +78,8 @@ fn insert() {
 #[test]
 fn change_and_paste() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
 
   {
     let mut ui = DummyUI{
@@ -94,7 +96,7 @@ fn change_and_paste() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -114,7 +116,7 @@ fn change_and_paste() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -145,7 +147,8 @@ fn change_and_paste() {
 #[test]
 fn delete_and_paste() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
 
   {
     let mut ui = DummyUI{
@@ -162,7 +165,7 @@ fn delete_and_paste() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -180,7 +183,7 @@ fn delete_and_paste() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -211,7 +214,8 @@ fn delete_and_paste() {
 #[test]
 fn copy_and_paste() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
 
   {
     let mut ui = DummyUI{
@@ -228,7 +232,7 @@ fn copy_and_paste() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -246,7 +250,7 @@ fn copy_and_paste() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -277,7 +281,8 @@ fn copy_and_paste() {
 #[test]
 fn mov_copy() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
 
   {
     let mut ui = DummyUI{
@@ -294,7 +299,7 @@ fn mov_copy() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -312,7 +317,7 @@ fn mov_copy() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -330,7 +335,7 @@ fn mov_copy() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -349,7 +354,8 @@ fn mov_copy() {
 #[test]
 fn mov() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
 
   {
     let mut ui = DummyUI{
@@ -366,7 +372,7 @@ fn mov() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -384,7 +390,7 @@ fn mov() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -407,7 +413,7 @@ fn mov() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -427,7 +433,8 @@ fn mov() {
 #[test]
 fn insert_inline() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
 
   {
     let mut ui = DummyUI{
@@ -444,7 +451,7 @@ fn insert_inline() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -464,7 +471,7 @@ fn insert_inline() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -484,7 +491,8 @@ fn insert_inline() {
 #[test]
 fn append_inline() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
 
   {
     let mut ui = DummyUI{
@@ -501,7 +509,7 @@ fn append_inline() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -521,7 +529,7 @@ fn append_inline() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");

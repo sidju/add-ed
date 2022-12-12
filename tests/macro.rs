@@ -1,17 +1,18 @@
 use add_ed::{
-  buffer::{
-    VecBuffer,
-    Buffer,
-  },
+  buffer::Buffer,
   ui::DummyUI,
   Ed,
 };
 use std::collections::HashMap;
 
+mod dummy_io;
+use dummy_io::DummyIO;
+
 #[test]
 fn test_name() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
 
   {
     let mut ui = DummyUI{
@@ -28,7 +29,7 @@ fn test_name() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -48,7 +49,7 @@ fn test_name() {
     };
     let mut macros = HashMap::new();
     macros.insert("test".to_string(), "i\na\n.".to_string());
-    let mut ed = Ed::new(&mut buffer, "".to_string(),macros,false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),macros,false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");

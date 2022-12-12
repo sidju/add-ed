@@ -1,19 +1,20 @@
 use add_ed::{
-  buffer::{
-    VecBuffer,
-    Buffer,
-  },
+  buffer::Buffer,
   ui::DummyUI,
   Ed,
 };
 use std::collections::HashMap;
+
+mod dummy_io;
+use dummy_io::DummyIO;
 
 /// Application, file and print commands not tested here. Manual testing adviced.
 
 #[test]
 fn regex_find_line() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
 
   {
     let mut ui = DummyUI{
@@ -30,7 +31,7 @@ fn regex_find_line() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -48,7 +49,7 @@ fn regex_find_line() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -67,7 +68,8 @@ fn regex_find_line() {
 #[test]
 fn regex_rfind_line() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
 
   {
     let mut ui = DummyUI{
@@ -84,7 +86,7 @@ fn regex_rfind_line() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -105,7 +107,7 @@ fn regex_rfind_line() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -124,7 +126,8 @@ fn regex_rfind_line() {
 #[test]
 fn regex_removing_line() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
 
   {
     let mut ui = DummyUI{
@@ -141,7 +144,7 @@ fn regex_removing_line() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -159,7 +162,7 @@ fn regex_removing_line() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -178,7 +181,8 @@ fn regex_removing_line() {
 #[test]
 fn multiline_regex_removing_lines() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
 
   {
     let mut ui = DummyUI{
@@ -195,7 +199,7 @@ fn multiline_regex_removing_lines() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -213,7 +217,7 @@ fn multiline_regex_removing_lines() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -232,7 +236,8 @@ fn multiline_regex_removing_lines() {
 #[test]
 fn regex_substitute_no_match() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
 
   {
     let mut ui = DummyUI{
@@ -249,7 +254,7 @@ fn regex_substitute_no_match() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -267,7 +272,7 @@ fn regex_substitute_no_match() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     let res = ed.run_macro(&mut ui);
@@ -287,7 +292,8 @@ fn regex_substitute_no_match() {
 #[test]
 fn regex_substitute_no_args() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
 
   {
     let mut ui = DummyUI{
@@ -304,7 +310,7 @@ fn regex_substitute_no_args() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -323,7 +329,7 @@ fn regex_substitute_no_args() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui)

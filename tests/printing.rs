@@ -1,12 +1,12 @@
 use add_ed::{
-  buffer::{
-    VecBuffer,
-    Buffer,
-  },
+  buffer::Buffer,
   ui::DummyUI,
   Ed,
 };
 use std::collections::HashMap;
+
+mod dummy_io;
+use dummy_io::DummyIO;
 
 mod aggregator_ui;
 use aggregator_ui::AggregatorUI;
@@ -14,7 +14,8 @@ use aggregator_ui::AggregatorUI;
 #[test]
 fn print() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
   let mut aggregator = AggregatorUI{ prints_history: Vec::new() };
 
   {
@@ -32,7 +33,7 @@ fn print() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -50,7 +51,7 @@ fn print() {
       ].into(),
       print_ui: Some(&mut aggregator),
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -76,7 +77,8 @@ fn print() {
 #[test]
 fn printing_flags() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
   let mut aggregator = AggregatorUI{ prints_history: Vec::new() };
 
   {
@@ -94,7 +96,7 @@ fn printing_flags() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -114,7 +116,7 @@ fn printing_flags() {
       ].into(),
       print_ui: Some(&mut aggregator),
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
@@ -164,7 +166,8 @@ fn printing_flags() {
 #[test]
 fn change_printing_defaults() {
   // Create the testing editor
-  let mut buffer = VecBuffer::new();
+  let mut io = DummyIO::new();
+  let mut buffer = Buffer::new();
   let mut aggregator = AggregatorUI{ prints_history: Vec::new() };
 
   {
@@ -182,7 +185,7 @@ fn change_printing_defaults() {
       ].into(),
       print_ui: None,
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
@@ -205,7 +208,7 @@ fn change_printing_defaults() {
       ].into(),
       print_ui: Some(&mut aggregator),
     };
-    let mut ed = Ed::new(&mut buffer, "".to_string(),HashMap::new(),false,false)
+    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
       .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");

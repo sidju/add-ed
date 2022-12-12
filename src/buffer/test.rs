@@ -1,10 +1,16 @@
 use super::Buffer;
 
+#[test]
+fn validate() {
+  let mut buf = Buffer::new();
+  api_validation(&mut buf);
+}
+
 /// Big test function to validate Buffer behaviour
 /// Does not test file interactions or saved tracking.
 ///
 /// Takes an empty Buffer instance, returns it empty.
-pub fn api_validation(buffer: &mut impl Buffer) {
+pub fn api_validation(buffer: &mut Buffer) {
   // Verify that the buffer is empty / len works
   assert_eq!(buffer.len(), 0,
     ".len didn't return 0 at start of api test. Please provide empty buffer instance."
@@ -23,7 +29,7 @@ pub fn api_validation(buffer: &mut impl Buffer) {
     "8\n",
     "9\n"
   ];
-  buffer.insert(&mut data.clone().into_iter(), 0).unwrap();
+  buffer.insert(data.clone(), 0).unwrap();
   let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect();
   assert_eq!(output, data,
     ".get_selection((1,buffer.len())) didn't return the data we put in."
@@ -82,7 +88,7 @@ pub fn api_validation(buffer: &mut impl Buffer) {
   );
 
   // Test change as a way to cleanup
-  buffer.change(&mut vec!["3\n","4\n","5\n","6\n"].into_iter(), (3,3)).unwrap();
+  buffer.change(vec!["3\n","4\n","5\n","6\n"], (3,3)).unwrap();
   // Verify the cleanup by checking the full buffer contents
   let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect();
   assert_eq!(output, data,
@@ -168,7 +174,7 @@ pub fn api_validation(buffer: &mut impl Buffer) {
       "Enim asperiores sit åt et fugit omnis. Quos tenetur cupiditate velit excepturi est autem dolor. Est earum quidem dolorem. Adipisci earum vero ab enim. Qui rerum sit illum esse deserunt.\n",
       "Eos voluptatem vel corrupti reprehenderit. Voluptas quisquam fuga esse tenetur nesciunt sit corrupti. Odio corporis rerum est sed. Dicta ipsam modi minus voluptas.\n"
     ];
-    buffer.change(&mut lorem.clone().into_iter(), (1,buffer.len())).unwrap();
+    buffer.change(lorem.clone(), (1,buffer.len())).unwrap();
     let output: Vec<&str> = buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect();
     assert_eq!(
       lorem, output,

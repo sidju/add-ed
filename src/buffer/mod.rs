@@ -15,19 +15,6 @@ use std::rc::Rc;
 use super::*;
 use crate::error_consts::*;
 
-#[cfg(test)]
-mod test {
-  // Tests of the trickier cases
-  use super::*;
-  
-  // Use general api test to test most functions
-  #[test]
-  fn api_validation() {
-    let mut buf = Buffer::new();
-    super::test::api_validation(&mut buf);
-  }
-}
-
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 struct Line {
   tag: char,
