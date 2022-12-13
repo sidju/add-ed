@@ -12,7 +12,6 @@ mod test;
 use core::iter::Iterator;
 use std::rc::Rc;
 
-use super::*;
 use crate::error_consts::*;
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]

@@ -156,6 +156,7 @@ pub const UNKNOWN: &str = "Unknown error while reading file.";
 pub const CHILD_CREATION_FAILED: &str = "Failed to create child process.";
 pub const CHILD_FAILED_TO_START: &str = "Child process failed to start.";
 pub const CHILD_EXIT_ERROR: &str = "Child process returned error after running.";
+pub const CHILD_PIPING_ERROR: &str = "Error occured when sending data to child thread.";
 
 // UI errors
 pub const NO_INPUT: &str = "Failed to get input."; // Probably only used by DummyUI, which has limited input.

@@ -13,14 +13,15 @@ use crate::error_consts::*;
 fn spawn_transfer<'a, I, O>(
   i: I,
   mut o: O,
-) -> std::thread::JoinHandle<()> where
+) -> std::thread::JoinHandle<usize> where
   I: Iterator<Item = &'a str>,
   O: std::io::Write + std::marker::Send + 'static,
 {
   let aggregated_input = i.fold(String::new(),|mut s, a| {s.push_str(a); s});
   std::thread::spawn(move || {
-    use std::io::{Read, Write, copy};
+    let inputlen = aggregated_input.len();
     o.write_all(aggregated_input.as_bytes()).expect("Pipe forwarding failed.");
+    inputlen
   })
 }
 pub struct LocalIO {
@@ -71,22 +72,62 @@ impl IO for LocalIO {
   }
 
   fn run_read_command(&mut self,
-    ui: &mut UILock,
+    _ui: &mut UILock,
     command: String,
   ) -> Result<String, &'static str> {
-    todo!()
+    let shell = std::env::var("SHELL").unwrap_or("sh".to_owned());
+    // Create child process
+    let child = Command::new(shell)
+      .arg("-c")
+      .arg(command)
+      .stdout(Stdio::piped())
+      .spawn()
+      .map_err(|_| CHILD_CREATION_FAILED)?
+    ;
+    // Blocks until child has finished running
+    let res = child.wait_with_output()
+      .map_err(|_| CHILD_FAILED_TO_START)
+    ?;
+    if !(res.status.success()) {
+      return Err(CHILD_EXIT_ERROR)
+    }
+    let output = String::from_utf8_lossy(&res.stdout).into_owned();
+    Ok(output)
   }
 
   fn run_write_command<'a>(&mut self,
-    ui: &mut UILock,
+    _ui: &mut UILock,
     command: String,
     input: impl Iterator<Item = &'a str>,
   ) -> Result<usize, &'static str> {
-    todo!()
+    let shell = std::env::var("SHELL").unwrap_or("sh".to_owned());
+    // Create child process
+    let mut child = Command::new(shell)
+      .arg("-c")
+      .arg(command)
+      .stdin(Stdio::piped())
+      .spawn()
+      .map_err(|_| CHILD_CREATION_FAILED)?
+    ;
+    let i = spawn_transfer(
+      input,
+      child.stdin.take().unwrap(),
+    );
+    // Blocks until child has finished running
+    let res = child.wait_with_output()
+      .map_err(|_| CHILD_FAILED_TO_START)
+    ;
+    // Wait for the other child thread before triggering early returns with ?
+    let transfer_res = i.join().map_err(|_| CHILD_PIPING_ERROR)?;
+    let res = res?;
+    if !(res.status.success()) {
+      return Err(CHILD_EXIT_ERROR)
+    }
+    Ok(transfer_res)
   }
 
   fn run_transform_command<'a>(&mut self,
-    ui: &mut UILock,
+    _ui: &mut UILock,
     command: String,
     input: impl Iterator<Item = &'a str>,
   ) -> Result<String, &'static str> {
@@ -106,8 +147,11 @@ impl IO for LocalIO {
     );
     // Blocks until child has finished running
     let res = child.wait_with_output()
-      .map_err(|_| CHILD_FAILED_TO_START)?
+      .map_err(|_| CHILD_FAILED_TO_START)
     ;
+    // Wait for the other child thread before triggering early returns with ?
+    let _transfer_res = i.join().map_err(|_| CHILD_PIPING_ERROR)?;
+    let res = res?;
     if !(res.status.success()) {
       return Err(CHILD_EXIT_ERROR)
     }
