@@ -10,17 +10,17 @@ use crate::IO;
 use crate::UILock;
 use crate::error_consts::*;
 
-fn spawn_transfer<'a, O>(
-  i: Vec<String>,
+fn spawn_transfer<'a, I, O>(
+  i: I,
   mut o: O,
 ) -> std::thread::JoinHandle<()> where
+  I: Iterator<Item = &'a str>,
   O: std::io::Write + std::marker::Send + 'static,
 {
+  let aggregated_input = i.fold(String::new(),|mut s, a| {s.push_str(a); s});
   std::thread::spawn(move || {
     use std::io::{Read, Write, copy};
-    for line in i {
-      o.write_all(line.as_bytes()).expect("Pipe forwarding failed.");
-    }
+    o.write_all(aggregated_input.as_bytes()).expect("Pipe forwarding failed.");
   })
 }
 pub struct LocalIO {
@@ -100,9 +100,8 @@ impl IO for LocalIO {
       .spawn()
       .map_err(|_| CHILD_CREATION_FAILED)?
     ;
-    let input_vec: Vec<String> = input.map(|s| s.to_owned()).collect();
     let i = spawn_transfer(
-      input_vec,
+      input,
       child.stdin.take().unwrap(),
     );
     // Blocks until child has finished running
