@@ -128,6 +128,7 @@ pub const SELECTION_FORBIDDEN: &str = "That command doesn't take a selection.";
 pub const UNSAVED_CHANGES: &str = "Unsaved changes. Force with the capitalised version of your command or save with 'w'.";
 pub const NO_ERROR: &str = "No errors recorded.";
 pub const NO_FILE: &str = "No file set.";
+pub const INVALID_FILE: &str = "Invalid filepath, commands can not be saved as default path.";
 
 // Post-command parsing errors
 pub const ESCAPED_LAST_EXPRESSION: &str = "Expression input ended with '\\'.";

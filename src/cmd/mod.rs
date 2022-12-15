@@ -168,7 +168,7 @@ pub fn run<I: IO>(
           Ok(false)
         },
         'w' | 'W' => {
-          write_to_file(state, selection, ch, clean)
+          write_to_file(state, ui, selection, ch, clean)
         },
         // Print commands
         'p' | 'n' | 'l' => {

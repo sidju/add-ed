@@ -3,12 +3,17 @@
   Maybe let UI hand in String for input?
 - Shell interaction. ('!' as usual)
 - Inject context environment variables into shell interaction. File, lines, etc.
-- Expand 'r' and 'w' to allow reading from/writing to stdout/in
+- Expand parse_path to allow escaping exclamation mark at beginning of path?
+  Or maybe just force them to write ./! as an escape for that?
+- Expand parse path to replace % with current state.file?
+  (Or should we leave that to IO impl? Should be required to match Ed.)
 - Add | command for passing selection through shell command?
   Or do that if ! is given a selection, like vim does?
 - Support % as whole buffer? (redundant with ',')
 - Have some variant of a ed.hup file
   (try to write buffer to it before panicking)
+  The consuming application has all the parts to do this themselves; hand out a
+  utility function that does the Buffer -> IO plumbing?
 - 'j' should put the replaced lines in the clipboard
   (look over clipboard interactions in ed docs)
 

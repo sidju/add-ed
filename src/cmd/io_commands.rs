@@ -8,12 +8,15 @@ pub(super) fn filename<I: IO>(
   match parse_path(path) {
     None => { // Print current filename
       ui.print_message(
-        if state.path.is_empty() { NO_FILE }
-        else { &state.path }
+        if state.file.is_empty() { NO_FILE }
+        else { &state.file }
       )?;
     }
     Some(x) => { // Set new filename
-      state.path = x.to_string();
+      match x {
+        Path::Command(_) => return Err(INVALID_FILE),
+        Path::File(file) => { state.file = file.to_owned(); },
+      }
     }
   }
   Ok(())
@@ -42,10 +45,20 @@ pub(super) fn read_from_file<I: IO>(
     Err(UNSAVED_CHANGES)
   }
   else {
-    let path = parse_path(path).unwrap_or(&state.path);
-    let unformated_data = state.io.read_file(path, command == 'E')?;
-    // We are forced to aggregate to know how many lines we are handing in.
-    // Redefining Buffer::insert to return number of lines inserted would fix.
+    let path = parse_path(path).unwrap_or(Path::File(&state.file));
+    let unformated_data = match path {
+      Path::Command(cmd) => {
+        state.io.run_read_command(
+          &mut ui.lock_ui(),
+          cmd.to_owned(),
+        )?
+      },
+      Path::File(file) => {
+        state.io.read_file(file, command == 'E')?
+      },
+    };
+    // We are forced to aggregate to convert into the format insert wants.
+    // This has the bonus of telling us how many lines we are inserting.
     let data: Vec<&str> = (&unformated_data).split_inclusive('\n').collect();
     let datalen = data.len();
     match index {
@@ -56,23 +69,38 @@ pub(super) fn read_from_file<I: IO>(
         state.buffer.change(data, (1, state.buffer.len()))
       },
     }?;
-    state.buffer.set_saved();
-    if command != 'r' {
-      state.path = path.to_string();
-    }
+    // Handle after-effects
     let index = index.unwrap_or(1);
     state.selection = (index, index + datalen - 1);
-    // Print bytes read from what path
-    ui.print_message(&format!(
-      "Read {} bytes from {}",
-      unformated_data.len(),
-      &state.path,
-    ))?;
+    match path {
+      // Considering saved after command is odd, and commands cannot be saved
+      // into state.file, so no after effects except printout
+      Path::Command(cmd) => {
+        ui.print_message(&format!(
+          "Read {} bytes from command `{}`",
+          unformated_data.len(),
+          cmd,
+        ))?;
+      },
+      Path::File(file) => {
+        ui.print_message(&format!(
+          "Read {} bytes from path `{}`",
+          unformated_data.len(),
+          file,
+        ))?;
+        // Should only occur if we cleared buffer or it was empty before read
+        if state.buffer.len() == datalen {
+          state.file = file.to_owned();
+          state.buffer.set_saved();
+        }
+      },
+    }
     Ok(())
   }
 }
 pub(super) fn write_to_file<I: IO>(
   state: &mut Ed<'_, I>,
+  ui: &mut dyn UI,
   selection: Option<Sel<'_>>,
   command: char,
   path: &str,
@@ -96,11 +124,11 @@ pub(super) fn write_to_file<I: IO>(
 
   // If not wq, parse path
   let (q, path) = if path != "q" {
-    (false, parse_path(path).unwrap_or(&state.path))
+    (false, parse_path(path).unwrap_or(Path::File(&state.file)))
   }
   // If wq, use current file path
   else {
-    (true, &state.path[..])
+    (true, (Path::File(&state.file)))
   };
   // If the 'q' flag is set the whole buffer must be selected
   if q && sel.is_some() { return Err(UNSAVED_CHANGES); }
@@ -110,19 +138,40 @@ pub(super) fn write_to_file<I: IO>(
   )?
     .map(|x| x.1)
   ;
-  // Write it into the file (append if 'W')
-  let append = command == 'W';
-  state.io.write_file(
-    path,
-    append,
-    data,
-  )?;
-  // If given path now contains only the whole buffer, update state.file
+  // Write into command or file, print nr of bytes written
+  match path {
+    Path::File(file) => {
+      let append = command == 'W';
+      let written = state.io.write_file(
+        file,
+        append,
+        data,
+      )?;
+      ui.print_message(&format!(
+        "Wrote {} bytes to path `{}`",
+        written,
+        file,
+      ))?;
+      // Since path isn't allowed to be a command, do check in here
+      // If given path now contains only the whole buffer, update state.file
+      if sel.is_none() { state.file = file.to_string(); }
+    },
+    Path::Command(cmd) => {
+      let written = state.io.run_write_command(
+        &mut ui.lock_ui(),
+        cmd.to_owned(),
+        data,
+      )?;
+      ui.print_message(&format!(
+        "Wrote {} bytes to command `{}`",
+        written,
+        cmd,
+      ))?;
+    },
+  }
   // If selection was given, save that selection
   match sel {
-    None => {
-      if !append { state.path = path.to_string(); }
-    },
+    None => (),
     Some(s) => {
       state.selection = (s.0, s.1);
     },

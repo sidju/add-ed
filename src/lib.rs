@@ -27,7 +27,7 @@ use io::IO;
 pub struct EdState<'a> {
   pub selection: (usize, usize),
   pub buffer: &'a Buffer,
-  pub path: &'a str,
+  pub file: &'a str,
 }
 
 /// A ready parsed 's' invocation
@@ -49,7 +49,7 @@ pub struct Ed <'a, I: IO> {
   // The buffer implementor will handle most of the operations and store the data
   buffer: &'a mut Buffer,
   // The path to the currently selected file
-  path: String,
+  file: String,
   // A mutable reference to an IO implementor
   // It will handle file interactions and command execution
   io: &'a mut I,
@@ -82,7 +82,7 @@ impl <'a, I: IO> Ed <'a, I> {
   pub fn new(
     buffer: &'a mut Buffer,
     io: &'a mut I,
-    path: String,
+    file: String,
     macros: HashMap<String, String>,
     n: bool,
     l: bool,
@@ -99,7 +99,7 @@ impl <'a, I: IO> Ed <'a, I> {
       // And the given values
       buffer,
       io,
-      path,
+      file,
       n,
       l,
       macros,
@@ -169,7 +169,7 @@ impl <'a, I: IO> Ed <'a, I> {
   pub fn see_state(&self) -> EdState {
     EdState{
       selection: self.selection,
-      path: &self.path,
+      file: &self.file,
       buffer: self.buffer,
     }
   }
