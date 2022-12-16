@@ -1,17 +1,33 @@
 # Todos:
 - Consider types in traits.
   Maybe let UI hand in String for input?
+- Consider adding 'R' command, as 'r' but inserts before selection.
 - Inject context environment variables into shell interaction. File, lines, etc.
-- Support % as whole buffer? (redundant with ',')
 - Have some variant of a ed.hup file
   (try to write buffer to it before panicking)
   The consuming application has all the parts to do this themselves; hand out a
   utility function that does the Buffer -> IO plumbing?
 - 'j' should put the replaced lines in the clipboard
   (look over clipboard interactions in ed docs)
+- Let command substitutions error if no prev command or no path.
+  (As this will usually result in command execution error, early catch is better)
+- Look over how IO interactions error, print ! after error to show handing back
+  control into add-ed? And consider if 'r' and 'w' should print '!'.
+
+# Testing improvements:
+## Unit tests:
+- buffer_api test should be split out into multiple tests.
+
+## Integration tests:
+- !
+- |
+- w
+- r
+
+## Fuzzing:
+- Set up fuzzing again with mock IO, to prevent creating thousands of files.
 
 # vim examples with !:
-
 - `r !git log` to read in prior commit messages
 - (explicit selection)`!sort` to sort selected lines
 - `.!figlet` to make a line into big ascii art letters

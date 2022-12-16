@@ -32,6 +32,7 @@ pub(super) fn read_from_file<I: IO>(
   let index =
     if command == 'r' {
       let i = interpret_selection(selection, state.selection, state.buffer)?.1;
+      verify_index(state.buffer, i)?;
       Ok(Some(i))
     }
     else if selection.is_none() {
@@ -68,7 +69,7 @@ pub(super) fn read_from_file<I: IO>(
     let data: Vec<&str> = (&unformated_data).split_inclusive('\n').collect();
     let datalen = data.len();
     match index {
-      Some(i) => state.buffer.insert(data, i + 1),
+      Some(i) => state.buffer.insert(data, i),
       None => if state.buffer.len() == 0 {
         state.buffer.insert(data, 0)
       } else {
