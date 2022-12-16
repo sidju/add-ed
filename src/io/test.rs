@@ -112,7 +112,7 @@ fn test_file_io() {
   let res = io.read_file(path, true);
   assert!(
     res.is_err(),
-    "Read file should return an error if must_exist is true and file not found",
+    "Read file should return an error if must_exist is true and file not found.",
   );
 }
 
@@ -130,7 +130,17 @@ fn test_command_io() {
   assert_eq!(
     &data,
     "hurr\ndurr\n",
-    "Command running did not have expected effect"
+    "Command running did not have expected effect."
+  );
+  // Verify that failed execution gives an error
+  let res = io.run_command(
+    &mut mock_ui_lock,
+    "false".to_owned(),
+  );
+  assert_eq!(
+    res,
+    Err(crate::error_consts::CHILD_EXIT_ERROR),
+    "No error returned when child process failed to run."
   );
   // Cleanup
   std::fs::remove_file("io_command_test_file").unwrap();
@@ -142,7 +152,7 @@ fn test_command_io() {
   assert_eq!(
     &data,
     "hurr\ndurr\n",
-    "Reading from a command did not return the expected output"
+    "Reading from a command did not return the expected output."
   );
   // Test writing to command
   let input = "hurr\ndurr\ndunn\n";
@@ -173,6 +183,6 @@ fn test_command_io() {
   assert_eq!(
     &output,
     "0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n",
-    "Transform command running did not have expected effect"
+    "Transform command running did not have expected effect."
   );
 } 

@@ -48,9 +48,15 @@ pub(super) fn read_from_file<I: IO>(
     let path = parse_path(path).unwrap_or(Path::File(&state.file));
     let unformated_data = match path {
       Path::Command(cmd) => {
+        let (changed, substituted) = command_substitutions(
+          cmd,
+          &state.file,
+          &state.prev_shell_command,
+        );
+        if changed {ui.print_message( &substituted )?;}
         state.io.run_read_command(
           &mut ui.lock_ui(),
-          cmd.to_owned(),
+          substituted,
         )?
       },
       Path::File(file) => {
@@ -74,12 +80,17 @@ pub(super) fn read_from_file<I: IO>(
     state.selection = (index, index + datalen - 1);
     match path {
       // Considering saved after command is odd, and commands cannot be saved
-      // into state.file, so no after effects except printout
+      // into state.file, only aftereffect is state.prev_shell_command
       Path::Command(cmd) => {
+        state.prev_shell_command = command_substitutions(
+          cmd,
+          &state.file,
+          &state.prev_shell_command,
+        ).1;
         ui.print_message(&format!(
           "Read {} bytes from command `{}`",
           unformated_data.len(),
-          cmd,
+          &state.prev_shell_command,
         ))?;
       },
       Path::File(file) => {
@@ -157,15 +168,22 @@ pub(super) fn write_to_file<I: IO>(
       if sel.is_none() { state.file = file.to_string(); }
     },
     Path::Command(cmd) => {
+      let (changed, substituted) = command_substitutions(
+        cmd,
+        &state.file,
+        &state.prev_shell_command,
+      );
+      if changed {ui.print_message( &substituted )?;}
       let written = state.io.run_write_command(
         &mut ui.lock_ui(),
-        cmd.to_owned(),
+        substituted.clone(),
         data,
       )?;
+      state.prev_shell_command = substituted;
       ui.print_message(&format!(
         "Wrote {} bytes to command `{}`",
         written,
-        cmd,
+        &state.prev_shell_command,
       ))?;
     },
   }
@@ -193,13 +211,19 @@ pub fn run_command<I: IO>(
   else {
     Some(interpret_selection(selection, state.selection, state.buffer)?)
   };
+  let (changed, substituted) = command_substitutions(
+    command,
+    &state.file,
+    &state.prev_shell_command,
+  );
+  if changed {ui.print_message( &substituted )?;}
   // Depending on selection or not we use run_filter_command or run_command
   match sel {
     // When there is no selection we just run the command, no buffer interaction
     None => {
       state.io.run_command(
         &mut ui.lock_ui(),
-        command.to_owned(),
+        substituted,
       )?;
       ui.print_message("!")?;
     },
@@ -209,7 +233,7 @@ pub fn run_command<I: IO>(
       let data = state.buffer.get_selection(s)?.map(|x| x.1);
       let transformed = state.io.run_transform_command(
         &mut ui.lock_ui(),
-        command.to_owned(),
+        substituted.clone(),
         data,
       )?;
       let lines: Vec<&str> = (&transformed).split_inclusive('\n').collect();
@@ -222,10 +246,11 @@ pub fn run_command<I: IO>(
       else {
         (1.max(s.0 - 1), s.0 - 1)
       };
+      state.prev_shell_command = substituted;
       ui.print_message(&format!(
         "Transformation returned {} bytes through command `{}`",
         transformed.len(),
-        command,
+        &state.prev_shell_command,
       ))?;
     },
   }

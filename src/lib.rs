@@ -50,6 +50,7 @@ pub struct Ed <'a, I: IO> {
   buffer: &'a mut Buffer,
   // The path to the currently selected file
   file: String,
+  prev_shell_command: String,
   // A mutable reference to an IO implementor
   // It will handle file interactions and command execution
   io: &'a mut I,
@@ -96,6 +97,7 @@ impl <'a, I: IO> Ed <'a, I> {
       cmd_prefix: Some(':'),
       selection,
       dont_snapshot: false,
+      prev_shell_command: String::new(),
       // And the given values
       buffer,
       io,

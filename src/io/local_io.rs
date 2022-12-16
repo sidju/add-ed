@@ -60,14 +60,17 @@ impl IO for LocalIO {
   ) -> Result<(), &'static str> {
     let shell = std::env::var("SHELL").unwrap_or("sh".to_owned());
     // Create and run child process, passing through all io
-    let _child_result = Command::new(shell)
+    let res = Command::new(shell)
       .arg("-c")
       .arg(command)
       .spawn() // When spawn io defaults to inherited
-      .map_err(|_| "Failed to spawn child process.")?
+      .map_err(|_| CHILD_CREATION_FAILED)?
       .wait()
-      .map_err(|_| "Child process failed to start.")?
+      .map_err(|_| CHILD_FAILED_TO_START)?
     ;
+    if !(res.success()) {
+      return Err(CHILD_EXIT_ERROR)
+    }
     Ok(())
   }
 
@@ -114,13 +117,13 @@ impl IO for LocalIO {
       child.stdin.take().unwrap(),
     );
     // Blocks until child has finished running
-    let res = child.wait_with_output()
+    let res = child.wait()
       .map_err(|_| CHILD_FAILED_TO_START)
     ;
     // Wait for the other child thread before triggering early returns with ?
     let transfer_res = i.join().map_err(|_| CHILD_PIPING_ERROR)?;
     let res = res?;
-    if !(res.status.success()) {
+    if !(res.success()) {
       return Err(CHILD_EXIT_ERROR)
     }
     Ok(transfer_res)
