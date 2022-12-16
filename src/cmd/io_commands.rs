@@ -178,3 +178,56 @@ pub(super) fn write_to_file<I: IO>(
   }
   Ok(q)
 }
+
+pub fn run_command<I: IO>(
+  state: &mut Ed<'_, I>,
+  ui: &mut dyn UI,
+  selection: Option<Sel<'_>>,
+  ch: char,
+  command: &str,
+) -> Result<(), &'static str> {
+  // If ! we default to no selection, if | we default to prior selection
+  let sel = if ch == '!' && selection.is_none() {
+    None
+  }
+  else {
+    Some(interpret_selection(selection, state.selection, state.buffer)?)
+  };
+  // Depending on selection or not we use run_filter_command or run_command
+  match sel {
+    // When there is no selection we just run the command, no buffer interaction
+    None => {
+      state.io.run_command(
+        &mut ui.lock_ui(),
+        command.to_owned(),
+      )?;
+      ui.print_message("!")?;
+    },
+    // When there is a selection we pipe that selection through the command and
+    // replace it with the output
+    Some(s) => {
+      let data = state.buffer.get_selection(s)?.map(|x| x.1);
+      let transformed = state.io.run_transform_command(
+        &mut ui.lock_ui(),
+        command.to_owned(),
+        data,
+      )?;
+      let lines: Vec<&str> = (&transformed).split_inclusive('\n').collect();
+      let nr_lines = lines.len();
+      state.buffer.change(lines, s)?;
+      state.selection = if nr_lines != 0 {
+        (s.0, s.0 + nr_lines - 1)
+      }
+      // Same logic as in 'd' and 'c' command
+      else {
+        (1.max(s.0 - 1), s.0 - 1)
+      };
+      ui.print_message(&format!(
+        "Transformation returned {} bytes through command `{}`",
+        transformed.len(),
+        command,
+      ))?;
+    },
+  }
+  Ok(())
+}

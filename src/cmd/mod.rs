@@ -156,13 +156,17 @@ pub fn run<I: IO>(
           state.l = !state.l;
           Ok(false)
         },
-        // File commands
+        // File/shell commands
         'f' => { // Set or print filename
           if selection.is_some() { return Err(SELECTION_FORBIDDEN); }
           // Print or update filename
           filename(state, ui, clean)?;
           Ok(false)
-        }
+        },
+        '!' | '|' => {
+          run_command(state, ui, selection, ch, clean)?;
+          Ok(false)
+        },
         'e' | 'E' | 'r' => {
           read_from_file(state, ui, selection, ch, clean)?;
           Ok(false)
