@@ -50,6 +50,8 @@ pub struct Ed <'a, I: IO> {
   buffer: &'a mut Buffer,
   // The path to the currently selected file
   file: String,
+  // The fully processed command last given by the user
+  // (Saved before successful run, so may be invalid)
   prev_shell_command: String,
   // A mutable reference to an IO implementor
   // It will handle file interactions and command execution

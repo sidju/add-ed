@@ -9,8 +9,6 @@
   utility function that does the Buffer -> IO plumbing?
 - 'j' should put the replaced lines in the clipboard
   (look over clipboard interactions in ed docs)
-- Let command substitutions error if no prev command or no path.
-  (As this will usually result in command execution error, early catch is better)
 - Look over how IO interactions error, print ! after error to show handing back
   control into add-ed? And consider if 'r' and 'w' should print '!'.
 

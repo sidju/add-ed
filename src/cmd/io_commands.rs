@@ -53,7 +53,8 @@ pub(super) fn read_from_file<I: IO>(
           cmd,
           &state.file,
           &state.prev_shell_command,
-        );
+        )?;
+        state.prev_shell_command = substituted.clone();
         if changed {ui.print_message( &substituted )?;}
         state.io.run_read_command(
           &mut ui.lock_ui(),
@@ -82,12 +83,7 @@ pub(super) fn read_from_file<I: IO>(
     match path {
       // Considering saved after command is odd, and commands cannot be saved
       // into state.file, only aftereffect is state.prev_shell_command
-      Path::Command(cmd) => {
-        state.prev_shell_command = command_substitutions(
-          cmd,
-          &state.file,
-          &state.prev_shell_command,
-        ).1;
+      Path::Command(_cmd) => {
         ui.print_message(&format!(
           "Read {} bytes from command `{}`",
           unformated_data.len(),
@@ -173,14 +169,14 @@ pub(super) fn write_to_file<I: IO>(
         cmd,
         &state.file,
         &state.prev_shell_command,
-      );
+      )?;
+      state.prev_shell_command = substituted.clone();
       if changed {ui.print_message( &substituted )?;}
       let written = state.io.run_write_command(
         &mut ui.lock_ui(),
-        substituted.clone(),
+        substituted,
         data,
       )?;
-      state.prev_shell_command = substituted;
       ui.print_message(&format!(
         "Wrote {} bytes to command `{}`",
         written,
@@ -216,7 +212,8 @@ pub fn run_command<I: IO>(
     command,
     &state.file,
     &state.prev_shell_command,
-  );
+  )?;
+  state.prev_shell_command = substituted.clone();
   if changed {ui.print_message( &substituted )?;}
   // Depending on selection or not we use run_filter_command or run_command
   match sel {
@@ -234,7 +231,7 @@ pub fn run_command<I: IO>(
       let data = state.buffer.get_selection(s)?.map(|x| x.1);
       let transformed = state.io.run_transform_command(
         &mut ui.lock_ui(),
-        substituted.clone(),
+        substituted,
         data,
       )?;
       let lines: Vec<&str> = (&transformed).split_inclusive('\n').collect();
@@ -247,7 +244,6 @@ pub fn run_command<I: IO>(
       else {
         (1.max(s.0 - 1), s.0 - 1)
       };
-      state.prev_shell_command = substituted;
       ui.print_message(&format!(
         "Transformation returned {} bytes through command `{}`",
         transformed.len(),
