@@ -17,14 +17,14 @@ include = [
 ]
 
 [features]
-vecbuffer = ["regex"]
 local_io = []
+test_local_io = ["local_io"]
 initial_input_data = []
-default = ["vecbuffer", "local_io"]
+default = ["local_io"]
 
 [dependencies]
-regex = { version = "1", optional = true }
+regex = "1"
 
 [[bin]]
 name = "classic"
-required-features = ["vecbuffer"]
+required-features = ["local_io"]

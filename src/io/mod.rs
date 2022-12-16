@@ -5,6 +5,9 @@ pub mod local_io;
 #[cfg(feature = "local_io")]
 pub use local_io::LocalIO;
 
+#[cfg(all(feature = "test_local_io", test))]
+mod test;
+
 /// Trait that abstracts file interactions and running shell commands
 ///
 /// Intended to allow modifying how and where system interactions occur.
