@@ -1,16 +1,12 @@
 # Todos:
-- Consider types in traits.
-  Maybe let UI hand in String for input?
 - Consider adding 'R' command, as 'r' but inserts before selection.
-- Inject context environment variables into shell interaction. File, lines, etc.
-- Have some variant of a ed.hup file
-  (try to write buffer to it before panicking)
-  The consuming application has all the parts to do this themselves; hand out a
-  utility function that does the Buffer -> IO plumbing?
+- Inject context environment variables into shell interaction.
+  (File, selection_start, selection_end, prev_shell_command, if running script)
 - 'j' should put the replaced lines in the clipboard
   (look over clipboard interactions in ed docs)
 - Look over how IO interactions error, print ! after error to show handing back
   control into add-ed? And consider if 'r' and 'w' should print '!'.
+- Improve classic.rs to support all of ed's command line arguments
 
 # Testing improvements:
 ## Unit tests:
