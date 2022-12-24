@@ -1,15 +1,15 @@
+use std::collections::HashMap;
 use add_ed::{
   buffer::Buffer,
   ui::DummyUI,
   Ed,
 };
-use std::collections::HashMap;
 
 mod dummy_io;
 use dummy_io::DummyIO;
 
 #[test]
-fn comment_selection() {
+fn reflow() {
   // Create the testing editor
   let mut io = DummyIO::new();
   let mut buffer = Buffer::new();
@@ -19,12 +19,8 @@ fn comment_selection() {
       input: vec![
         // Create initial buffer contents
         ",a\n".to_string(),
-        "1\n".to_string(),
-        "2\n".to_string(),
-        "3\n".to_string(),
-        "4\n".to_string(),
-        "5\n".to_string(),
-        "6\n".to_string(),
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam ac urna sit amet enim elementum efficitur non eget lorem. Quisque orci enim, gravida in lorem nec, varius porta velit. Donec\n".to_string(),
+        "at mollis urna. Curabitur cursus lectus in maximus accumsan. Cras et luctus diam. Vivamus tristique, sem vitae condimentum euismod, tellus lectus tincidunt sem, faucibus tempor dolor ante vitae ante.\n".to_string(),
         ".\n".to_string(),
       ].into(),
       print_ui: None,
@@ -35,29 +31,35 @@ fn comment_selection() {
   }
   assert_eq!(
     buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
-    vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
+    vec!["Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam ac urna sit amet enim elementum efficitur non eget lorem. Quisque orci enim, gravida in lorem nec, varius porta velit. Donec\n","at mollis urna. Curabitur cursus lectus in maximus accumsan. Cras et luctus diam. Vivamus tristique, sem vitae condimentum euismod, tellus lectus tincidunt sem, faucibus tempor dolor ante vitae ante.\n",],
     "Initialising buffer didn't yield expected buffer contents."
   );
 
   {
     let mut ui = DummyUI{
       input: vec![
-        ",#".to_string(),
+        ",J".to_string(),
       ].into(),
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
     ;
-    let res = ed.run_macro(&mut ui);
-    assert_eq!(
-      res,
-      Err(add_ed::error_consts::SELECTION_FORBIDDEN)
-    );
+    ed.run_macro(&mut ui).expect("Error running test.");
   }
+  assert_eq!(
+    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
+    vec![
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam ac urna sit\n",
+      "amet enim elementum efficitur non eget lorem. Quisque orci enim, gravida in\n",
+      "lorem nec, varius porta velit. Donec at mollis urna. Curabitur cursus lectus in\n",
+      "maximus accumsan. Cras et luctus diam. Vivamus tristique, sem vitae condimentum\n",
+      "euismod, tellus lectus tincidunt sem, faucibus tempor dolor ante vitae ante.\n",
+    ]
+  );
 }
 
 #[test]
-fn printsel_selection() {
+fn join() {
   // Create the testing editor
   let mut io = DummyIO::new();
   let mut buffer = Buffer::new();
@@ -90,7 +92,7 @@ fn printsel_selection() {
   {
     let mut ui = DummyUI{
       input: vec![
-        "2,5=".to_string(),
+        "2,4j\n".to_string(),
       ].into(),
       print_ui: None,
     };
@@ -99,67 +101,12 @@ fn printsel_selection() {
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
       ed.see_state().selection,
-      (2,5)
+      (2,2),
+      "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
     );
   }
   assert_eq!(
     buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
-    vec!["1\n","2\n","3\n","4\n","5\n","6\n"]
-  );
-}
-
-#[test]
-fn tag_line() {
-  // Create the testing editor
-  let mut io = DummyIO::new();
-  let mut buffer = Buffer::new();
-
-  {
-    let mut ui = DummyUI{
-      input: vec![
-        // Create initial buffer contents
-        ",a\n".to_string(),
-        "1\n".to_string(),
-        "2\n".to_string(),
-        "3\n".to_string(),
-        "4\n".to_string(),
-        "5\n".to_string(),
-        "6\n".to_string(),
-        ".\n".to_string(),
-      ].into(),
-      print_ui: None,
-    };
-    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-    ;
-    ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
-  }
-  assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
-    vec!["1\n","2\n","3\n","4\n","5\n","6\n"],
-    "Initialising buffer didn't yield expected buffer contents."
-  );
-
-  {
-    let mut ui = DummyUI{
-      input: vec![
-        "2,5".to_string(), // Set current selection
-        "ky".to_string(), // k tags first line only
-        "KY".to_string(), // K tags last line only
-        "1".to_string(),
-        "'y,'Y".to_string(), // Should load back original selection
-      ].into(),
-      print_ui: None,
-    };
-    let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-    ;
-    ed.run_macro(&mut ui).expect("Error running test.");
-    assert_eq!(
-      ed.see_state().selection,
-      (2,5)
-    );
-  }
-  assert_eq!(
-    buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
-    vec!["1\n","2\n","3\n","4\n","5\n","6\n"]
+    vec!["1\n","234\n","5\n","6\n"]
   );
 }

@@ -1,15 +1,17 @@
-use std::collections::HashMap;
 use add_ed::{
   buffer::Buffer,
   ui::DummyUI,
   Ed,
 };
+use std::collections::HashMap;
 
 mod dummy_io;
 use dummy_io::DummyIO;
 
+/// Application, file and print commands not tested here. Manual testing adviced.
+
 #[test]
-fn undo() {
+fn regex_find_line() {
   // Create the testing editor
   let mut io = DummyIO::new();
   let mut buffer = Buffer::new();
@@ -30,7 +32,6 @@ fn undo() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
@@ -43,15 +44,18 @@ fn undo() {
   {
     let mut ui = DummyUI{
       input: vec![
-        ",d\n".to_string(),
-        "u\n".to_string(),
+        "/3/".to_string(),
       ].into(),
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
+    assert_eq!(
+      ed.see_state().selection,
+      (3,3),
+      "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
+    );
   }
   assert_eq!(
     buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
@@ -60,7 +64,7 @@ fn undo() {
 }
 
 #[test]
-fn redo() {
+fn regex_rfind_line() {
   // Create the testing editor
   let mut io = DummyIO::new();
   let mut buffer = Buffer::new();
@@ -81,7 +85,6 @@ fn redo() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
@@ -94,21 +97,24 @@ fn redo() {
   {
     let mut ui = DummyUI{
       input: vec![
-        ",i\n".to_string(),
-        "0\n".to_string(),
-        ".\n".to_string(),
-        "u\n".to_string(),
-        "U\n".to_string(),
+        // Needed since default startup selection is 1,bufferlen
+        // Forward happens to work since default index is the start of sel index
+        "6".to_string(),
+        "?3?".to_string(),
       ].into(),
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
+    assert_eq!(
+      ed.see_state().selection,
+      (3,3),
+      "Wrong selection after run. (note: selections are 1 indexed & inclusive)"
+    );
   }
   assert_eq!(
     buffer.get_selection((1,buffer.len())).unwrap().map(|(_,s)|s).collect::<Vec<&str>>(),
-    vec!["0\n","1\n","2\n","3\n","4\n","5\n","6\n"]
+    vec!["1\n","2\n","3\n","4\n","5\n","6\n"]
   );
 }

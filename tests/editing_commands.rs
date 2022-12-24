@@ -34,7 +34,6 @@ fn insert() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
     assert_eq!(
@@ -59,7 +58,6 @@ fn insert() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
@@ -97,7 +95,6 @@ fn change_and_paste() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
@@ -117,7 +114,6 @@ fn change_and_paste() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
@@ -166,7 +162,6 @@ fn delete_and_paste() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
@@ -184,7 +179,6 @@ fn delete_and_paste() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
@@ -233,7 +227,6 @@ fn copy_and_paste() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
@@ -251,7 +244,6 @@ fn copy_and_paste() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
@@ -300,7 +292,6 @@ fn mov_copy() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
@@ -318,7 +309,6 @@ fn mov_copy() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
@@ -336,7 +326,6 @@ fn mov_copy() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
@@ -373,7 +362,6 @@ fn mov() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
@@ -391,7 +379,6 @@ fn mov() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
@@ -414,7 +401,6 @@ fn mov() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
@@ -452,7 +438,6 @@ fn insert_inline() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
@@ -472,7 +457,6 @@ fn insert_inline() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(
@@ -510,7 +494,6 @@ fn append_inline() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
@@ -530,7 +513,6 @@ fn append_inline() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
     assert_eq!(

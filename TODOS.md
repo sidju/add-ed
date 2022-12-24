@@ -15,8 +15,6 @@
 ## Integration tests:
 - !
 - |
-- w
-- r
 
 ## Fuzzing:
 - Set up fuzzing again with mock IO, to prevent creating thousands of files.

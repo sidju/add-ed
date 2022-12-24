@@ -9,7 +9,7 @@ mod dummy_io;
 use dummy_io::DummyIO;
 
 #[test]
-fn test_name() {
+fn run_macro() {
   // Create the testing editor
   let mut io = DummyIO::new();
   let mut buffer = Buffer::new();
@@ -30,7 +30,6 @@ fn test_name() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
@@ -50,7 +49,6 @@ fn test_name() {
     let mut macros = HashMap::new();
     macros.insert("test".to_string(), "i\na\n.".to_string());
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),macros,false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
   }

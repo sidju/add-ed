@@ -34,7 +34,6 @@ fn print() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
@@ -52,7 +51,6 @@ fn print() {
       print_ui: Some(&mut aggregator),
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
   }
@@ -97,7 +95,6 @@ fn printing_flags() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
@@ -117,7 +114,6 @@ fn printing_flags() {
       print_ui: Some(&mut aggregator),
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
   }
@@ -186,7 +182,6 @@ fn change_printing_defaults() {
       print_ui: None,
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error creating initial buffer contents.");
   }
@@ -209,7 +204,6 @@ fn change_printing_defaults() {
       print_ui: Some(&mut aggregator),
     };
     let mut ed = Ed::new(&mut buffer, &mut io, "".to_string(),HashMap::new(),false,false)
-      .expect("Failed to open no file. Should be noop.")
     ;
     ed.run_macro(&mut ui).expect("Error running test.");
   }

@@ -78,7 +78,7 @@ pub(super) fn read_from_file<I: IO>(
       },
     }?;
     // Handle after-effects
-    let index = index.unwrap_or(1);
+    let index = index.unwrap_or(0) + 1;
     state.selection = (index, index + datalen - 1);
     match path {
       // Considering saved after command is odd, and commands cannot be saved
@@ -96,8 +96,10 @@ pub(super) fn read_from_file<I: IO>(
           unformated_data.len(),
           file,
         ))?;
-        // Should only occur if we cleared buffer or it was empty before read
-        if state.buffer.len() == datalen {
+        // Should only occur if we cleared buffer or it was empty before read.
+        // Rule of least surprise means 'r' shouldn't do this even then, since
+        // it normally won't.
+        if state.buffer.len() == datalen && command != 'r' {
           state.file = file.to_owned();
           state.buffer.set_saved();
         }
@@ -106,6 +108,7 @@ pub(super) fn read_from_file<I: IO>(
     Ok(())
   }
 }
+
 pub(super) fn write_to_file<I: IO>(
   state: &mut Ed<'_, I>,
   ui: &mut dyn UI,
@@ -161,8 +164,13 @@ pub(super) fn write_to_file<I: IO>(
         file,
       ))?;
       // Since path isn't allowed to be a command, do check in here
-      // If given path now contains only the whole buffer, update state.file
-      if sel.is_none() { state.file = file.to_string(); }
+      // If path now contains only whole buffer, set saved and update state.file.
+      // Rule of least surprise means 'W' shouldn't do so even then, since it
+      // normally won't
+      if sel.is_none() && command != 'W' {
+        state.file = file.to_string();
+        state.buffer.set_saved();
+      }
     },
     Path::Command(cmd) => {
       let (changed, substituted) = command_substitutions(

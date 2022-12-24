@@ -89,9 +89,10 @@ impl <'a, I: IO> Ed <'a, I> {
     macros: HashMap<String, String>,
     n: bool,
     l: bool,
-  ) -> Result<Self, &'static str> {
-    let selection = (1,0); // Empty, but that is handled in cmd module
-    let tmp = Self {
+  ) -> Self {
+    // let selection = (1,0); // Empty, but that is handled in cmd module
+    let selection = (1, buffer.len()); // May be empty, handled in cmd module
+    Self {
       // Sane defaults for initial settings
       print_errors: true,
       error: None,
@@ -107,8 +108,7 @@ impl <'a, I: IO> Ed <'a, I> {
       n,
       l,
       macros,
-    };
-    Ok(tmp)
+    }
   }
 
   /// Run the given command
