@@ -90,12 +90,12 @@ pub(super) fn global<I: IO>(
   // After command collection we get the matching lines to run them at and do so
   while let Some(index) = state.buffer.get_marked()? {
     // Use dummy UI to recurse while supporting text input
-    let mut dummy = DummyUI{
+    let mut scripted = ScriptedUI{
       input: commands.iter().cloned().collect(),
       print_ui: Some(ui),
     };
     state.selection = (index, index);
-    state.run_macro(&mut dummy)?;
+    state.run_macro(&mut scripted)?;
   }
   Ok(())
 }
@@ -127,12 +127,12 @@ pub(super) fn global_inv<I: IO>(
       #[cfg(feature = "initial_input_data")]
       None,
     )?;
-    let mut dummy = DummyUI{
+    let mut scripted = ScriptedUI{
       input: input.into(),
       print_ui: Some(ui),
     };
     state.selection = (index, index);
-    state.run_macro(&mut dummy)?;
+    state.run_macro(&mut scripted)?;
   }
   Ok(())
 }

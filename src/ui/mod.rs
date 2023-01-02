@@ -7,8 +7,8 @@ use super::EdState;
 mod lock;
 pub use lock::UILock;
 
-mod dummy_ui;
-pub use dummy_ui::DummyUI;
+mod scripted_ui;
+pub use scripted_ui::ScriptedUI;
 
 /// The UI trait used to abstract all common UI operations
 pub trait UI {

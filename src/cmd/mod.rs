@@ -1,7 +1,7 @@
 use crate::{Ed, Substitution};
 use crate::buffer::{Buffer, verify_selection, verify_index, verify_line};
 use crate::io::IO;
-use crate::ui::{UI, DummyUI};
+use crate::ui::{UI, ScriptedUI};
 use crate::error_consts::*;
 
 mod parse_selection;
@@ -329,12 +329,12 @@ pub fn run<I: IO>(
             Some(m) => {
               // Disable undo snapshotting during macro execution
               state.dont_snapshot = true;
-              let mut dummy = DummyUI{
+              let mut scripted = ScriptedUI{
                 input: m.lines().map(|x| format!("{}\n",x)).collect(),
                 print_ui: Some(ui),
               };
               state.selection = selection;
-              let res = state.run_macro(&mut dummy);
+              let res = state.run_macro(&mut scripted);
               // Re-enable snapshotting after
               state.dont_snapshot = false;
               res?;
