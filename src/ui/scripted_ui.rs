@@ -7,7 +7,7 @@ use super::EdState;
 
 use std::collections::VecDeque;
 
-/// This is a dummy UI. That means it simulates an UI without interfacing with any users.
+/// This is a scripted UI. It returns the scripted input without querying user.
 ///
 /// How to use:
 /// * Put the input to simulate line-by-line in the input variable.
@@ -15,11 +15,11 @@ use std::collections::VecDeque;
 
 // Things not derived here since they would require the same being implemented on the UI trait,
 // which may be too extreme for me at this stage. If you have need, complain and I'll fix it.
-pub struct DummyUI<'a> {
+pub struct ScriptedUI<'a> {
   pub input: VecDeque<String>,
   pub print_ui: Option<&'a mut dyn UI>,
 }
-impl <'a> UI for DummyUI<'a> {
+impl <'a> UI for ScriptedUI<'a> {
   fn get_command(&mut self,
     _ed: EdState,
     _prefix: Option<char>
@@ -76,9 +76,12 @@ impl <'a> UI for DummyUI<'a> {
       None => Ok(()),
     }
   }
-  // Locking and unlocking require no additional actions
   fn lock_ui(&mut self) -> UILock<'_> {
-    UILock::new(self)
+    match self.print_ui {
+      Some(ref mut i) => i.lock_ui(),
+      None => UILock::new(self),
+    }
   }
+  // Will only be called if no inner UI, beware
   fn unlock_ui(&mut self) {}
 }
