@@ -11,10 +11,12 @@ use std::collections::VecDeque;
 ///
 /// How to use:
 /// * Put the input to simulate line-by-line in the input variable.
-/// * If you want output from print commands put the UI to print with in print_ui.
+///   (terminating '\n' required, errors may arise if missing)
+/// * If you want output from print commands put a UI to print with in print_ui.
+///   (If none given prints will quietly be ignored)
 
 // Things not derived here since they would require the same being implemented on the UI trait,
-// which may be too extreme for me at this stage. If you have need, complain and I'll fix it.
+// which is too extreme for me at this stage. If you have need, complain and I'll add it.
 pub struct ScriptedUI<'a> {
   pub input: VecDeque<String>,
   pub print_ui: Option<&'a mut dyn UI>,
