@@ -31,6 +31,7 @@ impl BasicTest {
       s
     }).collect();
     buffer.insert(init_buffer, 0).unwrap();
+    buffer.set_saved();
     // Create scripted UI (with no printing UI, errors on print invocations)
     let mut ui = ScriptedUI{
       print_ui: None,
@@ -67,11 +68,14 @@ impl BasicTest {
       "Buffer.saved() (left) after test didn't match expectations (right)."
     );
     assert_eq!(
-      buffer.get_selection((1,buffer.len()))
-        .unwrap()
-        .map(|(_,s)| s.trim_end_matches('\n'))
-        .collect::<Vec<&str>>()
-      ,
+      if buffer.len() != 0 {
+        buffer.get_selection((1,buffer.len()))
+          .unwrap()
+          .map(|(_,s)| s.trim_end_matches('\n'))
+          .collect::<Vec<&str>>()
+      } else {
+        vec![]
+      },
       self.expected_buffer,
       "Buffer contents (left) after test didn't match expectations (right)."
     );
