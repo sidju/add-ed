@@ -156,14 +156,27 @@ pub(super) fn change<I: IO>(
   )?;
   let inputlen = input.len();
   state.buffer.change(input, sel)?;
-  state.selection = if inputlen != 0 {
-    (sel.0, sel.0 + inputlen - 1)
-  }
-  else {
-    // If we just deleted all then sel.0 == 1 then
-    // this resolves to (1,0)
-    // Otherwise selects nearest line before selection
-    (1.max(sel.0 - 1), sel.0 - 1)
+  state.selection = {
+    // For change behaviour select:
+    // - sel.0 to sel.0 + inputlen
+
+    // For deletion behaviour try to select:
+    // - nearest following line
+    // - if no following line, take the last line in buffer
+    // - If buffer empty, fallback to (1,0)
+
+    // The minimum for start is 1, max will switch over to 1 if it would be less
+    (1.max(
+      // Try to select sel.0
+      // (if delete is line after selection, if change is first line of changed)
+      // But limit to buffer.len via a min in case we deleted the whole buffer
+      sel.0.min(state.buffer.len())
+    ),
+      // Try to select sel.0 + inputlen.saturating_sub(1)
+      // (if delete is same as sel.0 above, if change is last line of changed
+      // But limit to buffer.len via a min in case we deleted the whole buffer
+      (sel.0 + inputlen.saturating_sub(1)).min(state.buffer.len())
+    )
   };
   Ok(())
 }
