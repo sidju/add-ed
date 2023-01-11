@@ -7,9 +7,9 @@ use shared::fixtures::BasicTest;
 
 // Verify behaviour of 'a' command
 //
-// - Takes optional selection
-//   - If given, appends to selection.1
-//   - If none, appends to state.selection.1
+// - Takes optional index
+//   - If given, adds input after line at index
+//   - If none, same using state.selection.1 as index
 //   - Special: 0 is valid index to append to, inserts before line 1
 //   - Note: default state.selection should be (1,buffer.len()), thus (1,0) for
 //     an empty buffer
@@ -113,7 +113,7 @@ fn append_noselection() {
 fn append() {
   BasicTest{
     init_buffer: vec!["a","b"],
-    command_input: vec!["1,2a","c","d","."],
+    command_input: vec!["2a","c","d","."],
     expected_buffer: vec!["a","b","c","d"],
     expected_buffer_saved: false,
     expected_selection: (3,4)
@@ -122,8 +122,8 @@ fn append() {
 
 // Verify behaviour of 'A' command
 //
-// - Takes optional selection
-//   - If given, appends inline to selection.1
+// - Takes optional index
+//   - If given, appends inline to index
 //   - If none, appends inline to state.selection.1
 //   - (Inline appending to index 0 is not valid, error not a line)
 //   - Note: Not valid for any index when buffer is empty
@@ -136,7 +136,7 @@ fn append() {
 // TODO: Use error testing fixture, when errors have been improved
 #[test]
 #[should_panic]
-fn inline_append_empty_buffer() {
+fn inline_append_nobuffer() {
   BasicTest{
     init_buffer: vec![],
     command_input: vec!["A"],
@@ -190,7 +190,7 @@ fn inline_append_noselection() {
 fn inline_append() {
   BasicTest{
     init_buffer: vec!["a","b"],
-    command_input: vec!["1,2A","anana","cucumber","."],
+    command_input: vec!["2A","anana","cucumber","."],
     expected_buffer: vec!["a","banana","cucumber"],
     expected_buffer_saved: false,
     expected_selection: (2,3)
