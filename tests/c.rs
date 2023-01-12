@@ -14,7 +14,7 @@ use shared::fixtures::BasicTest;
 // - If no lines given set selection like 'd' command:
 //   - Tries to select nearest line after deleted selection
 //   - If selection was at end of buffer select nearest line before
-//   - If the buffer is empty after deletion select (1,0)
+//   - If the buffer is empty after deletion select (1,0),
 // - Always sets unsaved
 // - Deleted/replaced lines are placed in clipboard
 
@@ -25,10 +25,12 @@ use shared::fixtures::BasicTest;
 fn change_nobuffer() {
   BasicTest{
     init_buffer: vec![],
+    init_clipboard: vec![],
     command_input: vec!["c"],
     expected_buffer: vec![],
     expected_buffer_saved: true,
-    expected_selection: (1,0)
+    expected_selection: (1,0),
+    expected_clipboard: vec![],
   }.run();
 }
 // We don't do any noselection versions of 'c' testing, since default selection
@@ -39,10 +41,12 @@ fn change_nobuffer() {
 fn change_noinput_endofbuffer() {
   BasicTest{
     init_buffer: vec!["a","b","c"],
+    init_clipboard: vec![],
     command_input: vec!["3c","."],
     expected_buffer: vec!["a","b"],
     expected_buffer_saved: false,
-    expected_selection: (2,2)
+    expected_selection: (2,2),
+    expected_clipboard: vec!["c"],
   }.run();
 }
 
@@ -51,10 +55,12 @@ fn change_noinput_endofbuffer() {
 fn change_noinput_startofbuffer() {
   BasicTest{
     init_buffer: vec!["a","b","c"],
+    init_clipboard: vec![],
     command_input: vec!["1c","."],
     expected_buffer: vec!["b","c"],
     expected_buffer_saved: false,
-    expected_selection: (1,1)
+    expected_selection: (1,1),
+    expected_clipboard: vec!["a"],
   }.run();
 }
 
@@ -63,22 +69,26 @@ fn change_noinput_startofbuffer() {
 fn change_noinput_middleofbuffer() {
   BasicTest{
     init_buffer: vec!["a","b","c"],
+    init_clipboard: vec![],
     command_input: vec!["2c","."],
     expected_buffer: vec!["a","c"],
     expected_buffer_saved: false,
-    expected_selection: (2,2)
+    expected_selection: (2,2),
+    expected_clipboard: vec!["b"],
   }.run();
 }
 
-// No input, all of buffer. Should delete and select (1,0)
+// No input, all of buffer. Should delete and select (1,0),
 #[test]
 fn change_noinput_allofbuffer() {
   BasicTest{
     init_buffer: vec!["a","b","c"],
+    init_clipboard: vec![],
     command_input: vec![",c","."],
     expected_buffer: vec![],
     expected_buffer_saved: false,
-    expected_selection: (1,0)
+    expected_selection: (1,0),
+    expected_clipboard: vec!["a","b","c"],
   }.run();
 }
 
@@ -87,9 +97,11 @@ fn change_noinput_allofbuffer() {
 fn change() {
   BasicTest{
     init_buffer: vec!["a","b","d"],
+    init_clipboard: vec![],
     command_input: vec!["2c","banana","cucumber","."],
     expected_buffer: vec!["a","banana","cucumber","d"],
     expected_buffer_saved: false,
-    expected_selection: (2,3)
+    expected_selection: (2,3),
+    expected_clipboard: vec!["b"],
   }.run();
 }
