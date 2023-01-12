@@ -24,10 +24,12 @@ use shared::fixtures::BasicTest;
 fn append_noselection_noinput_nobuffer() {
   BasicTest{
     init_buffer: vec![],
+    init_clipboard: vec![],
     command_input: vec!["a","."],
     expected_buffer: vec![],
     expected_buffer_saved: true,
-    expected_selection: (1,0)
+    expected_selection: (1,0),
+    expected_clipboard: vec![],
   }.run();
 }
 
@@ -37,10 +39,12 @@ fn append_noselection_noinput_nobuffer() {
 fn append_noinput_nobuffer() {
   BasicTest{
     init_buffer: vec![],
+    init_clipboard: vec![],
     command_input: vec!["0a","."],
     expected_buffer: vec![],
     expected_buffer_saved: true,
-    expected_selection: (1,0)
+    expected_selection: (1,0),
+    expected_clipboard: vec![],
   }.run();
 }
 
@@ -49,10 +53,12 @@ fn append_noinput_nobuffer() {
 fn append_noselection_nobuffer() {
   BasicTest{
     init_buffer: vec![],
+    init_clipboard: vec![],
     command_input: vec!["a","1","2","."],
     expected_buffer: vec!["1","2"],
     expected_buffer_saved: false,
-    expected_selection: (1,2)
+    expected_selection: (1,2),
+    expected_clipboard: vec![],
   }.run();
 }
 
@@ -62,10 +68,12 @@ fn append_noselection_nobuffer() {
 fn append_nobuffer() {
   BasicTest{
     init_buffer: vec![],
+    init_clipboard: vec![],
     command_input: vec!["0a","1","2","."],
     expected_buffer: vec!["1","2"],
     expected_buffer_saved: false,
-    expected_selection: (1,2)
+    expected_selection: (1,2),
+    expected_clipboard: vec![],
   }.run();
 }
 
@@ -75,10 +83,12 @@ fn append_nobuffer() {
 fn append_noselection_noinput() {
   BasicTest{
     init_buffer: vec!["a","b"],
+    init_clipboard: vec![],
     command_input: vec!["a","."],
     expected_buffer: vec!["a","b"],
     expected_buffer_saved: true,
-    expected_selection: (1,2)
+    expected_selection: (1,2),
+    expected_clipboard: vec![],
   }.run();
 }
 
@@ -88,10 +98,12 @@ fn append_noselection_noinput() {
 fn append_noinput() {
   BasicTest{
     init_buffer: vec!["a","b"],
+    init_clipboard: vec![],
     command_input: vec!["2a","."],
     expected_buffer: vec!["a","b"],
     expected_buffer_saved: true,
-    expected_selection: (1,2)
+    expected_selection: (1,2),
+    expected_clipboard: vec![],
   }.run();
 }
 
@@ -100,10 +112,12 @@ fn append_noinput() {
 fn append_noselection() {
   BasicTest{
     init_buffer: vec!["a","b"],
+    init_clipboard: vec![],
     command_input: vec!["a","c","d","."],
     expected_buffer: vec!["a","b","c","d"],
     expected_buffer_saved: false,
-    expected_selection: (3,4)
+    expected_selection: (3,4),
+    expected_clipboard: vec![],
   }.run();
 }
 
@@ -113,10 +127,12 @@ fn append_noselection() {
 fn append() {
   BasicTest{
     init_buffer: vec!["a","b"],
+    init_clipboard: vec![],
     command_input: vec!["2a","c","d","."],
     expected_buffer: vec!["a","b","c","d"],
     expected_buffer_saved: false,
-    expected_selection: (3,4)
+    expected_selection: (3,4),
+    expected_clipboard: vec![],
   }.run();
 }
 
@@ -139,10 +155,12 @@ fn append() {
 fn inline_append_nobuffer() {
   BasicTest{
     init_buffer: vec![],
+    init_clipboard: vec![],
     command_input: vec!["A"],
     expected_buffer: vec![],
     expected_buffer_saved: true,
-    expected_selection: (1,0)
+    expected_selection: (1,0),
+    expected_clipboard: vec![],
   }.run();
 }
 
@@ -152,10 +170,12 @@ fn inline_append_nobuffer() {
 fn inline_append_noselection_noinput() {
   BasicTest{
     init_buffer: vec!["a","b"],
+    init_clipboard: vec![],
     command_input: vec!["A","."],
     expected_buffer: vec!["a","b"],
     expected_buffer_saved: true,
-    expected_selection: (1,2)
+    expected_selection: (1,2),
+    expected_clipboard: vec![],
   }.run();
 }
 
@@ -165,10 +185,12 @@ fn inline_append_noselection_noinput() {
 fn inline_append_noinput() {
   BasicTest{
     init_buffer: vec!["a","b"],
+    init_clipboard: vec![],
     command_input: vec!["2A","."],
     expected_buffer: vec!["a","b"],
     expected_buffer_saved: true,
-    expected_selection: (1,2)
+    expected_selection: (1,2),
+    expected_clipboard: vec![],
   }.run();
 }
 
@@ -177,10 +199,12 @@ fn inline_append_noinput() {
 fn inline_append_noselection() {
   BasicTest{
     init_buffer: vec!["a","b"],
+    init_clipboard: vec![],
     command_input: vec!["A","anana","cucumber","."],
     expected_buffer: vec!["a","banana","cucumber"],
     expected_buffer_saved: false,
-    expected_selection: (2,3)
+    expected_selection: (2,3),
+    expected_clipboard: vec![],
   }.run();
 }
 
@@ -190,9 +214,11 @@ fn inline_append_noselection() {
 fn inline_append() {
   BasicTest{
     init_buffer: vec!["a","b"],
+    init_clipboard: vec![],
     command_input: vec!["2A","anana","cucumber","."],
     expected_buffer: vec!["a","banana","cucumber"],
     expected_buffer_saved: false,
-    expected_selection: (2,3)
+    expected_selection: (2,3),
+    expected_clipboard: vec![],
   }.run();
 }

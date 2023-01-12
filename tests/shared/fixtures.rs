@@ -14,10 +14,12 @@ use add_ed::{
 // Terminating '\n' aren't needed nor allowed in any of the Vec<&str> arguments.
 pub struct BasicTest {
   pub init_buffer: Vec<&'static str>,
+  pub init_clipboard: Vec<&'static str>,
   pub command_input: Vec<&'static str>,
   pub expected_buffer: Vec<&'static str>,
   pub expected_buffer_saved: bool,
   pub expected_selection: (usize, usize),
+  pub expected_clipboard: Vec<&'static str>,
 }
 impl BasicTest {
   pub fn run(self) {
@@ -25,11 +27,20 @@ impl BasicTest {
     let mut io = DummyIO::new();
     // Create and init buffer
     let mut buffer = Buffer::new();
+    let init_clipboard: Vec<String> = self.init_clipboard.iter().map(|x| {
+      let mut s = x.to_string();
+      s.push('\n');
+      s
+    }).collect();
     let init_buffer: Vec<String> = self.init_buffer.iter().map(|x| {
       let mut s = x.to_string();
       s.push('\n');
       s
     }).collect();
+    if !self.init_clipboard.is_empty() {
+      buffer.insert(init_clipboard, 0).unwrap();
+      buffer.cut((1,buffer.len())).unwrap();
+    }
     buffer.insert(init_buffer, 0).unwrap();
     buffer.set_saved();
     // Create scripted UI (with no printing UI, errors on print invocations)
@@ -78,6 +89,22 @@ impl BasicTest {
       },
       self.expected_buffer,
       "Buffer contents (left) after test didn't match expectations (right)."
+    );
+    // Switch out buffer contents to clipboard contents
+    let end_of_buf = buffer.len();
+    buffer.paste(end_of_buf).unwrap();
+    if end_of_buf != 0 { buffer.cut((1,end_of_buf)).unwrap(); }
+    assert_eq!(
+      if buffer.len() != 0 {
+        buffer.get_selection((1,buffer.len()))
+          .unwrap()
+          .map(|(_,s)| s.trim_end_matches('\n'))
+          .collect::<Vec<&str>>()
+      } else {
+        vec![]
+      },
+      self.expected_clipboard,
+      "Cliboard contents (left) after test didn't match expectations (right)."
     );
   }
 }
