@@ -9,5 +9,9 @@ pub mod fake_io;
 // A dummy IO implementation that does nothing, for tests that don't use IO
 pub mod dummy_io;
 
+// A dummy UI that panics on everything except lock and unlock, verifies that
+// tests that shouldn't cause a print don't.
+pub mod dummy_ui;
+
 // All test fixtures
 pub mod fixtures;
