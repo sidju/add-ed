@@ -2,7 +2,11 @@
 // TODO: add testing for 'C'
 
 mod shared;
-use shared::fixtures::BasicTest;
+use shared::fixtures::{
+  BasicTest,
+  PrintTest,
+};
+use shared::mock_ui::Print;
 
 // Verify behaviour of 'c' command
 //
@@ -38,43 +42,64 @@ fn change_nobuffer() {
 
 // No input, end of buffer. Should delete and select new last line
 #[test]
-fn change_noinput_endofbuffer() {
-  BasicTest{
+fn change_noinput_endofbuffer_print() {
+  PrintTest{
     init_buffer: vec!["a","b","c"],
     init_clipboard: vec![],
-    command_input: vec!["3c","."],
+    command_input: vec!["3cp","."],
     expected_buffer: vec!["a","b"],
     expected_buffer_saved: false,
     expected_selection: (2,2),
     expected_clipboard: vec!["c"],
+    expected_prints: vec![
+      Print{
+        text: vec!["b\n".to_string()],
+        n: false,
+        l: false,
+      },
+    ],
   }.run();
 }
 
 // No input, start of buffer. Should delete and select line following selection
 #[test]
-fn change_noinput_startofbuffer() {
-  BasicTest{
+fn change_noinput_startofbuffer_numbered() {
+  PrintTest{
     init_buffer: vec!["a","b","c"],
     init_clipboard: vec![],
-    command_input: vec!["1c","."],
+    command_input: vec!["1cn","."],
     expected_buffer: vec!["b","c"],
     expected_buffer_saved: false,
     expected_selection: (1,1),
     expected_clipboard: vec!["a"],
+    expected_prints: vec![
+      Print{
+        text: vec!["b\n".to_string()],
+        n: true,
+        l: false,
+      },
+    ],
   }.run();
 }
 
 // No input, middle of buffer. Should delete and select line following selection
 #[test]
-fn change_noinput_middleofbuffer() {
-  BasicTest{
+fn change_noinput_middleofbuffer_literal() {
+  PrintTest{
     init_buffer: vec!["a","b","c"],
     init_clipboard: vec![],
-    command_input: vec!["2c","."],
+    command_input: vec!["2cl","."],
     expected_buffer: vec!["a","c"],
     expected_buffer_saved: false,
     expected_selection: (2,2),
     expected_clipboard: vec!["b"],
+    expected_prints: vec![
+      Print{
+        text: vec!["c\n".to_string()],
+        n: false,
+        l: true,
+      },
+    ],
   }.run();
 }
 

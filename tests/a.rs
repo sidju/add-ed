@@ -3,7 +3,11 @@
 // 'A' tests are after the 'a' tests
 
 mod shared;
-use shared::fixtures::BasicTest;
+use shared::fixtures::{
+  BasicTest,
+  PrintTest,
+};
+use shared::mock_ui::Print;
 
 // Verify behaviour of 'a' command
 //
@@ -50,15 +54,22 @@ fn append_noinput_nobuffer() {
 
 // No selection on empty buffer with input
 #[test]
-fn append_noselection_nobuffer() {
-  BasicTest{
+fn append_noselection_nobuffer_print() {
+  PrintTest{
     init_buffer: vec![],
     init_clipboard: vec![],
-    command_input: vec!["a","1","2","."],
+    command_input: vec!["ap","1","2","."],
     expected_buffer: vec!["1","2"],
     expected_buffer_saved: false,
     expected_selection: (1,2),
     expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: vec!["1\n".to_string(),"2\n".to_string(),],
+        n: false,
+        l: false,
+      },
+    ],
   }.run();
 }
 
@@ -80,15 +91,22 @@ fn append_nobuffer() {
 // No selection, no input
 // (Due to post selection and no input tests default selection)
 #[test]
-fn append_noselection_noinput() {
-  BasicTest{
+fn append_noselection_noinput_numbered() {
+  PrintTest{
     init_buffer: vec!["a","b"],
     init_clipboard: vec![],
-    command_input: vec!["a","."],
+    command_input: vec!["an","."],
     expected_buffer: vec!["a","b"],
     expected_buffer_saved: true,
     expected_selection: (1,2),
     expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: vec!["a\n".to_string(),"b\n".to_string()],
+        n: true,
+        l: false,
+      },
+    ],
   }.run();
 }
 
@@ -110,14 +128,21 @@ fn append_noinput() {
 // No selection
 #[test]
 fn append_noselection() {
-  BasicTest{
+  PrintTest{
     init_buffer: vec!["a","b"],
     init_clipboard: vec![],
-    command_input: vec!["a","c","d","."],
+    command_input: vec!["al","c","d","."],
     expected_buffer: vec!["a","b","c","d"],
     expected_buffer_saved: false,
     expected_selection: (3,4),
     expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: vec!["c\n".to_string(), "d\n".to_owned(),],
+        n: false,
+        l: true,
+      },
+    ],
   }.run();
 }
 
@@ -168,14 +193,21 @@ fn inline_append_nobuffer() {
 // (Due to post selection and no input tests default selection)
 #[test]
 fn inline_append_noselection_noinput() {
-  BasicTest{
+  PrintTest{
     init_buffer: vec!["a","b"],
     init_clipboard: vec![],
-    command_input: vec!["A","."],
+    command_input: vec!["Ap","."],
     expected_buffer: vec!["a","b"],
     expected_buffer_saved: true,
     expected_selection: (1,2),
     expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: vec!["a\n".to_string(),"b\n".to_string()],
+        n: false,
+        l: false,
+      }
+    ],
   }.run();
 }
 
@@ -183,14 +215,21 @@ fn inline_append_noselection_noinput() {
 // (Should behave identically as noselection above)
 #[test]
 fn inline_append_noinput() {
-  BasicTest{
+  PrintTest{
     init_buffer: vec!["a","b"],
     init_clipboard: vec![],
-    command_input: vec!["2A","."],
+    command_input: vec!["2Al","."],
     expected_buffer: vec!["a","b"],
     expected_buffer_saved: true,
     expected_selection: (1,2),
     expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: vec!["a\n".to_string(),"b\n".to_string()],
+        n: false,
+        l: true,
+      }
+    ],
   }.run();
 }
 
@@ -212,13 +251,20 @@ fn inline_append_noselection() {
 // (Should behave identically as noselection above)
 #[test]
 fn inline_append() {
-  BasicTest{
+  PrintTest{
     init_buffer: vec!["a","b"],
     init_clipboard: vec![],
-    command_input: vec!["2A","anana","cucumber","."],
+    command_input: vec!["2An","anana","cucumber","."],
     expected_buffer: vec!["a","banana","cucumber"],
     expected_buffer_saved: false,
     expected_selection: (2,3),
     expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: vec!["banana\n".to_string(),"cucumber\n".to_string()],
+        n: true,
+        l: false,
+      }
+    ],
   }.run();
 }

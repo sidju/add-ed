@@ -6,6 +6,7 @@ use add_ed::{
   ui::UILock,
 };
 
+#[derive(Debug, PartialEq)]
 pub struct Print {
   pub text: Vec<String>,
   pub n: bool,
