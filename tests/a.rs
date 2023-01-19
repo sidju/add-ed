@@ -214,7 +214,7 @@ fn inline_append_noselection_noinput() {
 // No input
 // (Should behave identically as noselection above)
 #[test]
-fn inline_append_noinput() {
+fn inline_append_noinput_literal() {
   PrintTest{
     init_buffer: vec!["a","b"],
     init_clipboard: vec![],
