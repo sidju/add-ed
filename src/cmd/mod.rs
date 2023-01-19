@@ -203,15 +203,31 @@ pub fn run<I: IO>(
         'd' => { // Cut
           let sel = interpret_selection(selection, state.selection, state.buffer)?;
           // Since selection after execution can be 0 it isn't allowed to auto print after
-          parse_flags(clean, "")?;
+          // Get the flags
+          let mut flags = parse_flags(clean, "pnl")?;
+          // Set the global print pflags (safe to unwrap since parse_flags never removes a key)
+          pflags.p = flags.remove(&'p').unwrap();
+          pflags.n = flags.remove(&'n').unwrap();
+          pflags.l = flags.remove(&'l').unwrap();
           state.buffer.cut(sel)?;
           // Try to figure out a selection after the deletion
-          state.selection = 
-            // If we just deleted up to start of buffer then 
-            // sel.0 == 1 then this resolves to (1,0)
-            // Otherwise selects nearest line before selection
-            (1.max(sel.0 - 1), sel.0 - 1)
-          ;
+          state.selection = {
+            // For deletion behaviour try to select:
+            // - nearest following line
+            // - if no following line, take the last line in buffer
+            // - If buffer empty, fallback to (1,0)
+
+            // Minimum for start is 1, max will return 1 if it would be less
+            (1.max(
+              // Try to select sel.0, after delete it is line after selection
+              // Limit to buffer.len via min in case we deleted whole buffer
+              sel.0.min(state.buffer.len())
+            ),
+              // Same as above but without the minimum of one, giving 0 if
+              // buffer is empty
+              sel.0.min(state.buffer.len())
+            )
+          };
           Ok(false)
         },
         'y' => { // Copy to clipboard

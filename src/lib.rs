@@ -91,6 +91,7 @@ impl <'a, I: IO> Ed <'a, I> {
     l: bool,
   ) -> Self {
     // let selection = (1,0); // Empty, but that is handled in cmd module
+    // This selection matches the selection after opening file with 'e' command
     let selection = (1, buffer.len()); // May be empty, handled in cmd module
     Self {
       // Sane defaults for initial settings
