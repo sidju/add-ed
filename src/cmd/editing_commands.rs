@@ -56,10 +56,6 @@ pub(super) fn input<I: IO>(
   command: char,
   flags: &str,
 ) -> Result<(), &'static str> {
-  // All of these commands only accept index
-  if let Some(Sel::Pair(_,_)) = selection {
-    return Err(INDEX_PARSE);
-  }
   let sel = interpret_selection(selection, state.selection, state.buffer)?;
   let mut flags = parse_flags(flags, "pnl")?;
   pflags.p = flags.remove(&'p').unwrap();
