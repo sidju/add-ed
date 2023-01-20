@@ -161,12 +161,14 @@ pub struct IOTest {
   pub init_buffer: Vec<&'static str>,
   pub init_clipboard: Vec<&'static str>,
   pub init_io: FakeIO,
+  pub init_filepath: &'static str,
   pub command_input: Vec<&'static str>,
   pub expected_buffer: Vec<&'static str>,
   pub expected_buffer_saved: bool,
   pub expected_selection: (usize, usize),
   pub expected_clipboard: Vec<&'static str>,
-  pub expected_files: Vec<(&'static str, &'static str)>,
+  pub expected_file_changes: Vec<(&'static str, &'static str)>,
+  pub expected_filepath: &'static str,
 }
 impl IOTest {
   pub fn run(mut self) {
@@ -205,18 +207,23 @@ impl IOTest {
       let mut ed = Ed::new(
         &mut buffer,
         &mut self.init_io,
-        "default_file".to_owned(),
+        self.init_filepath.to_owned(),
         HashMap::new(),
         false,
         false,
       );
       ed.run_macro(&mut ui).expect("Error running test.");
 
-      // Before dropping editor, read selection if expectation
+      // Before dropping editor, verify its state against expectations
       assert_eq!(
         ed.see_state().selection,
         self.expected_selection,
         "Selection after test (left) didn't match expectations (right)."
+      );
+      assert_eq!(
+        ed.see_state().file,
+        self.expected_filepath,
+        "Filepath after test (left) didn't match expectations (right)."
       );
     }
     assert_eq!(
@@ -252,12 +259,13 @@ impl IOTest {
       self.expected_clipboard,
       "Cliboard contents (left) after test didn't match expectations (right)."
     );
+    let mut expected_post_state = self.init_io.clone();
+    for (file, new_contents) in self.expected_file_changes {
+      expected_post_state.fake_fs.insert(file.to_owned(), new_contents.to_owned());
+    }
     assert_eq!(
-      (&self.init_io.fake_fs).iter()
-        .map(|(a,b)| (&a[..],&b[..]))
-        .collect::<Vec<(&str,&str)>>()
-      ,
-      self.expected_files,
+      &self.init_io.fake_fs,
+      &expected_post_state.fake_fs,
       "Filesystem state after test (left) didn't match expectations (right)."
     );
   }

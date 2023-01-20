@@ -9,11 +9,12 @@ use add_ed::error_consts::{
 
 use std::collections::HashMap;
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Clone)]
 pub struct ShellCommand {
   pub command: String,
   pub input: String,
 }
+#[derive(Clone)]
 pub struct FakeIO {
   pub fake_fs: HashMap<String, String>,
   pub fake_shell: HashMap<ShellCommand, String>,
