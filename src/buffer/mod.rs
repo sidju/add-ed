@@ -186,6 +186,22 @@ impl Buffer {
     self.history[self.buffer_i].append(&mut tail);
     Ok(())
   }
+  pub fn change_no_clipboard<'a, S: Into<String>>(&mut self,
+    mut data: Vec<S>,
+    selection: (usize, usize)
+  ) -> Result<(), &'static str> {
+    verify_selection(self, selection)?;
+    self.saved = false;
+    let mut tail = self.history[self.buffer_i].split_off(selection.1);
+    let _ = self.history[self.buffer_i].split_off(selection.0.saturating_sub(1));
+    for line in data.drain(..) {
+      self.history[self.buffer_i].push(
+        Line{tag: '\0', matched: false, text: Rc::new(line.into())}
+      );
+    }
+    self.history[self.buffer_i].append(&mut tail);
+    Ok(())
+  }
   pub fn mov(&mut self, selection: (usize, usize), index: usize) -> Result<(), &'static str> {
     verify_selection(self, selection)?;
     verify_index(self, index)?;
