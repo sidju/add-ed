@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::collections::HashMap;
 use super::{
   dummy_io::DummyIO,
@@ -156,6 +158,7 @@ impl PrintTest {
 // given commands via dummy_ui. (Selection is Ed default, buffer.saved is true)
 // Afterwards verifies state against optional expectations on
 // buffer contents, fake filesystem state and selection.
+// Note that expected file changes is a Vec<(filename, new_contents)>.
 // Terminating '\n' aren't needed nor allowed in any of the Vec<&str> arguments.
 pub struct IOTest {
   pub init_buffer: Vec<&'static str>,

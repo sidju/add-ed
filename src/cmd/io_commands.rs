@@ -74,7 +74,7 @@ pub(super) fn read_from_file<I: IO>(
       None => if state.buffer.len() == 0 {
         state.buffer.insert(data, 0)
       } else {
-        state.buffer.change(data, (1, state.buffer.len()))
+        state.buffer.change_no_clipboard(data, (1, state.buffer.len()))
       },
     }?;
     // Handle after-effects

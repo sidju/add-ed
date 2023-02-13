@@ -46,27 +46,100 @@ fn test_io() -> FakeIO {
 }
 
 // No selection and no path, verify defaults
+// (Since there are no changes 'e' should reread from disk, for example to get a
+// updated version of a file after git pull or similar)
 #[test]
 fn edit_defaults() {
   let test_io = test_io();
   IOTest{
-    init_buffer: vec!["text\n"],
-    init_clipboard: vec!["dummy\n"],
+    init_buffer: vec!["text"],
+    init_clipboard: vec!["dummy"],
     init_io: test_io.clone(),
     init_filepath: "text",
     command_input: vec![
       "e",
     ],
     expected_buffer: vec![
-      "file\n",
-      "data\n",
-      "in\n",
-      "file\n",
+      "file",
+      "data",
+      "in",
+      "file",
+    ],
+    expected_buffer_saved: true,
+    expected_selection: (1,4),
+    expected_clipboard: vec!["dummy"],
+    expected_file_changes: vec![], // No changes to the fs
+    expected_filepath: "text",
+  }.run();
+}
+
+// Give path, verify state changes
+#[test]
+fn edit_path() {
+  let test_io = test_io();
+  IOTest{
+    init_buffer: vec!["text"],
+    init_clipboard: vec!["dummy"],
+    init_io: test_io.clone(),
+    init_filepath: "text",
+    command_input: vec![
+      "e numbers",
+    ],
+    expected_buffer: vec![
+      "4",
+      "5",
+      "2",
+      "1",
+    ],
+    expected_buffer_saved: true,
+    expected_selection: (1,4),
+    expected_clipboard: vec!["dummy"],
+    expected_file_changes: vec![], // No changes to the fs
+    expected_filepath: "numbers",
+  }.run();
+}
+
+// Give path that doesn't exist yet, verify state changes
+#[test]
+fn edit_new_file() {
+  let test_io = test_io();
+  IOTest{
+    init_buffer: vec!["text"],
+    init_clipboard: vec!["dummy"],
+    init_io: test_io.clone(),
+    init_filepath: "text",
+    command_input: vec![
+      "e new_file",
+    ],
+    expected_buffer: vec![
     ],
     expected_buffer_saved: true,
     expected_selection: (1,0),
-    expected_clipboard: vec!["dummy\n"],
+    expected_clipboard: vec!["dummy"],
     expected_file_changes: vec![], // No changes to the fs
-    expected_filepath: "text",
+    expected_filepath: "new_file",
+  }.run();
+}
+
+// Give selection, should panic
+#[test]
+#[should_panic]
+fn edit_selection() {
+  let test_io = test_io();
+  IOTest{
+    init_buffer: vec!["text"],
+    init_clipboard: vec!["dummy"],
+    init_io: test_io.clone(),
+    init_filepath: "text",
+    command_input: vec![
+      ",e",
+    ],
+    expected_buffer: vec![
+    ],
+    expected_buffer_saved: true,
+    expected_selection: (1,0),
+    expected_clipboard: vec!["dummy"],
+    expected_file_changes: vec![], // No changes to the fs
+    expected_filepath: "new_file",
   }.run();
 }
