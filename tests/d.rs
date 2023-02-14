@@ -27,11 +27,13 @@ fn delete_noselection_nobuffer() {
   BasicTest{
     init_buffer: vec![],
     init_clipboard: vec![],
+    init_filepath: "path",
     command_input: vec!["d"],
     expected_buffer: vec![],
     expected_buffer_saved: true,
     expected_selection: (1,0),
     expected_clipboard: vec![],
+    expected_filepath: "path",
   }.run();
 }
 
@@ -41,11 +43,13 @@ fn delete_noselection() {
   BasicTest{
     init_buffer: vec!["a","b","c"],
     init_clipboard: vec![],
+    init_filepath: "path",
     command_input: vec!["d"],
     expected_buffer: vec![],
     expected_buffer_saved: false,
     expected_selection: (1,0),
     expected_clipboard: vec!["a","b","c"],
+    expected_filepath: "path",
   }.run();
 }
 
@@ -58,11 +62,13 @@ fn delete_noselection_allofbuffer_print() {
   BasicTest{
     init_buffer: vec!["a","b","c"],
     init_clipboard: vec![],
+    init_filepath: "path",
     command_input: vec!["dp"],
     expected_buffer: vec![],
     expected_buffer_saved: false,
     expected_selection: (1,0),
     expected_clipboard: vec!["a","b","c"],
+    expected_filepath: "path",
   }.run();
 }
 
@@ -72,6 +78,7 @@ fn delete_noselection_middleofbuffer_numbered_literal() {
   PrintTest{
     init_buffer: vec!["a","b","c"],
     init_clipboard: vec![],
+    init_filepath: "path",
     command_input: vec!["2","dnl"],
     expected_buffer: vec!["a","c"],
     expected_buffer_saved: false,
@@ -89,6 +96,7 @@ fn delete_noselection_middleofbuffer_numbered_literal() {
         l: true,
       },
     ],
+    expected_filepath: "path",
   }.run();
 }
 
@@ -98,6 +106,7 @@ fn delete_startofbuffer_print() {
   PrintTest{
     init_buffer: vec!["a","b","c"],
     init_clipboard: vec![],
+    init_filepath: "path",
     command_input: vec!["1,2dp"],
     expected_buffer: vec!["c"],
     expected_buffer_saved: false,
@@ -110,6 +119,7 @@ fn delete_startofbuffer_print() {
         l: false,
       },
     ],
+    expected_filepath: "path",
   }.run();
 }
 
@@ -119,10 +129,12 @@ fn delete_endofbuffer() {
   BasicTest{
     init_buffer: vec!["a","b","c"],
     init_clipboard: vec![],
+    init_filepath: "path",
     command_input: vec!["2,3d"],
     expected_buffer: vec!["a"],
     expected_buffer_saved: false,
     expected_selection: (1,1),
     expected_clipboard: vec!["b","c"],
+    expected_filepath: "path",
   }.run();
 }

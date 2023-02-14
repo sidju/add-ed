@@ -22,22 +22,26 @@ use add_ed::{
 pub struct BasicTest {
   pub init_buffer: Vec<&'static str>,
   pub init_clipboard: Vec<&'static str>,
+  pub init_filepath: &'static str,
   pub command_input: Vec<&'static str>,
   pub expected_buffer: Vec<&'static str>,
   pub expected_buffer_saved: bool,
   pub expected_selection: (usize, usize),
   pub expected_clipboard: Vec<&'static str>,
+  pub expected_filepath: &'static str,
 }
 impl BasicTest {
   pub fn run(self) {
     PrintTest{
       init_buffer: self.init_buffer,
       init_clipboard: self.init_clipboard,
+      init_filepath: self.init_filepath,
       command_input: self.command_input,
       expected_buffer: self.expected_buffer,
       expected_buffer_saved: self.expected_buffer_saved,
       expected_selection: self.expected_selection,
       expected_clipboard: self.expected_clipboard,
+      expected_filepath: self.expected_filepath,
       expected_prints: vec![],
     }.run();
   }
@@ -52,11 +56,13 @@ impl BasicTest {
 pub struct PrintTest {
   pub init_buffer: Vec<&'static str>,
   pub init_clipboard: Vec<&'static str>,
+  pub init_filepath: &'static str,
   pub command_input: Vec<&'static str>,
   pub expected_buffer: Vec<&'static str>,
   pub expected_buffer_saved: bool,
   pub expected_selection: (usize, usize),
   pub expected_clipboard: Vec<&'static str>,
+  pub expected_filepath: &'static str,
   pub expected_prints: Vec<Print>,
 }
 impl PrintTest {
@@ -98,18 +104,23 @@ impl PrintTest {
       let mut ed = Ed::new(
         &mut buffer,
         &mut io,
-        "default_file".to_owned(),
+        self.init_filepath.to_owned(),
         HashMap::new(),
         false,
         false,
       );
       ed.run_macro(&mut ui).expect("Error running test.");
 
-      // Before dropping editor, read selection if expectation
+      // Before dropping editor, verify selection and filepath
       assert_eq!(
         ed.see_state().selection,
         self.expected_selection,
         "Selection after test (left) didn't match expectations (right)."
+      );
+      assert_eq!(
+        ed.see_state().file,
+        self.expected_filepath,
+        "state.filepath after test (left) didn't match expectations (right)."
       );
     }
     assert_eq!(
