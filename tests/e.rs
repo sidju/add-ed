@@ -134,6 +134,7 @@ fn edit_selection() {
     command_input: vec![
       ",e",
     ],
+    // Expectations are after the panicing unwrap, so irrelevant
     expected_buffer: vec![
     ],
     expected_buffer_saved: true,
@@ -141,5 +142,61 @@ fn edit_selection() {
     expected_clipboard: vec!["dummy"],
     expected_file_changes: vec![], // No changes to the fs
     expected_filepath: "new_file",
+  }.run();
+}
+
+// With edits, should panic
+#[test]
+#[should_panic]
+fn edit_unsaved() {
+  let test_io = test_io();
+  IOTest{
+    init_buffer: vec!["text"],
+    init_clipboard: vec!["dummy"],
+    init_io: test_io.clone(),
+    init_filepath: "text",
+    command_input: vec![
+      "i",
+      "line",
+      ".",
+      "e",
+    ],
+    // Expectations are after the panicing unwrap, so irrelevant
+    expected_buffer: vec![
+    ],
+    expected_buffer_saved: true,
+    expected_selection: (1,0),
+    expected_clipboard: vec!["dummy"],
+    expected_file_changes: vec![], // No changes to the fs
+    expected_filepath: "new_file",
+  }.run();
+}
+
+// With edits, should go through with force
+#[test]
+fn force_edit_unsaved() {
+  let test_io = test_io();
+  IOTest{
+    init_buffer: vec!["text"],
+    init_clipboard: vec!["dummy"],
+    init_io: test_io.clone(),
+    init_filepath: "text",
+    command_input: vec![
+      "i",
+      "line",
+      ".",
+      "E",
+    ],
+    expected_buffer: vec![
+      "file",
+      "data",
+      "in",
+      "file",
+    ],
+    expected_buffer_saved: true,
+    expected_selection: (1,4),
+    expected_clipboard: vec!["dummy"],
+    expected_file_changes: vec![], // No changes to the fs
+    expected_filepath: "text",
   }.run();
 }
