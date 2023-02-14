@@ -30,11 +30,13 @@ fn change_nobuffer() {
   BasicTest{
     init_buffer: vec![],
     init_clipboard: vec![],
+    init_filepath: "path",
     command_input: vec!["c"],
     expected_buffer: vec![],
     expected_buffer_saved: true,
     expected_selection: (1,0),
     expected_clipboard: vec![],
+    expected_filepath: "path",
   }.run();
 }
 // We don't do any noselection versions of 'c' testing, since default selection
@@ -46,6 +48,7 @@ fn change_noinput_endofbuffer_print() {
   PrintTest{
     init_buffer: vec!["a","b","c"],
     init_clipboard: vec![],
+    init_filepath: "path",
     command_input: vec!["3cp","."],
     expected_buffer: vec!["a","b"],
     expected_buffer_saved: false,
@@ -58,6 +61,7 @@ fn change_noinput_endofbuffer_print() {
         l: false,
       },
     ],
+    expected_filepath: "path",
   }.run();
 }
 
@@ -67,6 +71,7 @@ fn change_noinput_startofbuffer_numbered() {
   PrintTest{
     init_buffer: vec!["a","b","c"],
     init_clipboard: vec![],
+    init_filepath: "path",
     command_input: vec!["1cn","."],
     expected_buffer: vec!["b","c"],
     expected_buffer_saved: false,
@@ -79,6 +84,7 @@ fn change_noinput_startofbuffer_numbered() {
         l: false,
       },
     ],
+    expected_filepath: "path",
   }.run();
 }
 
@@ -88,6 +94,7 @@ fn change_noinput_middleofbuffer_literal() {
   PrintTest{
     init_buffer: vec!["a","b","c"],
     init_clipboard: vec![],
+    init_filepath: "path",
     command_input: vec!["2cl","."],
     expected_buffer: vec!["a","c"],
     expected_buffer_saved: false,
@@ -100,6 +107,7 @@ fn change_noinput_middleofbuffer_literal() {
         l: true,
       },
     ],
+    expected_filepath: "path",
   }.run();
 }
 
@@ -109,11 +117,13 @@ fn change_noinput_allofbuffer() {
   BasicTest{
     init_buffer: vec!["a","b","c"],
     init_clipboard: vec![],
+    init_filepath: "path",
     command_input: vec![",c","."],
     expected_buffer: vec![],
     expected_buffer_saved: false,
     expected_selection: (1,0),
     expected_clipboard: vec!["a","b","c"],
+    expected_filepath: "path",
   }.run();
 }
 
@@ -123,10 +133,12 @@ fn change() {
   BasicTest{
     init_buffer: vec!["a","b","d"],
     init_clipboard: vec![],
+    init_filepath: "path",
     command_input: vec!["2c","banana","cucumber","."],
     expected_buffer: vec!["a","banana","cucumber","d"],
     expected_buffer_saved: false,
     expected_selection: (2,3),
     expected_clipboard: vec!["b"],
+    expected_filepath: "path",
   }.run();
 }
