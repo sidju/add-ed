@@ -1,5 +1,5 @@
 // Tests for 'e' and 'E' command
-// Only test case testing 'E' is with unsaved buffer
+// Only test for 'E' is with unsaved buffer, last in file
 
 use std::collections::HashMap;
 mod shared;
