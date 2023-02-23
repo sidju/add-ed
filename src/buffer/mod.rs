@@ -111,15 +111,23 @@ impl Buffer {
       .build()
       .map_err(|_| INVALID_REGEX)
     ?;
+    let mut match_found = false;
     for index in 0 .. self.len() {
       if index >= selection.0.saturating_sub(1) && index <= selection.1.saturating_sub(1) {
-        self.history[self.buffer_i][index].matched = regex.is_match(&(self.history[self.buffer_i][index].text)) ^ inverse;
+        if regex.is_match(&(self.history[self.buffer_i][index].text)) ^ inverse {
+          match_found = true;
+          self.history[self.buffer_i][index].matched = true;
+        }
       }
       else {
         self.history[self.buffer_i][index].matched = false;
       }
     }
-    Ok(())
+    if !match_found {
+      Err(NO_MATCH)
+    } else {
+      Ok(())
+    }
   }
   // Horrendously inefficient getter with O(N * M) N = buffer.len(), M = nr_matches
   pub fn get_marked(&mut self)

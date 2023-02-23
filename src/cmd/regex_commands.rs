@@ -71,7 +71,8 @@ pub(super) fn global<I: IO>(
   // Then we get the script to run against them, if not already given
   // First grab commands given on command line
   let mut commands: Vec<String> = expressions.split_off(1).iter().map(|s| s.to_string()).collect();
-  // If the last command in that list is not empty it means the list was not terminated, so we take more from input
+  // If the last command in that list is not empty it means the list was not terminated,
+  // so we take more from input
   if commands.last().map(|s| s.trim()) != Some("") {
     // expressions.len() would be 0 if no command, so safe to unwrap
     let mut input = ui.get_input(
@@ -83,9 +84,13 @@ pub(super) fn global<I: IO>(
     commands.append(&mut input);
   }
   else {
-    // If the last command was empty we should pop it,
-    // since it will otherwise cause an unexpected print
+    // If the last command was empty we should pop it, since since it will
+    // otherwise cause an unexpected print
     commands.pop();
+  }
+  // If no other command given, default to print
+  if commands.is_empty() {
+    commands.push("p\n".to_string())
   }
   // After command collection we get the matching lines to run them at and do so
   while let Some(index) = state.buffer.get_marked()? {

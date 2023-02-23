@@ -4,6 +4,14 @@ Some time ago I decided to write an ED clone with syntax highlighting, [hired](h
 On my way to that I found that the macro commands ('g', 'v', 'G', 'V') pretty much require that you write an ED library for them.
 So I did, and here it is.
 
+## Differences from GNU Ed
+I have taken some liberties in the commands I have found less than ergonomic, so
+especially advanced commands have some differences (both syntax and behaviour)
+from GNU Ed. This strives to be a list of these changes.
+
+- 'g' and related commands take command list in input mode (with the regex
+  separator as terminator instead of '.').
+
 ## Early APIs
 Currently it is based on both my experiences with hired and the hired repo specifically (a manual fork, so it has the whole history).
 This may well mean the API is ill suited for your use. If that is the case I'd be happy to make some changes to make it more general.
