@@ -2,10 +2,7 @@
 // 'g' first, 'G' after
 
 mod shared;
-use shared::fixtures::{
-  BasicTest,
-  PrintTest,
-};
+use shared::fixtures::PrintTest;
 use shared::mock_ui::Print;
 
 // Verify behaviour of 'g'
@@ -16,10 +13,138 @@ use shared::mock_ui::Print;
 // - Takes a list of arguments separated by the first char following 'g'
 //   - First is the regex that lines are marked if matching
 //   - Then it takes any number of commands to run on all matching lines.
-//   - If the last argument on the line doesn't have the separator after:
+//   - If the last argument on the line doesn't have a separator after:
 //     - Starts taking input with the separator from above as terminator.
 //       Each input line is another command to run on all matching lines.
-//       (No additional per-line termination required, unlike gnu ed.)
+//       (No additional per-line termination required, unlike GNU Ed.)
+//   - If no commands are given it defaults to one invocation of 'p'.
 // - If no line matches the regex the command aborts, leaving state unchanged.
-// - Selection after command is the selection searched for matches.
+// - Selection after command is the selection left by execution of macro on
+//   the last matching line. (chosen to handle deletions correctly)
 // - Doesn't set/unset unsaved, but the commands executed affect as usual.
+
+// The most normal test case, g/re/p/, using that 'g' defaults to 'p'
+#[test]
+fn global_grep_defaultcommand() {
+  let buffer = vec![
+    "hello",
+    "1",
+    "4",
+    "there",
+  ];
+  PrintTest{
+    init_buffer: buffer.clone(),
+    init_clipboard: vec![],
+    init_filepath: "path",
+    command_input: vec![r",g/\d/"],
+    expected_buffer: buffer,
+    expected_buffer_saved: true,
+    expected_selection: (3,3),
+    expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: vec!["1\n".to_string(),],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec!["4\n".to_string(),],
+        n: false,
+        l: false,
+      },
+    ],
+    expected_filepath: "path",
+  }.run();
+}
+
+// Test a slightly fancier multiline invocation
+#[test]
+fn global_grep_and_delete() {
+  PrintTest{
+    init_buffer: vec![
+      "hello",
+      "1",
+      "4",
+      "there",
+      "9",
+    ],
+    init_clipboard: vec![],
+    init_filepath: "path",
+    command_input: vec![r",g/\d/p","d","/"],
+    expected_buffer: vec![
+      "hello",
+      "there",
+    ],
+    expected_buffer_saved: false,
+    expected_selection: (2,2),
+    expected_clipboard: vec!["9"],
+    expected_prints: vec![
+      Print{
+        text: vec!["1\n".to_string(),],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec!["4\n".to_string(),],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec!["9\n".to_string(),],
+        n: false,
+        l: false,
+      },
+    ],
+    expected_filepath: "path",
+  }.run();
+}
+
+// The most normal test case, g/re/p/, but with default selection
+// Also run a command after, to verify that 'g' doesn't incorrectly take input
+#[test]
+fn global_grep_noselection_separatepostcommand() {
+  let buffer = vec![
+    "hello",
+    "1",
+    "4",
+    "there",
+  ];
+  PrintTest{
+    init_buffer: buffer.clone(),
+    init_clipboard: vec![],
+    init_filepath: "path",
+    command_input: vec![",n",r",g/\d/p/","l",],
+    expected_buffer: buffer,
+    expected_buffer_saved: true,
+    expected_selection: (3,3),
+    expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: vec![
+          "hello\n".to_string(),
+          "1\n".to_string(),
+          "4\n".to_string(),
+          "there\n".to_string(),
+        ],
+        n: true,
+        l: false,
+      },
+      Print{
+        text: vec!["1\n".to_string(),],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec!["4\n".to_string(),],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec!["4\n".to_string(),],
+        n: false,
+        l: true,
+      },
+    ],
+    expected_filepath: "path",
+  }.run();
+}
