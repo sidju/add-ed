@@ -148,3 +148,114 @@ fn global_grep_noselection_separatepostcommand() {
     expected_filepath: "path",
   }.run();
 }
+
+// Verify behaviour of 'G'
+//
+// - Takes optional selection.
+//   - If given marks all matching lines in that selection.
+//   - If none, same using state.selection.
+// - Takes a list of arguments separated by the first char following 'G'.
+//   - First is the regex that lines are marked if matching.
+//   - No further arguments currently supported.
+// - If no line matches the regex the command aborts, leaving state unchanged.
+// - For each matching line:
+//   - That line is printed.
+//   - Commands to run on that line are taken in input mode using the separator
+//     as terminator.
+//     (If none are given defaults to one invocation of 'p')
+//   - Commands are run in the order given, aborting on any error.
+// - Selection after command is the selection left by commands executed on the
+//   last line (that line, if no commands given).
+// - Doesn't set/unset unsaved, but the commands executed affect as usual.
+
+// Run interactive global command with default/no command and selection
+// Additionally run a command after, to verify input is done
+#[test]
+fn global_interactive_defaultcommand_defaultselection() {
+  let buffer = vec![
+    "hello",
+    "1",
+    "4",
+    "there",
+  ];
+  PrintTest{
+    init_buffer: buffer.clone(),
+    init_clipboard: vec![],
+    init_filepath: "path",
+    command_input: vec![",n",r"G/\d/","/","/","l",],
+    expected_buffer: buffer,
+    expected_buffer_saved: true,
+    expected_selection: (3,3),
+    expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: vec![
+          "hello\n".to_string(),
+          "1\n".to_string(),
+          "4\n".to_string(),
+          "there\n".to_string(),
+        ],
+        n: true,
+        l: false,
+      },
+      Print{
+        text: vec!["1\n".to_string(),],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec!["4\n".to_string(),],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec!["4\n".to_string(),],
+        n: false,
+        l: true,
+      },
+    ],
+    expected_filepath: "path",
+  }.run();
+}
+
+// Run interactive global command with delete command
+// Additionally run a command after, to verify input is done
+#[test]
+fn global_interactive_delete() {
+  PrintTest{
+    init_buffer: vec![
+      "hello",
+      "1",
+      "4",
+      "there",
+    ],
+    init_clipboard: vec![],
+    init_filepath: "path",
+    command_input: vec![r"G/\d/","d","/","d","/","l",],
+    expected_buffer: vec![
+      "hello",
+      "there",
+    ],
+    expected_buffer_saved: false,
+    expected_selection: (2,2),
+    expected_clipboard: vec!["4"],
+    expected_prints: vec![
+      Print{
+        text: vec!["1\n".to_string(),],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec!["4\n".to_string(),],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec!["there\n".to_string(),],
+        n: false,
+        l: true,
+      },
+    ],
+    expected_filepath: "path",
+  }.run();
+}

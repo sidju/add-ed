@@ -333,7 +333,7 @@ pub fn run<I: IO>(
         'G' | 'V' => {
           // Disable snapshotting during execution
           state.dont_snapshot = true;
-          let res = global_inv(state, ui, selection, ch, clean);
+          let res = global_interactive(state, ui, selection, ch, clean);
           state.dont_snapshot = false;
           res?;
           Ok(false)

@@ -11,6 +11,7 @@ from GNU Ed. This strives to be a list of these changes.
 
 - 'g' and related commands take command list in input mode (with the regex
   separator as terminator instead of '.').
+  (Also, the 'I' suffix for case insensitive matching isn't implemented)
 
 ## Early APIs
 Currently it is based on both my experiences with hired and the hired repo specifically (a manual fork, so it has the whole history).
