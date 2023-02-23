@@ -105,7 +105,7 @@ pub(super) fn global<I: IO>(
   Ok(())
 }
 
-pub(super) fn global_inv<I: IO>(
+pub(super) fn global_interactive<I: IO>(
   state: &mut Ed<'_, I>,
   ui: &mut dyn UI,
   selection: Option<Sel<'_>>,
