@@ -28,6 +28,9 @@ pub struct EdState<'a> {
   pub selection: (usize, usize),
   pub buffer: &'a Buffer,
   pub file: &'a str,
+  pub print_errors: bool,
+  pub n: bool,
+  pub l: bool,
 }
 
 /// A ready parsed 's' invocation
@@ -176,6 +179,9 @@ impl <'a, I: IO> Ed <'a, I> {
       selection: self.selection,
       file: &self.file,
       buffer: self.buffer,
+      print_errors: self.print_errors,
+      n: self.n,
+      l: self.l,
     }
   }
 }

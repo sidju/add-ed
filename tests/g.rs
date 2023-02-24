@@ -102,7 +102,7 @@ fn global_grep_and_delete() {
 // The most normal test case, g/re/p/, but with default selection
 // Also run a command after, to verify that 'g' doesn't incorrectly take input
 #[test]
-fn global_grep_noselection_separatepostcommand() {
+fn global_grep_noselection_commandafter() {
   let buffer = vec![
     "hello",
     "1",
