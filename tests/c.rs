@@ -4,6 +4,7 @@
 mod shared;
 use shared::fixtures::{
   BasicTest,
+  ErrorTest,
   PrintTest,
 };
 use shared::mock_ui::Print;
@@ -23,15 +24,14 @@ use shared::mock_ui::Print;
 // - Deleted/replaced lines are placed in clipboard
 
 // Empty buffer, errors always
-// TODO: Use error testing fixtures, when errors have been improved
 #[test]
-#[should_panic]
 fn change_nobuffer() {
-  BasicTest{
+  ErrorTest{
     init_buffer: vec![],
     init_clipboard: vec![],
     init_filepath: "path",
     command_input: vec!["c"],
+    expected_error: add_ed::error_consts::SELECTION_EMPTY,
     expected_buffer: vec![],
     expected_buffer_saved: true,
     expected_selection: (1,0),

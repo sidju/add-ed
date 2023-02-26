@@ -14,4 +14,6 @@ pub mod dummy_io;
 pub mod dummy_ui;
 
 // All test fixtures
+mod inner_fixture;
+use inner_fixture::inner_fixture;
 pub mod fixtures;
