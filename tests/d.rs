@@ -3,6 +3,7 @@
 mod shared;
 use shared::fixtures::{
   BasicTest,
+  ErrorTest,
   PrintTest,
 };
 use shared::mock_ui::Print;
@@ -20,15 +21,14 @@ use shared::mock_ui::Print;
 // - Sets unsaved if selection is valid/it is executed
 
 // No selection, no buffer
-// TODO: Use error testing fixture, when errors have been improved
 #[test]
-#[should_panic]
 fn delete_noselection_nobuffer() {
-  BasicTest{
+  ErrorTest{
     init_buffer: vec![],
     init_clipboard: vec![],
     init_filepath: "path",
     command_input: vec!["d"],
+    expected_error: add_ed::error_consts::SELECTION_EMPTY,
     expected_buffer: vec![],
     expected_buffer_saved: true,
     expected_selection: (1,0),
@@ -57,13 +57,13 @@ fn delete_noselection() {
 // (This should be used to improve when using an error testing fixture, we
 // should preferably error before deleting the buffer instead of after.)
 #[test]
-#[should_panic]
 fn delete_noselection_allofbuffer_print() {
-  BasicTest{
+  ErrorTest{
     init_buffer: vec!["a","b","c"],
     init_clipboard: vec![],
     init_filepath: "path",
     command_input: vec!["dp"],
+    expected_error: add_ed::error_consts::SELECTION_EMPTY,
     expected_buffer: vec![],
     expected_buffer_saved: false,
     expected_selection: (1,0),

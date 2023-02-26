@@ -5,6 +5,7 @@
 mod shared;
 use shared::fixtures::{
   BasicTest,
+  ErrorTest,
   PrintTest,
 };
 use shared::mock_ui::Print;
@@ -189,16 +190,15 @@ fn append() {
 //   (If no lines doesn't change selection)
 // - Sets unsaved if input given (else no change)
 
-// No selection, no buffer, no input required (returns error before)
-// TODO: Use error testing fixture, when errors have been improved
+// No selection, no buffer, no input required (returns from execution before)
 #[test]
-#[should_panic]
 fn inline_append_nobuffer() {
-  BasicTest{
+  ErrorTest{
     init_buffer: vec![],
     init_clipboard: vec![],
     init_filepath: "path",
     command_input: vec!["A"],
+    expected_error: add_ed::error_consts::INVALID_LINENR0,
     expected_buffer: vec![],
     expected_buffer_saved: true,
     expected_selection: (1,0),

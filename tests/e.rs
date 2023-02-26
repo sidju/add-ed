@@ -3,7 +3,10 @@
 
 use std::collections::HashMap;
 mod shared;
-use shared::fixtures::IOTest;
+use shared::fixtures::{
+  IOTest,
+  ErrorTest,
+};
 use shared::fake_io::{
   FakeIO,
   ShellCommand,
@@ -123,37 +126,30 @@ fn edit_new_file() {
 
 // Give selection, should panic
 #[test]
-#[should_panic]
 fn edit_selection() {
-  let test_io = test_io();
-  IOTest{
+  ErrorTest{
     init_buffer: vec!["text"],
     init_clipboard: vec!["dummy"],
-    init_io: test_io.clone(),
     init_filepath: "text",
     command_input: vec![
       ",e",
     ],
-    // Expectations are after the panicing unwrap, so irrelevant
-    expected_buffer: vec![
-    ],
+    expected_error: add_ed::error_consts::SELECTION_FORBIDDEN,
+    // Everything should be unchanged, since we should error without changes
+    expected_buffer: vec!["text"],
     expected_buffer_saved: true,
-    expected_selection: (1,0),
+    expected_selection: (1,1),
     expected_clipboard: vec!["dummy"],
-    expected_file_changes: vec![], // No changes to the fs
-    expected_filepath: "new_file",
+    expected_filepath: "text",
   }.run();
 }
 
-// With edits, should panic
+// With edits, should error early so we don't need an IO
 #[test]
-#[should_panic]
 fn edit_unsaved() {
-  let test_io = test_io();
-  IOTest{
+  ErrorTest{
     init_buffer: vec!["text"],
     init_clipboard: vec!["dummy"],
-    init_io: test_io.clone(),
     init_filepath: "text",
     command_input: vec![
       "i",
@@ -161,14 +157,13 @@ fn edit_unsaved() {
       ".",
       "e",
     ],
-    // Expectations are after the panicing unwrap, so irrelevant
-    expected_buffer: vec![
-    ],
-    expected_buffer_saved: true,
-    expected_selection: (1,0),
+    expected_error: add_ed::error_consts::UNSAVED_CHANGES,
+    // Expectations shouldn't be affected by the 'e' invocation, since it errors
+    expected_buffer: vec!["line","text"],
+    expected_buffer_saved: false,
+    expected_selection: (1,1),
     expected_clipboard: vec!["dummy"],
-    expected_file_changes: vec![], // No changes to the fs
-    expected_filepath: "new_file",
+    expected_filepath: "text",
   }.run();
 }
 
