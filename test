@@ -1,7 +1,8 @@
 #!/bin/bash
-set -e
 
 mkdir -p test-env
 cd test-env
 cargo test --features="test_local_io" && \
 cargo test --features="initial_input_data"
+cd ..
+rm -r test-env
