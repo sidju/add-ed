@@ -189,6 +189,7 @@ fn append() {
 // - Selection after command is the inserted lines AND the now modified index
 //   (If no lines doesn't change selection)
 // - Sets unsaved if input given (else no change)
+// - Clipboard after execution is the line at index and first input line.
 
 // No selection, no buffer, no input required (returns from execution before)
 #[test]
@@ -266,7 +267,7 @@ fn inline_append_noselection() {
     expected_buffer: vec!["a","banana","cucumber"],
     expected_buffer_saved: false,
     expected_selection: (2,3),
-    expected_clipboard: vec![],
+    expected_clipboard: vec!["b"],
     expected_filepath: "path",
   }.run();
 }
@@ -283,7 +284,7 @@ fn inline_append() {
     expected_buffer: vec!["a","banana","cucumber"],
     expected_buffer_saved: false,
     expected_selection: (2,3),
-    expected_clipboard: vec![],
+    expected_clipboard: vec!["b"],
     expected_prints: vec![
       Print{
         text: vec!["banana\n".to_string(),"cucumber\n".to_string()],
