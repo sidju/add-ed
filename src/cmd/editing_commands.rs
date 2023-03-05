@@ -78,33 +78,28 @@ pub(super) fn input<I: IO>(
   )?;
   // Run the actual command and save returned selection to state
   state.selection = if input.len() != 0 {
-    let index = if command == 'a' || command == 'A' {
-      sel.1
-    }
-    else {
-      sel.0.saturating_sub(1)
+    let index = match command {
+      'a' | 'A' => sel.1,
+      'i' => sel.0.saturating_sub(1),
+      'I' => sel.0,
+      _ => unreachable!(),
     };
     let start = index + 1; // since buffer.insert puts input after index
     let end = start + input.len() - 1; // Subtract for inclusive select
-    state.buffer.insert(input, index)?;
     // In the case of 'a', 'i' that is all
     // 'A' and 'I' need a join
     match command {
-      // For 'A' we join the first input line with its preceeding, and thus reduce selection with 1
       'A' => {
-        // That the next line exists is checked by check_line on sel.1 above
-        state.buffer.join((index, index + 1))?;
+        state.buffer.inline_append(input, index)?;
         // This offsets start and end of sel by -1
-        (start.saturating_sub(1), end.saturating_sub(1))
+        (start - 1, end - 1)
       },
-      // For 'I' we do the same with the last input line and the following line, requiring no selection change
       'I' => {
-        // That next line exists is checked by check_line on sel.0 above
-        state.buffer.join((end, end + 1))?;
-        (start,end)
+        state.buffer.inline_insert(input, index)?;
+        (start - 1,end - 1)
       },
-      // 'a' and 'i' need only pass out start and end
       'a' | 'i' => {
+        state.buffer.insert(input, index)?;
         (start, end)
       },
       _ => { panic!("Unreachable code reached"); }

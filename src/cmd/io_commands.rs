@@ -71,11 +71,7 @@ pub(super) fn read_from_file<I: IO>(
     let datalen = data.len();
     match index {
       Some(i) => state.buffer.insert(data, i),
-      None => if state.buffer.len() == 0 {
-        state.buffer.insert(data, 0)
-      } else {
-        state.buffer.change_no_clipboard(data, (1, state.buffer.len()))
-      },
+      None => state.buffer.replace_buffer(data),
     }?;
     // Handle after-effects
     let index = index.unwrap_or(0) + 1;

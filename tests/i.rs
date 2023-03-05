@@ -189,6 +189,7 @@ fn insert() {
 // - Selection after command is the inserted lines AND the now modified index
 //   (If no lines doesn't change selection)
 // - Sets unsaved if input given (else no change)
+// - Clipboard after execution is last input line and line at index before join
 
 // No selection, no buffer, no input required (returns from execution before)
 #[test]
@@ -266,7 +267,7 @@ fn inline_insert_noselection() {
     expected_buffer: vec!["lake", "sauna","b"],
     expected_buffer_saved: false,
     expected_selection: (1,2),
-    expected_clipboard: vec![],
+    expected_clipboard: vec!["a"],
     expected_filepath: "path",
   }.run();
 }
@@ -283,7 +284,7 @@ fn inline_insert() {
     expected_buffer: vec!["lake","sauna","b"],
     expected_buffer_saved: false,
     expected_selection: (1,2),
-    expected_clipboard: vec![],
+    expected_clipboard: vec!["a"],
     expected_prints: vec![
       Print{
         text: vec!["lake\n".to_string(),"sauna\n".to_string()],

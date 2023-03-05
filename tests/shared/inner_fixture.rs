@@ -115,7 +115,7 @@ pub fn inner_fixture(
       vec![]
     },
     expected_clipboard,
-    "Cliboard contents (left) after test didn't match expectations (right)."
+    "Clipboard contents (left) after test didn't match expectations (right)."
   );
   assert_eq!(
     inner_ui.prints_history,
