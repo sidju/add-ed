@@ -191,7 +191,7 @@ impl Buffer {
     let data = self.history[self.buffer_i].split_off(selection.0.saturating_sub(1));
     // First join all lines into one, replacing newlines with spaces
     let mut joined = String::new();
-    for line in data {
+    for line in &data {
       for ch in line.text.chars() {
         joined.push(match ch {
           '\n' => ' ',
@@ -199,6 +199,8 @@ impl Buffer {
         })
       }
     }
+    // When we are done with original data we save it to clipboard
+    self.clipboard = data;
     // Remove trailing newline, which is now an unnecesary space
     joined.pop();
     // Then replace space nearest before selected width with newline
