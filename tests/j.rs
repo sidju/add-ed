@@ -5,10 +5,7 @@
 mod shared;
 use shared::fixtures::{
   BasicTest,
-  ErrorTest,
-  PrintTest,
 };
-use shared::mock_ui::Print;
 
 // Verify behaviour of 'j' command
 //

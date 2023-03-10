@@ -281,7 +281,6 @@ pub fn run<I: IO>(
           if clean.len() > 1 { return Err(INVALID_TAG); }
           let index = if ch == 'k' { sel.0 } else { sel.1 };
           state.buffer.tag_line(index, clean.chars().next().unwrap_or('\0'))?;
-          state.selection = sel;
           Ok(false)
         },
         'm' | 't' => {
