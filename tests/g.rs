@@ -35,7 +35,6 @@ fn global_grep_defaultcommand() {
   PrintTest{
     init_buffer: buffer.clone(),
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec![r",g/\d/"],
     expected_buffer: buffer,
     expected_buffer_saved: true,
@@ -53,7 +52,6 @@ fn global_grep_defaultcommand() {
         l: false,
       },
     ],
-    expected_filepath: "path",
   }.run();
 }
 
@@ -69,7 +67,6 @@ fn global_grep_and_delete() {
       "9",
     ],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec![r",g/\d/p","d","/"],
     expected_buffer: vec![
       "hello",
@@ -95,7 +92,6 @@ fn global_grep_and_delete() {
         l: false,
       },
     ],
-    expected_filepath: "path",
   }.run();
 }
 
@@ -112,7 +108,6 @@ fn global_grep_noselection_commandafter() {
   PrintTest{
     init_buffer: buffer.clone(),
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec![",n",r",g/\d/p/","l",],
     expected_buffer: buffer,
     expected_buffer_saved: true,
@@ -145,7 +140,6 @@ fn global_grep_noselection_commandafter() {
         l: true,
       },
     ],
-    expected_filepath: "path",
   }.run();
 }
 
@@ -181,7 +175,6 @@ fn global_interactive_defaultcommand_defaultselection() {
   PrintTest{
     init_buffer: buffer.clone(),
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec![",n",r"G/\d/","/","/","l",],
     expected_buffer: buffer,
     expected_buffer_saved: true,
@@ -214,7 +207,6 @@ fn global_interactive_defaultcommand_defaultselection() {
         l: true,
       },
     ],
-    expected_filepath: "path",
   }.run();
 }
 
@@ -230,7 +222,6 @@ fn global_interactive_delete() {
       "there",
     ],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec![r"G/\d/","d","/","d","/","l",],
     expected_buffer: vec![
       "hello",
@@ -256,6 +247,5 @@ fn global_interactive_delete() {
         l: true,
       },
     ],
-    expected_filepath: "path",
   }.run();
 }

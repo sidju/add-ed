@@ -28,7 +28,6 @@ fn mark() {
   BasicTest{
     init_buffer: vec!["a","b","c"],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec![
       "2,3kp", // Mark line with p
     ],
@@ -36,7 +35,6 @@ fn mark() {
     expected_buffer_saved: true,
     expected_selection: (1,3),
     expected_clipboard: vec![],
-    expected_filepath: "path",
   }.run()
 }
 
@@ -46,7 +44,6 @@ fn mark_print_adress() {
   PrintTest{
     init_buffer: vec!["a","b","c"],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec![
       "2,3kp", // Mark line with p
       "'p=", // Print index of line tagged by p
@@ -55,7 +52,6 @@ fn mark_print_adress() {
     expected_buffer_saved: true,
     expected_selection: (2,2),
     expected_clipboard: vec![],
-    expected_filepath: "path",
     expected_prints: vec![
       Print{
         text: vec!["(2,2)".to_string()],
@@ -76,7 +72,6 @@ fn mark_last() {
   BasicTest{
     init_buffer: vec!["a","b","c"],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec![
       "1,2Kp", // Mark line with p
     ],
@@ -84,7 +79,6 @@ fn mark_last() {
     expected_buffer_saved: true,
     expected_selection: (1,3),
     expected_clipboard: vec![],
-    expected_filepath: "path",
   }.run()
 }
 
@@ -94,7 +88,6 @@ fn mark_last_print_adress() {
   PrintTest{
     init_buffer: vec!["a","b","c"],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec![
       "1,2Kp", // Mark line with p
       "'p=", // Print index of line tagged by p
@@ -103,7 +96,6 @@ fn mark_last_print_adress() {
     expected_buffer_saved: true,
     expected_selection: (2,2),
     expected_clipboard: vec![],
-    expected_filepath: "path",
     expected_prints: vec![
       Print{
         text: vec!["(2,2)".to_string()],

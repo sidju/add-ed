@@ -22,27 +22,25 @@ use add_ed::{
 pub struct BasicTest {
   pub init_buffer: Vec<&'static str>,
   pub init_clipboard: Vec<&'static str>,
-  pub init_filepath: &'static str,
   pub command_input: Vec<&'static str>,
   pub expected_buffer: Vec<&'static str>,
   pub expected_buffer_saved: bool,
   pub expected_selection: (usize, usize),
   pub expected_clipboard: Vec<&'static str>,
-  pub expected_filepath: &'static str,
 }
 impl BasicTest {
   pub fn run(self) {
     inner_fixture(
       self.init_clipboard,
       self.init_buffer,
-      self.init_filepath,
+      "path",
       self.command_input,
       Ok(()),
       self.expected_buffer,
       self.expected_buffer_saved,
       self.expected_selection,
       self.expected_clipboard,
-      self.expected_filepath,
+      "path",
       vec![], // No prints expected
     )
   }
@@ -58,28 +56,26 @@ impl BasicTest {
 pub struct ErrorTest {
   pub init_buffer: Vec<&'static str>,
   pub init_clipboard: Vec<&'static str>,
-  pub init_filepath: &'static str,
   pub command_input: Vec<&'static str>,
   pub expected_error: &'static str,
   pub expected_buffer: Vec<&'static str>,
   pub expected_buffer_saved: bool,
   pub expected_selection: (usize, usize),
   pub expected_clipboard: Vec<&'static str>,
-  pub expected_filepath: &'static str,
 }
 impl ErrorTest {
   pub fn run(self) {
     inner_fixture(
       self.init_clipboard,
       self.init_buffer,
-      self.init_filepath,
+      "path",
       self.command_input,
       Err(self.expected_error),
       self.expected_buffer,
       self.expected_buffer_saved,
       self.expected_selection,
       self.expected_clipboard,
-      self.expected_filepath,
+      "path",
       vec![], // No prints expected
     )
   }
@@ -94,13 +90,11 @@ impl ErrorTest {
 pub struct PrintTest {
   pub init_buffer: Vec<&'static str>,
   pub init_clipboard: Vec<&'static str>,
-  pub init_filepath: &'static str,
   pub command_input: Vec<&'static str>,
   pub expected_buffer: Vec<&'static str>,
   pub expected_buffer_saved: bool,
   pub expected_selection: (usize, usize),
   pub expected_clipboard: Vec<&'static str>,
-  pub expected_filepath: &'static str,
   pub expected_prints: Vec<Print>,
 }
 impl PrintTest {
@@ -108,15 +102,39 @@ impl PrintTest {
     inner_fixture(
       self.init_clipboard,
       self.init_buffer,
-      self.init_filepath,
+      "path",
       self.command_input,
       Ok(()),
       self.expected_buffer,
       self.expected_buffer_saved,
       self.expected_selection,
       self.expected_clipboard,
-      self.expected_filepath,
+      "path",
       self.expected_prints,
+    )
+  }
+}
+
+// A test fixture for verifying filename changes, essentially just for 'f'
+pub struct PathTest {
+  pub init_filepath: &'static str,
+  pub command_input: Vec<&'static str>,
+  pub expected_filepath: &'static str,
+}
+impl PathTest {
+  pub fn run(self) {
+    inner_fixture(
+      vec![],
+      vec![],
+      self.init_filepath,
+      self.command_input,
+      Ok(()),
+      vec![],
+      true,
+      (1,0),
+      vec![],
+      self.expected_filepath,
+      vec![],
     )
   }
 }

@@ -22,13 +22,11 @@ fn join() {
   BasicTest{
     init_buffer: vec!["a","b","c","d"],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["2,3j"],
     expected_buffer: vec!["a","bc","d"],
     expected_buffer_saved: false,
     expected_clipboard: vec!["b","c"],
     expected_selection: (2,2),
-    expected_filepath: "path",
   }.run()
 }
 
@@ -38,13 +36,11 @@ fn join_noselection() {
   BasicTest{
     init_buffer: vec!["a","b","c","d"],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["j"],
     expected_buffer: vec!["abcd"],
     expected_buffer_saved: false,
     expected_clipboard: vec!["a","b","c","d"],
     expected_selection: (1,1),
-    expected_filepath: "path",
   }.run()
 }
 
@@ -73,7 +69,6 @@ fn reflow_noselection_nowidth() {
   BasicTest{
     init_buffer: lorem(),
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["J"],
     expected_buffer: vec![
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor",
@@ -103,7 +98,6 @@ fn reflow_noselection_nowidth() {
     expected_buffer_saved: false,
     expected_clipboard: lorem(),
     expected_selection: (1,23),
-    expected_filepath: "path",
   }.run()
 }
 
@@ -115,7 +109,6 @@ fn reflow() {
   BasicTest{
     init_buffer: lorem(),
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["1J70"],
     expected_buffer: vec![
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do",
@@ -139,6 +132,5 @@ fn reflow() {
     expected_buffer_saved: false,
     expected_clipboard: expected_clipboard,
     expected_selection: (1,16),
-    expected_filepath: "path",
   }.run()
 }

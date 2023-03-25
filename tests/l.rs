@@ -33,13 +33,11 @@ fn literal() {
   PrintTest{
     init_buffer: vec!["a","\tb","$c","d"],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["1,4l"],
     expected_selection: (1,4),
     expected_buffer: vec!["a","\tb","$c","d"],
     expected_buffer_saved: true,
     expected_clipboard: vec![],
-    expected_filepath: "path",
     expected_prints: vec![
       Print{
         text: vec![
@@ -61,13 +59,11 @@ fn literal_numbered_noselection() {
   PrintTest{
     init_buffer: vec!["a","\tb","$c","d"],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["ln"],
     expected_selection: (1,4),
     expected_buffer: vec!["a","\tb","$c","d"],
     expected_buffer_saved: true,
     expected_clipboard: vec![],
-    expected_filepath: "path",
     expected_prints: vec![
       Print{
         text: vec![
