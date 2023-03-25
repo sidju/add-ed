@@ -2,8 +2,8 @@
 
 mod shared;
 use shared::fixtures::{
-  BasicTest,
   PrintTest,
+  PathTest,
 };
 use shared::mock_ui::Print;
 
@@ -20,7 +20,6 @@ fn filename_default() {
   PrintTest{
     init_buffer: vec![],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec![
       "f",
     ],
@@ -28,7 +27,6 @@ fn filename_default() {
     expected_buffer_saved: true,
     expected_selection: (1,0),
     expected_clipboard: vec![],
-    expected_filepath: "path",
     expected_prints: vec![
       Print{
         text: vec!["path".to_owned()],
@@ -42,15 +40,9 @@ fn filename_default() {
 // With given path, set new state.path
 #[test]
 fn filename() {
-  BasicTest{
-    init_buffer: vec![],
-    init_clipboard: vec![],
+  PathTest{
     init_filepath: "old",
     command_input: vec!["f new"],
-    expected_buffer: vec![],
-    expected_buffer_saved: true,
-    expected_selection: (1,0),
-    expected_clipboard: vec![],
     expected_filepath: "new",
   }.run();
 }
@@ -58,15 +50,9 @@ fn filename() {
 // With unseparated given path, set new state.path
 #[test]
 fn filename_without_space() {
-  BasicTest{
-    init_buffer: vec![],
-    init_clipboard: vec![],
+  PathTest{
     init_filepath: "old",
     command_input: vec!["fnew"],
-    expected_buffer: vec![],
-    expected_buffer_saved: true,
-    expected_selection: (1,0),
-    expected_clipboard: vec![],
     expected_filepath: "new",
   }.run();
 }

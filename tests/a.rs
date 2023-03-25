@@ -30,13 +30,11 @@ fn append_noselection_noinput_nobuffer() {
   BasicTest{
     init_buffer: vec![],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["a","."],
     expected_buffer: vec![],
     expected_buffer_saved: true,
     expected_selection: (1,0),
     expected_clipboard: vec![],
-    expected_filepath: "path",
   }.run();
 }
 
@@ -47,13 +45,11 @@ fn append_noinput_nobuffer() {
   BasicTest{
     init_buffer: vec![],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["0a","."],
     expected_buffer: vec![],
     expected_buffer_saved: true,
     expected_selection: (1,0),
     expected_clipboard: vec![],
-    expected_filepath: "path",
   }.run();
 }
 
@@ -63,7 +59,6 @@ fn append_noselection_nobuffer_print() {
   PrintTest{
     init_buffer: vec![],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["ap","1","2","."],
     expected_buffer: vec!["1","2"],
     expected_buffer_saved: false,
@@ -76,7 +71,6 @@ fn append_noselection_nobuffer_print() {
         l: false,
       },
     ],
-    expected_filepath: "path",
   }.run();
 }
 
@@ -87,13 +81,11 @@ fn append_nobuffer() {
   BasicTest{
     init_buffer: vec![],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["0a","1","2","."],
     expected_buffer: vec!["1","2"],
     expected_buffer_saved: false,
     expected_selection: (1,2),
     expected_clipboard: vec![],
-    expected_filepath: "path",
   }.run();
 }
 
@@ -104,7 +96,6 @@ fn append_noselection_noinput_numbered() {
   PrintTest{
     init_buffer: vec!["a","b"],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["an","."],
     expected_buffer: vec!["a","b"],
     expected_buffer_saved: true,
@@ -117,7 +108,6 @@ fn append_noselection_noinput_numbered() {
         l: false,
       },
     ],
-    expected_filepath: "path",
   }.run();
 }
 
@@ -128,13 +118,11 @@ fn append_noinput() {
   BasicTest{
     init_buffer: vec!["a","b"],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["2a","."],
     expected_buffer: vec!["a","b"],
     expected_buffer_saved: true,
     expected_selection: (1,2),
     expected_clipboard: vec![],
-    expected_filepath: "path",
   }.run();
 }
 
@@ -144,7 +132,6 @@ fn append_noselection() {
   PrintTest{
     init_buffer: vec!["a","b"],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["al","c","d","."],
     expected_buffer: vec!["a","b","c","d"],
     expected_buffer_saved: false,
@@ -157,7 +144,6 @@ fn append_noselection() {
         l: true,
       },
     ],
-    expected_filepath: "path",
   }.run();
 }
 
@@ -168,13 +154,11 @@ fn append() {
   BasicTest{
     init_buffer: vec!["a","b"],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["2a","c","d","."],
     expected_buffer: vec!["a","b","c","d"],
     expected_buffer_saved: false,
     expected_selection: (3,4),
     expected_clipboard: vec![],
-    expected_filepath: "path",
   }.run();
 }
 
@@ -197,14 +181,12 @@ fn inline_append_nobuffer() {
   ErrorTest{
     init_buffer: vec![],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["A"],
     expected_error: add_ed::error_consts::INVALID_LINENR0,
     expected_buffer: vec![],
     expected_buffer_saved: true,
     expected_selection: (1,0),
     expected_clipboard: vec![],
-    expected_filepath: "path",
   }.run();
 }
 
@@ -215,7 +197,6 @@ fn inline_append_noselection_noinput() {
   PrintTest{
     init_buffer: vec!["a","b"],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["Ap","."],
     expected_buffer: vec!["a","b"],
     expected_buffer_saved: true,
@@ -228,7 +209,6 @@ fn inline_append_noselection_noinput() {
         l: false,
       }
     ],
-    expected_filepath: "path",
   }.run();
 }
 
@@ -239,7 +219,6 @@ fn inline_append_noinput_literal() {
   PrintTest{
     init_buffer: vec!["a","b"],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["2Al","."],
     expected_buffer: vec!["a","b"],
     expected_buffer_saved: true,
@@ -252,7 +231,6 @@ fn inline_append_noinput_literal() {
         l: true,
       }
     ],
-    expected_filepath: "path",
   }.run();
 }
 
@@ -262,13 +240,11 @@ fn inline_append_noselection() {
   BasicTest{
     init_buffer: vec!["a","b"],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["A","anana","cucumber","."],
     expected_buffer: vec!["a","banana","cucumber"],
     expected_buffer_saved: false,
     expected_selection: (2,3),
     expected_clipboard: vec!["b"],
-    expected_filepath: "path",
   }.run();
 }
 
@@ -279,7 +255,6 @@ fn inline_append() {
   PrintTest{
     init_buffer: vec!["a","b"],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["2An","anana","cucumber","."],
     expected_buffer: vec!["a","banana","cucumber"],
     expected_buffer_saved: false,
@@ -292,6 +267,5 @@ fn inline_append() {
         l: false,
       }
     ],
-    expected_filepath: "path",
   }.run();
 }

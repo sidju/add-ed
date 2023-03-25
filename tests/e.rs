@@ -130,7 +130,6 @@ fn edit_selection() {
   ErrorTest{
     init_buffer: vec!["text"],
     init_clipboard: vec!["dummy"],
-    init_filepath: "text",
     command_input: vec![
       ",e",
     ],
@@ -140,7 +139,6 @@ fn edit_selection() {
     expected_buffer_saved: true,
     expected_selection: (1,1),
     expected_clipboard: vec!["dummy"],
-    expected_filepath: "text",
   }.run();
 }
 
@@ -150,7 +148,6 @@ fn edit_unsaved() {
   ErrorTest{
     init_buffer: vec!["text"],
     init_clipboard: vec!["dummy"],
-    init_filepath: "text",
     command_input: vec![
       "i",
       "line",
@@ -163,7 +160,6 @@ fn edit_unsaved() {
     expected_buffer_saved: false,
     expected_selection: (1,1),
     expected_clipboard: vec!["dummy"],
-    expected_filepath: "text",
   }.run();
 }
 

@@ -34,13 +34,11 @@ fn help_noerror() {
   PrintTest{
     init_buffer: vec![],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["h"],
     expected_buffer: vec![],
     expected_buffer_saved: true,
     expected_selection: (1,0),
     expected_clipboard: vec![],
-    expected_filepath: "path",
     expected_prints: vec![
       Print{
         text: vec!["No errors recorded.".to_string()],
@@ -124,13 +122,11 @@ fn help_text() {
   PrintTest{
     init_buffer: vec![],
     init_clipboard: vec![],
-    init_filepath: "path",
     command_input: vec!["help"],
     expected_buffer: vec![],
     expected_buffer_saved: true,
     expected_selection: (1,0),
     expected_clipboard: vec![],
-    expected_filepath: "path",
     expected_prints: vec![
       Print{
         text: [HELP_TEXT].iter().map(|s| s.to_string()).collect(),
