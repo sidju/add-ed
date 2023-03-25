@@ -14,6 +14,7 @@ use add_ed::{
 pub fn inner_fixture(
   init_clipboard: Vec<&str>,
   init_buffer: Vec<&str>,
+  init_buffer_saved: bool,
   init_filepath: &str,
   command_input: Vec<&str>,
   expected_result: Result<(),&str>,
@@ -43,7 +44,7 @@ pub fn inner_fixture(
     buffer.cut((1,buffer.len())).unwrap();
   }
   buffer.insert(init_buffer, 0).unwrap();
-  buffer.set_saved();
+  if init_buffer_saved { buffer.set_saved(); }
   // Create scripted UI (with mock UI, which tracks print invocations)
   let mut inner_ui = MockUI{ prints_history: Vec::new() };
   let mut ui = ScriptedUI{

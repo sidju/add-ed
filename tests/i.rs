@@ -180,13 +180,8 @@ fn insert() {
 fn inline_insert_nobuffer() {
   ErrorTest{
     init_buffer: vec![],
-    init_clipboard: vec![],
     command_input: vec!["I"],
     expected_error: add_ed::error_consts::INDEX_TOO_BIG,
-    expected_buffer: vec![],
-    expected_buffer_saved: true,
-    expected_selection: (1,0),
-    expected_clipboard: vec![],
   }.run();
 }
 

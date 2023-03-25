@@ -129,6 +129,7 @@ pub const UNSAVED_CHANGES: &str = "Unsaved changes. Force with the capitalised v
 pub const NO_ERROR: &str = "No errors recorded.";
 pub const NO_FILE: &str = "No file set.";
 pub const INVALID_FILE: &str = "Invalid filepath, commands can not be saved as default path.";
+pub const PRINT_AFTER_WIPE: &str = "You cannot print after command that deletes whole buffer.";
 
 // Post-command parsing errors
 pub const ESCAPED_LAST_EXPRESSION: &str = "Expression input ended with '\\'.";

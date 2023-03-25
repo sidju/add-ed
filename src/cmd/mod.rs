@@ -209,6 +209,13 @@ pub fn run<I: IO>(
           pflags.p = flags.remove(&'p').unwrap();
           pflags.n = flags.remove(&'n').unwrap();
           pflags.l = flags.remove(&'l').unwrap();
+          // If we are about to delete whole buffer
+          if sel.0 == 1 && sel.1 == state.buffer.len() {
+            // And we are to print after execution, error
+            if pflags.p || pflags.n || pflags.l {
+              return Err(PRINT_AFTER_WIPE);
+            }
+          }
           state.buffer.cut(sel)?;
           // Try to figure out a selection after the deletion
           state.selection = {

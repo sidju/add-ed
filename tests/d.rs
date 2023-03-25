@@ -25,13 +25,8 @@ use shared::mock_ui::Print;
 fn delete_noselection_nobuffer() {
   ErrorTest{
     init_buffer: vec![],
-    init_clipboard: vec![],
     command_input: vec!["d"],
     expected_error: add_ed::error_consts::SELECTION_EMPTY,
-    expected_buffer: vec![],
-    expected_buffer_saved: true,
-    expected_selection: (1,0),
-    expected_clipboard: vec![],
   }.run();
 }
 
@@ -56,13 +51,8 @@ fn delete_noselection() {
 fn delete_noselection_allofbuffer_print() {
   ErrorTest{
     init_buffer: vec!["a","b","c"],
-    init_clipboard: vec![],
     command_input: vec!["dp"],
-    expected_error: add_ed::error_consts::SELECTION_EMPTY,
-    expected_buffer: vec![],
-    expected_buffer_saved: false,
-    expected_selection: (1,0),
-    expected_clipboard: vec!["a","b","c"],
+    expected_error: add_ed::error_consts::PRINT_AFTER_WIPE,
   }.run();
 }
 
