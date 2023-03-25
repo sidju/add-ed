@@ -93,7 +93,7 @@ fn main() {
   let mut buffer = add_ed::buffer::Buffer::new();
   let mut io = add_ed::io::LocalIO::new();
   // Read in the file given and instantiate the editor
-  let mut ed = add_ed::Ed::new(&mut buffer, &mut io, path, HashMap::new(), false, false);
+  let mut ed = add_ed::Ed::new(&mut buffer, &mut io, path, HashMap::new());
   // Run the editor with the created UI
   ed.run(&mut ui).unwrap();
 }

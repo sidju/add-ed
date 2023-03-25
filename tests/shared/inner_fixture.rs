@@ -63,8 +63,6 @@ pub fn inner_fixture(
       &mut io,
       init_filepath.to_owned(),
       HashMap::new(),
-      false,
-      false,
     );
     assert_eq!(
       ed.run_macro(&mut ui),
