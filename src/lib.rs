@@ -28,9 +28,6 @@ pub struct EdState<'a> {
   pub selection: (usize, usize),
   pub buffer: &'a Buffer,
   pub file: &'a str,
-  pub print_errors: bool,
-  pub n: bool,
-  pub l: bool,
 }
 
 /// A ready parsed 's' invocation
@@ -64,18 +61,21 @@ pub struct Ed <'a, I: IO> {
   // Flag to prevent auto-creating undo-points when running macros or the like
   dont_snapshot: bool,
 
+  // Variables after this are essentially just configurations with no
+  // representable invalid state, so we can allow free access to them.
+
   // Prefix for command input. Traditionally ':' so that by default
-  cmd_prefix: Option<char>,
+  pub cmd_prefix: Option<char>,
   // Default states for printing flags
   // Allows to print numbered or literal by default
-  n: bool,
-  l: bool,
+  pub n: bool,
+  pub l: bool,
   // Map of macro name to macro script
-  macros: HashMap<String, String>,
+  pub macros: HashMap<String, String>,
   // Wether or not to print errors when they occur (if not, print ? instead of error)
-  print_errors: bool,
+  pub print_errors: bool,
   // The previous error that occured, since we may not have printed it
-  error: Option<&'static str>,
+  pub error: Option<&'static str>,
 }
 
 impl <'a, I: IO> Ed <'a, I> {
@@ -90,8 +90,6 @@ impl <'a, I: IO> Ed <'a, I> {
     io: &'a mut I,
     file: String,
     macros: HashMap<String, String>,
-    n: bool,
-    l: bool,
   ) -> Self {
     // let selection = (1,0); // Empty, but that is handled in cmd module
     // This selection matches the selection after opening file with 'e' command
@@ -99,6 +97,8 @@ impl <'a, I: IO> Ed <'a, I> {
     Self {
       // Sane defaults for initial settings
       print_errors: true,
+      n: false,
+      l: false,
       error: None,
       prev_s: None,
       cmd_prefix: Some(':'),
@@ -109,8 +109,6 @@ impl <'a, I: IO> Ed <'a, I> {
       buffer,
       io,
       file,
-      n,
-      l,
       macros,
     }
   }
@@ -173,15 +171,12 @@ impl <'a, I: IO> Ed <'a, I> {
     Ok(())
   }
 
-  /// Get an immutable reference to part of the editors state
+  /// Get an immutable reference to some internal parts of the editors state
   pub fn see_state(&self) -> EdState {
     EdState{
       selection: self.selection,
       file: &self.file,
       buffer: self.buffer,
-      print_errors: self.print_errors,
-      n: self.n,
-      l: self.l,
     }
   }
 }

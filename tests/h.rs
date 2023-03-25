@@ -75,8 +75,6 @@ fn help() {
     &mut io,
     "path".to_owned(),
     HashMap::new(),
-    false,
-    false,
   );
   assert_eq!(ed.run_macro(&mut ui), Err(SELECTION_EMPTY));
   ed.run_macro(&mut ui).expect("Error running test");
@@ -114,12 +112,10 @@ fn help_toggle() {
     &mut io,
     "path".to_owned(),
     HashMap::new(),
-    false,
-    false,
   );
-  assert_eq!(ed.see_state().print_errors, true);
+  assert_eq!(ed.print_errors, true);
   ed.run_macro(&mut ui).expect("Error running test");
-  assert_eq!(ed.see_state().print_errors, false);
+  assert_eq!(ed.print_errors, false);
   assert!(buffer.is_empty());
 }
 

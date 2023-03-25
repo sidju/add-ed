@@ -180,8 +180,6 @@ impl IOTest {
         &mut self.init_io,
         self.init_filepath.to_owned(),
         HashMap::new(),
-        false,
-        false,
       );
       ed.run_macro(&mut ui).expect("Error running test.");
 
