@@ -180,13 +180,8 @@ fn append() {
 fn inline_append_nobuffer() {
   ErrorTest{
     init_buffer: vec![],
-    init_clipboard: vec![],
     command_input: vec!["A"],
     expected_error: add_ed::error_consts::INVALID_LINENR0,
-    expected_buffer: vec![],
-    expected_buffer_saved: true,
-    expected_selection: (1,0),
-    expected_clipboard: vec![],
   }.run();
 }
 

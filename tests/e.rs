@@ -129,16 +129,10 @@ fn edit_new_file() {
 fn edit_selection() {
   ErrorTest{
     init_buffer: vec!["text"],
-    init_clipboard: vec!["dummy"],
     command_input: vec![
       ",e",
     ],
     expected_error: add_ed::error_consts::SELECTION_FORBIDDEN,
-    // Everything should be unchanged, since we should error without changes
-    expected_buffer: vec!["text"],
-    expected_buffer_saved: true,
-    expected_selection: (1,1),
-    expected_clipboard: vec!["dummy"],
   }.run();
 }
 
@@ -147,19 +141,10 @@ fn edit_selection() {
 fn edit_unsaved() {
   ErrorTest{
     init_buffer: vec!["text"],
-    init_clipboard: vec!["dummy"],
     command_input: vec![
-      "i",
-      "line",
-      ".",
       "e",
     ],
     expected_error: add_ed::error_consts::UNSAVED_CHANGES,
-    // Expectations shouldn't be affected by the 'e' invocation, since it errors
-    expected_buffer: vec!["line","text"],
-    expected_buffer_saved: false,
-    expected_selection: (1,1),
-    expected_clipboard: vec!["dummy"],
   }.run();
 }
 

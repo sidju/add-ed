@@ -146,6 +146,13 @@ pub(super) fn change<I: IO>(
     initial_input_data,
   )?;
   let inputlen = input.len();
+  // If we are about to delete the whole buffer
+  if inputlen == 0 && sel.0 == 1 && sel.1 == state.buffer.len() {
+    // Verify that we don't have a print flag set, error if we do
+    if pflags.p || pflags.n || pflags.l {
+      return Err(PRINT_AFTER_WIPE);
+    }
+  }
   state.buffer.change(input, sel)?;
   state.selection = {
     // For change behaviour select:

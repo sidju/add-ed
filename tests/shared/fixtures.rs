@@ -33,6 +33,7 @@ impl BasicTest {
     inner_fixture(
       self.init_clipboard,
       self.init_buffer,
+      true,
       "path",
       self.command_input,
       Ok(()),
@@ -49,32 +50,28 @@ impl BasicTest {
 // An error checking fixture
 // Sets up state as though reading buffer contents from a file and runs the
 // given commands via dummy_ui. (Selection is Ed default, buffer.saved is true)
-// Afterwards verifies state against optional expectations on
-// buffer contents and selection.
+// Afterwards verifies that state hasn't changed and error matches expectations.
 // Panics if any command tries to print, use PrintTest if this isn't desired.
 // Terminating '\n' aren't needed nor allowed in any of the Vec<&str> arguments.
 pub struct ErrorTest {
   pub init_buffer: Vec<&'static str>,
-  pub init_clipboard: Vec<&'static str>,
   pub command_input: Vec<&'static str>,
   pub expected_error: &'static str,
-  pub expected_buffer: Vec<&'static str>,
-  pub expected_buffer_saved: bool,
-  pub expected_selection: (usize, usize),
-  pub expected_clipboard: Vec<&'static str>,
 }
 impl ErrorTest {
   pub fn run(self) {
+    let init_buffer_len = self.init_buffer.len();
     inner_fixture(
-      self.init_clipboard,
-      self.init_buffer,
+      vec![],
+      self.init_buffer.clone(),
+      false, // Since some errors need the buffer unsaved to trigger
       "path",
       self.command_input,
       Err(self.expected_error),
-      self.expected_buffer,
-      self.expected_buffer_saved,
-      self.expected_selection,
-      self.expected_clipboard,
+      self.init_buffer,
+      false,
+      (1,init_buffer_len),
+      vec![],
       "path",
       vec![], // No prints expected
     )
@@ -102,6 +99,7 @@ impl PrintTest {
     inner_fixture(
       self.init_clipboard,
       self.init_buffer,
+      true,
       "path",
       self.command_input,
       Ok(()),
@@ -126,6 +124,7 @@ impl PathTest {
     inner_fixture(
       vec![],
       vec![],
+      true,
       self.init_filepath,
       self.command_input,
       Ok(()),

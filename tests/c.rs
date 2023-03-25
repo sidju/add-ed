@@ -28,13 +28,8 @@ use shared::mock_ui::Print;
 fn change_nobuffer() {
   ErrorTest{
     init_buffer: vec![],
-    init_clipboard: vec![],
     command_input: vec!["c"],
     expected_error: add_ed::error_consts::SELECTION_EMPTY,
-    expected_buffer: vec![],
-    expected_buffer_saved: true,
-    expected_selection: (1,0),
-    expected_clipboard: vec![],
   }.run();
 }
 // We don't do any noselection versions of 'c' testing, since default selection
