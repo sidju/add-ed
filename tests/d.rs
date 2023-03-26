@@ -57,6 +57,7 @@ fn delete_noselection_allofbuffer_print() {
 }
 
 // No selection, modified selection by pre-command gives partial delete
+// Incidentally also tests default command
 #[test]
 fn delete_noselection_middleofbuffer_numbered_literal() {
   PrintTest{

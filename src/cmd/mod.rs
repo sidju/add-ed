@@ -133,7 +133,7 @@ pub fn run<I: IO>(
         }
         // Non-editing commands
         '#' => {
-          if selection.is_some() { return Err(SELECTION_FORBIDDEN); }
+          state.selection = interpret_selection(selection, state.selection, state.buffer)?;
           Ok(false)
         },
         '=' => { // Print selection (can set selection)

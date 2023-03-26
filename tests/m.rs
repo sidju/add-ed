@@ -1,11 +1,11 @@
-// Tests for 'm' and 'M' command
-// 'm' tests immediately after imports
-// 'M' tests after the 'm' tests
+// Tests for 'm' command
 
 mod shared;
 use shared::fixtures::{
   BasicTest,
+  PrintTest,
 };
+use shared::mock_ui::Print;
 
 // Verify behaviour of 'm' command
 //
@@ -31,5 +31,27 @@ fn mov() {
     expected_buffer_saved: false,
     expected_clipboard: vec![],
     expected_selection: (1,2),
+  }.run()
+}
+
+// Test with default selection and default index
+// (Uses '#' to set selection without any print)
+#[test]
+fn mov_noindex_noselection_print() {
+  PrintTest{
+    init_buffer: vec!["a","b","c","d"],
+    init_clipboard: vec![],
+    command_input: vec!["2,3#","mp"],
+    expected_buffer: vec!["a","d","b","c"],
+    expected_buffer_saved: false,
+    expected_selection: (3,4),
+    expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: vec!["b\n".to_string(),"c\n".to_string(),],
+        n: false,
+        l: false,
+      },
+    ],
   }.run()
 }
