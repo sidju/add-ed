@@ -70,12 +70,12 @@ pub struct Ed <'a, I: IO> {
   // Allows to print numbered or literal by default
   pub n: bool,
   pub l: bool,
-  // Map of macro name to macro script
-  pub macros: HashMap<String, String>,
   // Wether or not to print errors when they occur (if not, print ? instead of error)
   pub print_errors: bool,
   // The previous error that occured, since we may not have printed it
   pub error: Option<&'static str>,
+  // Map of macro name to macro script
+  pub macros: HashMap<String, String>,
 }
 
 impl <'a, I: IO> Ed <'a, I> {

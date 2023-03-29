@@ -1,6 +1,6 @@
-// Tests for 'l' and 'L' command
-// 'l' tests are immediately after imports
-// 'L' tests are after the 'l' tests
+// Tests for 'n' and 'N' command
+// 'n' tests are immediately after imports
+// 'N' tests are after the 'N' tests
 
 mod shared;
 use shared::fixtures::{
@@ -15,39 +15,39 @@ use add_ed::{
 };
 use std::collections::HashMap;
 
-// Verify behaviour of 'l' command
+// Verify behaviour of 'n' command
 //
 // - Takes optional selection
 //   - If given prints selection
 //   - If not given prints state.selection
 // - Accepts printing flags
-// - Prints literally unless state.l is set
-//   (What literal printing is is left to the UI)
-// - Prints numbered if state.n is set
+// - Prints numbered unless state.n is set
+//   (What numbered means is is left to the UI)
+// - Prints literal if state.l is set
 // - state.selection is set to printed selection
 // - Does not change unsaved
 
-// Normal case, just print some lines literally
+// Normal case, just print some lines numbered
 #[test]
-fn literal() {
+fn numbered() {
   PrintTest{
-    init_buffer: vec!["a","\tb","$c","d"],
+    init_buffer: vec!["a","b","c","d"],
     init_clipboard: vec![],
-    command_input: vec!["1,4l"],
+    command_input: vec!["1,4n"],
     expected_selection: (1,4),
-    expected_buffer: vec!["a","\tb","$c","d"],
+    expected_buffer: vec!["a","b","c","d"],
     expected_buffer_saved: true,
     expected_clipboard: vec![],
     expected_prints: vec![
       Print{
         text: vec![
           "a\n".to_string(),
-          "\tb\n".to_string(),
-          "$c\n".to_string(),
+          "b\n".to_string(),
+          "c\n".to_string(),
           "d\n".to_string(),
         ],
-        n: false,
-        l: true,
+        n: true,
+        l: false,
       }
     ],
   }.run()
@@ -55,11 +55,11 @@ fn literal() {
 
 // Test flag handling and using default selection
 #[test]
-fn literal_numbered_noselection() {
+fn numbered_literal_noselection() {
   PrintTest{
     init_buffer: vec!["a","\tb","$c","d"],
     init_clipboard: vec![],
-    command_input: vec!["ln"],
+    command_input: vec!["nl"],
     expected_selection: (1,4),
     expected_buffer: vec!["a","\tb","$c","d"],
     expected_buffer_saved: true,
@@ -79,23 +79,23 @@ fn literal_numbered_noselection() {
   }.run()
 }
 
-// Verify behaviour of 'L' command
+// Verify behaviour of 'N' command
 //
 // - Takes no selection
 // - Does not modify selection
 // - Does not modify saved
-// - Toggles the state.l bool, which sets if to print literal by default
+// - Toggles the state.n bool, which sets if to print numbered by default
 
-// Verify toggling of literal by knowing state before and verifying after
+// Verify toggling of numbered by knowing initial state and verifying after
 #[test]
-fn literal_toggle_on() {
+fn numbered_toggle_on() {
   let mut io = DummyIO::new();
   let mut buffer = Buffer::new();
   buffer.set_saved();
   let mut ui = ScriptedUI{
     print_ui: None,
     input: vec![
-      "L",
+      "N",
     ].iter().map(|x|{
       let mut s = x.to_string();
       s.push('\n');
@@ -110,18 +110,18 @@ fn literal_toggle_on() {
     HashMap::new(),
   );
   ed.run_macro(&mut ui).expect("Error running test");
-  assert_eq!(ed.l, true);
+  assert_eq!(ed.n, true);
   assert!(buffer.is_empty());
 }
 #[test]
-fn literal_toggle_off() {
+fn numbered_toggle_off() {
   let mut io = DummyIO::new();
   let mut buffer = Buffer::new();
   buffer.set_saved();
   let mut ui = ScriptedUI{
     print_ui: None,
     input: vec![
-      "L",
+      "N",
     ].iter().map(|x|{
       let mut s = x.to_string();
       s.push('\n');
@@ -135,8 +135,8 @@ fn literal_toggle_off() {
     "path".to_owned(),
     HashMap::new(),
   );
-  ed.l = true;
+  ed.n = true;
   ed.run_macro(&mut ui).expect("Error running test");
-  assert_eq!(ed.l, false);
+  assert_eq!(ed.n, false);
   assert!(buffer.is_empty());
 }
