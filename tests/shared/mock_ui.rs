@@ -24,7 +24,7 @@ impl UI for MockUI {
   ) -> Result<(), &'static str> {
     self.prints_history.push(
       Print{
-        text: vec![data.to_string()],
+        text: vec![data.to_owned()],
         n: false,
         l: false,
       }
