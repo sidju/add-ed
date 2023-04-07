@@ -71,6 +71,9 @@ impl Buffer {
   pub fn set_saved(&mut self) {
     self.saved = true;
   }
+  pub fn set_unsaved(&mut self) {
+    self.saved = false;
+  }
   pub fn saved(&self) -> bool {
     self.saved
   }
