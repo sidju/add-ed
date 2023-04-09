@@ -86,7 +86,7 @@ pub fn inner_fixture(
   assert_eq!(
     buffer.saved(),
     expected_buffer_saved,
-    "Buffer.saved() (left) after test didn't match expectations (right)."
+    "Buffer.saved() after test (left) didn't match expectations (right)."
   );
   assert_eq!(
     if buffer.len() != 0 {
@@ -98,7 +98,7 @@ pub fn inner_fixture(
       vec![]
     },
     expected_buffer,
-    "Buffer contents (left) after test didn't match expectations (right)."
+    "Buffer contents after test (left) didn't match expectations (right)."
   );
   // Switch out buffer contents to clipboard contents
   let end_of_buf = buffer.len();
@@ -114,7 +114,7 @@ pub fn inner_fixture(
       vec![]
     },
     expected_clipboard,
-    "Clipboard contents (left) after test didn't match expectations (right)."
+    "Clipboard contents after test (left) didn't match expectations (right)."
   );
   assert_eq!(
     inner_ui.prints_history,

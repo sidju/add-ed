@@ -4,7 +4,6 @@ use std::collections::HashMap;
 mod shared;
 use shared::fixtures::{
   IOTest,
-  ErrorTest,
 };
 use shared::fake_io::{
   FakeIO,
