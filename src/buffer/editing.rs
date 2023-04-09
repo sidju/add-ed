@@ -262,7 +262,6 @@ impl Buffer {
     use regex::RegexBuilder;
     // ensure that the selection is valid
     verify_selection(self, selection)?;
-    self.saved = false; // TODO: actually check if changes are made
     // Compile the regex used to match/extract data
     let regex = RegexBuilder::new(pattern.0)
       .multi_line(true)
@@ -280,8 +279,6 @@ impl Buffer {
     for line in &before {
       tmp.push_str(&line.text);
     }
-    // Remove the trailing newline, so the whole selection cannot be deleted
-    tmp.pop();
 
     // First check if there exists a match in the selection
     // If not we return error
@@ -292,17 +289,20 @@ impl Buffer {
       return Err(NO_MATCH);
     }
 
-    // Run the search-replace over it
+    // Since there is a match we save the prior state in clipboard and mark
+    // the buffer as unsaved
+    self.clipboard = before;
+    self.saved = false; // TODO: actually check if changes are made
+
     // Interpret escape sequences in the replace pattern
     let replace = substitute::substitute(pattern.1);
+    // Run the search-replace over it
     let after = if global {
       regex.replace_all(&tmp, replace).to_string()
     }
     else {
       regex.replace(&tmp, replace).to_string()
     };
-    // Put back the removed newline
-    tmp.push('\n');
     // Split on newlines and add all lines to the buffer
     // lines iterator doesn't care if the last newline is there or not
     for line in after.lines() {

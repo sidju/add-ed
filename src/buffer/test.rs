@@ -125,9 +125,8 @@ pub fn api_validation(buffer: &mut Buffer) {
   );
 
   // Check that search_replace errors when it finds nothing to replace
-  // Also checks that last newline in selection isn't match/replace-able
   assert_eq!(
-    buffer.search_replace((r".*\n",""), (3,3), true),
+    buffer.search_replace((r"not_found\n",""), (3,3), true),
     Err(crate::error_consts::NO_MATCH),
     "If search_replace doesn't find anything to replace it should error to show this."
   );
