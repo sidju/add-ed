@@ -1,6 +1,6 @@
-// Tests for 'm' and 'M' command
-// 'm' tests are after imports
-// 'M' tests are thereafter
+// Test behaviour of 't' and 'T'
+// 't' tests are immediately after imports
+// 'T' tests are thereafter
 
 mod shared;
 use shared::fixtures::{
@@ -9,27 +9,27 @@ use shared::fixtures::{
 };
 use shared::mock_ui::Print;
 
-// Verify behaviour of 'm' command
+// Verify behaviour of 't' command
 //
 // - Takes optional selection
-//   - If given moves lines in given selection
-//   - If not given moves lines in state.selection
-// - Takes optional index argument
-//   - If given moves lines to after index
-//   - If not given moves lines to end of buffer
-//   - Special, moving to after line 0 moves to start of file
-// - Takes printing flags after index argument
+//   - If given copies lines in selection
+//   - If none given copies lines in state.selection
+// - Takes optional index argument after command
+//   - If given copies lines to after given index
+//   - If none given copies lines to after end of buffer
+//   - Special, index 0 copies to beginning of buffer
+// - Accepts printing flags after the index
 // - Sets unsaved
-// - Selection after execution is the moved lines in their new location
+// - Selection after execution is the new copied lines
 
 // Test fully defined command
 #[test]
-fn mov() {
+fn copy() {
   BasicTest{
     init_buffer: vec!["a","b","c","d"],
     init_clipboard: vec![],
-    command_input: vec!["3,4m0"],
-    expected_buffer: vec!["c","d","a","b"],
+    command_input: vec!["3,4t0"],
+    expected_buffer: vec!["c","d","a","b","c","d"],
     expected_buffer_saved: false,
     expected_clipboard: vec![],
     expected_selection: (1,2),
@@ -39,14 +39,14 @@ fn mov() {
 // Test with default selection and default index
 // (Uses '#' to set selection without any print)
 #[test]
-fn mov_noindex_noselection_print() {
+fn copy_noindex_noselection_print() {
   PrintTest{
     init_buffer: vec!["a","b","c","d"],
     init_clipboard: vec![],
-    command_input: vec!["2,3#","mp"],
-    expected_buffer: vec!["a","d","b","c"],
+    command_input: vec!["2,3#","tp"],
+    expected_buffer: vec!["a","b","c","d","b","c"],
     expected_buffer_saved: false,
-    expected_selection: (3,4),
+    expected_selection: (5,6),
     expected_clipboard: vec![],
     expected_prints: vec![
       Print{
@@ -58,27 +58,27 @@ fn mov_noindex_noselection_print() {
   }.run()
 }
 
-// Verify behaviour of 'M' command
+// Verify behaviour of 'T' command
 //
 // - Takes optional selection
-//   - If given moves lines in given selection
-//   - If not given moves lines in state.selection
+//   - If given copies lines in given selection
+//   - If not given copies lines in state.selection
 // - Takes optional index argument
-//   - If given moves lines to before index
-//   - If not given moves lines to beginning of buffer
-//   - Special, moving to before line 0 move to beginning of buffer
+//   - If given copies lines to before index
+//   - If not given copies lines to beginning of buffer
+//   - Special, copying to before line 0 copies to beginning of buffer
 // - Takes printing flags after index argument
 // - Sets unsaved
-// - Selection after execution is the moved lines in their new location
+// - Selection after execution is the new copied lines
 
 // Test fully defined command
 #[test]
-fn mov_before() {
+fn copy_before() {
   BasicTest{
     init_buffer: vec!["a","b","c","d"],
     init_clipboard: vec![],
-    command_input: vec!["3,4M2"],
-    expected_buffer: vec!["a","c","d","b"],
+    command_input: vec!["3,4T2"],
+    expected_buffer: vec!["a","c","d","b","c","d"],
     expected_buffer_saved: false,
     expected_clipboard: vec![],
     expected_selection: (2,3),
@@ -88,12 +88,12 @@ fn mov_before() {
 // Test with default selection and default index
 // (Uses '#' to set selection without any print)
 #[test]
-fn mov_before_noindex_noselection_print() {
+fn copy_before_noindex_noselection_print() {
   PrintTest{
     init_buffer: vec!["a","b","c","d"],
     init_clipboard: vec![],
-    command_input: vec!["2,3#","Mp"],
-    expected_buffer: vec!["b","c","a","d"],
+    command_input: vec!["2,3#","Tp"],
+    expected_buffer: vec!["b","c","a","b","c","d"],
     expected_buffer_saved: false,
     expected_selection: (1,2),
     expected_clipboard: vec![],

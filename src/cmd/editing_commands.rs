@@ -189,7 +189,10 @@ pub(super) fn transfer<I: IO>(
   // Parse the target index, then the flags if any
   let (ind_end, ind) = parse_index(tail)?;
   let index = interpret_index(
-    ind.unwrap_or(Ind::BufferLen),
+    ind.unwrap_or_else(||{
+      if command == 'M' || command == 'T' { Ind::Literal(1) }
+      else { Ind::BufferLen }
+    }),
     state.buffer,
     state.selection.1,
   )?;
@@ -201,17 +204,22 @@ pub(super) fn transfer<I: IO>(
   let selection = interpret_selection(selection, state.selection, state.buffer)?;
   // Beware, is actually 1 less than move size due to inclusive bounds
   let move_size = selection.1 - selection.0;
-  if command == 'm' {
-    state.buffer.mov(selection, index)?;
-  } else {
-    state.buffer.mov_copy(selection,index)?;
+  match command {
+    'm' => state.buffer.mov(selection, index)?,
+    'M' => state.buffer.mov(selection, index.saturating_sub(1))?,
+    't' => state.buffer.mov_copy(selection,index)?,
+    'T' => state.buffer.mov_copy(selection,index.saturating_sub(1))?,
+    _ => unreachable!(),
   };
   // Note that we subtract/add one to index to exclude index itself
-  state.selection = if command == 'm' && selection.1 < index {
-    // If moving forward detract moved lines from resulting selection
-    (index - move_size, index)
-  } else {
-    (index + 1, index + move_size + 1)
+  state.selection = match command {
+    // If moving forward we must detract moved lines from resulting selection
+    'm' if selection.1 < index => (index - move_size, index),
+    'M' if selection.1 < index.saturating_sub(1) => (index - 1 - move_size, index - 1),
+    // Otherwise the general case should work
+    'M' | 'T' => ( index, index + move_size),
+    'm' | 't' => (index + 1, index + move_size + 1),
+    _ => unreachable!(),
   };
   Ok(())
 }
