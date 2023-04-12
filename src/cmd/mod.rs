@@ -290,7 +290,7 @@ pub fn run<I: IO>(
           state.buffer.tag_line(index, clean.chars().next().unwrap_or('\0'))?;
           Ok(false)
         },
-        'm' | 't' => {
+        'm' | 'M' | 't' | 'T' => {
           transfer(state, &mut pflags, selection, ch, clean)?;
           Ok(false)
         }
