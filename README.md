@@ -22,6 +22,9 @@ from GNU Ed. This strives to be a list of these changes.
 Currently it is based on both my experiences with hired and the hired repo specifically (a manual fork, so it has the whole history).
 This may well mean the API is ill suited for your use. If that is the case I'd be happy to make some changes to make it more general.
 
+In line with this, the help text is often a bit outdated. I'll get to that, and
+improve on the error type, before the first stable release.
+
 ## Core concepts
 ### The selection:
 The original ED keeps track of the last line you interacted with and defaults to working on that for most commands.
@@ -31,7 +34,7 @@ My hope is that this is more intuitive.
 
 ### Flexible APIs
 The library has been designed with clear traits to enable changing out most components easily.
-For example it should be somewhat easy to create a SSH+sed Buffer implementation for remote editing,
+For example it should be somewhat easy to create a SSH/SFTP IO implementation for remote editing,
 or a GUI frontend implementing the UI trait.
 
 ## New features compared to Ed
