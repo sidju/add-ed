@@ -12,6 +12,11 @@ from GNU Ed. This strives to be a list of these changes.
 - 'g' and related commands take command list in input mode (with the regex
   separator as terminator instead of '.').
   (Also, the 'I' suffix for case insensitive matching isn't implemented)
+- '!' accepts a selection and will pipe those lines through the given shell
+  command, replacing them with the output. Without a selection it acts as in GNU
+  Ed.
+- '#' accepts a selection and will set state.selection to it without printing
+  anything. This is added to be able to set selection without printing.
 
 ## Early APIs
 Currently it is based on both my experiences with hired and the hired repo specifically (a manual fork, so it has the whole history).
@@ -30,14 +35,17 @@ For example it should be somewhat easy to create a SSH+sed Buffer implementation
 or a GUI frontend implementing the UI trait.
 
 ## New features compared to Ed
-- 'A' and 'I' commands, which act as 'a'/'i' and then 'j' the preceding/following line.
+- 'A' and 'I' commands, which first 'a'/'i' and then 'j' the preceding/following line.
   Perfect for commenting out a single line or adding a forgotten ;.
 - 'C' command, acts as 'c' but hands out previous value to the Ui's input method.
-  This enables you to edit the selection instead of replacing it (depends on Ui).
+  This enables you to edit the selection instead of replacing it (depends on UI).
 - 'N' and 'L' commands, toggle the default print conf. Line numbers and escapes respectively.
 - 'K' command tags the last line in selection (instead of first as 'k'). (selection adjustment)
 - ':' command, runs the macro with the name given as argument (whitespace trimmed).
   Macro execution behaves like 'g' execution. 'q' or error returns early.
+- 'J' command, joins all lines in selection and then splits them so they all are
+  shorter than the number of columns given after 'J'. Splits on word boundaries.
+  It doesn't understand indentation, but improvement PRs are very welcome.
 
 ## Feature flags:
 ### vecbuffer:

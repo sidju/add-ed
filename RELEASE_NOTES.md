@@ -1,3 +1,19 @@
+# 0.10.0
+- Add a first sketch of undo/redo. Feedback on behaviour is requested in the
+  "Undo behaviour" issue (#3) on github
+- Rework basically all tests, resulting in many small fixes
+  (Old tests kept but not active, a whole new suite written)
+- Add IO abstraction for shell and file interactions
+  (caused small change in  UI trait)
+- Add support for shell escapes to 'r', 'e' and 'w'
+- Add '!' command, with expanded functionality compared to ed
+  (If given selection it pipes it through the command, replacing the selection)
+- Renamed DummyUI to ScriptedUI
+- Make more of the Ed state public instead of configured at construction
+  (printing flags, cmd_prefix and macros)
+- Added back the ability for '#' to take and set a selection, to give a way to
+  set selection without any output (no command prints the given selection)
+
 # 0.9.0
 - Improve substitute, especially escapes.
 - Make ':' default prefix for command input (if handled by UI).

@@ -89,7 +89,6 @@ impl <'a, I: IO> Ed <'a, I> {
     buffer: &'a mut Buffer,
     io: &'a mut I,
     file: String,
-    macros: HashMap<String, String>,
   ) -> Self {
     // let selection = (1,0); // Empty, but that is handled in cmd module
     // This selection matches the selection after opening file with 'e' command
@@ -105,11 +104,11 @@ impl <'a, I: IO> Ed <'a, I> {
       selection,
       dont_snapshot: false,
       prev_shell_command: String::new(),
+      macros: HashMap::new(),
       // And the given values
       buffer,
       io,
       file,
-      macros,
     }
   }
 

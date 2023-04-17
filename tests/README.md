@@ -1,5 +1,5 @@
 # Test naming:
-Tests are named in two parts: a descriptive name for the command tested and 
+Tests are named in two parts: a descriptive name for the command tested and
 suffixes describing what specific circumstance is tested. Normal circumstances
 are considered to be an explicit selection/index on a buffer with lines in and
 input if the command accepts it. (and no print flags)

@@ -290,7 +290,8 @@ pub fn run<I: IO>(
           state.buffer.tag_line(index, clean.chars().next().unwrap_or('\0'))?;
           Ok(false)
         },
-        'm' | 'M' | 't' | 'T' => {
+        // 'M' and 'T' are supported internally but disabled, see issue #6
+        'm' | 't' => {
           transfer(state, &mut pflags, selection, ch, clean)?;
           Ok(false)
         }

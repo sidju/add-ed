@@ -10,7 +10,6 @@ use add_ed::{
   buffer::Buffer,
   Ed,
 };
-use std::collections::HashMap;
 
 // Verify behaviour of 'q' and 'Q' command
 //
@@ -30,7 +29,6 @@ fn quit() {
     &mut buffer,
     &mut io,
     "path".to_owned(),
-    HashMap::new(),
   );
   assert!(ed.run_command(&mut ui, "q\n").expect("Error running test"));
 }
@@ -57,7 +55,6 @@ fn force_quit_unsaved() {
     &mut buffer,
     &mut io,
     "path".to_owned(),
-    HashMap::new(),
   );
   assert!(ed.run_command(&mut ui, "Q\n").expect("Error running test"));
 }
