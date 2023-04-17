@@ -147,11 +147,13 @@ impl PathTest {
 // Terminating '\n' aren't needed nor allowed in any of the Vec<&str> arguments.
 pub struct IOTest {
   pub init_buffer: Vec<&'static str>,
+  pub init_clipboard: Vec<&'static str>,
   pub init_io: FakeIO,
   pub init_filepath: &'static str,
   pub command_input: Vec<&'static str>,
   pub expected_buffer: Vec<&'static str>,
   pub expected_buffer_saved: bool,
+  pub expected_clipboard: Vec<&'static str>,
   pub expected_selection: (usize, usize),
   pub expected_file_changes: Vec<(&'static str, &'static str)>,
   pub expected_filepath: &'static str,
@@ -160,7 +162,10 @@ impl IOTest {
   pub fn run(mut self) {
     // Create and init buffer
     let mut buffer = Buffer::new();
-    let init_clipboard: Vec<String> = vec![ "dummy\n".to_owned() ];
+    let init_clipboard: Vec<String> = self.init_clipboard.iter()
+      .map(|x| x.to_string())
+      .collect()
+    ;
     let init_buffer: Vec<String> = self.init_buffer.iter().map(|x| {
       let mut s = x.to_string();
       s.push('\n');
@@ -234,7 +239,7 @@ impl IOTest {
       } else {
         vec![]
       },
-      vec!["dummy"],
+      self.expected_clipboard,
       "Cliboard contents (left) after test didn't match expectations (right)."
     );
     let mut expected_post_state = self.init_io.clone();

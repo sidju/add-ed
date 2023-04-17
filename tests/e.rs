@@ -57,6 +57,7 @@ fn edit_defaults() {
   IOTest{
     init_buffer: vec!["text"],
     init_io: test_io.clone(),
+    init_clipboard: vec!["dummy"],
     init_filepath: "text",
     command_input: vec![
       "e",
@@ -70,6 +71,7 @@ fn edit_defaults() {
     expected_buffer_saved: true,
     expected_selection: (1,4),
     expected_file_changes: vec![], // No changes to the fs
+    expected_clipboard: vec!["dummy"],
     expected_filepath: "text",
   }.run();
 }
@@ -81,6 +83,7 @@ fn edit_path() {
   IOTest{
     init_buffer: vec!["text"],
     init_io: test_io.clone(),
+    init_clipboard: vec!["dummy"],
     init_filepath: "text",
     command_input: vec![
       "e numbers",
@@ -94,6 +97,7 @@ fn edit_path() {
     expected_buffer_saved: true,
     expected_selection: (1,4),
     expected_file_changes: vec![], // No changes to the fs
+    expected_clipboard: vec!["dummy"],
     expected_filepath: "numbers",
   }.run();
 }
@@ -105,6 +109,7 @@ fn edit_new_file() {
   IOTest{
     init_buffer: vec!["text"],
     init_io: test_io.clone(),
+    init_clipboard: vec!["dummy"],
     init_filepath: "text",
     command_input: vec![
       "e new_file",
@@ -114,6 +119,7 @@ fn edit_new_file() {
     expected_buffer_saved: true,
     expected_selection: (1,0),
     expected_file_changes: vec![], // No changes to the fs
+    expected_clipboard: vec!["dummy"],
     expected_filepath: "new_file",
   }.run();
 }
@@ -149,6 +155,7 @@ fn force_edit_unsaved() {
   IOTest{
     init_buffer: vec!["text"],
     init_io: test_io.clone(),
+    init_clipboard: vec!["dummy"],
     init_filepath: "text",
     command_input: vec![
       "i",
@@ -165,6 +172,7 @@ fn force_edit_unsaved() {
     expected_buffer_saved: true,
     expected_selection: (1,4),
     expected_file_changes: vec![], // No changes to the fs
+    expected_clipboard: vec!["dummy"],
     expected_filepath: "text",
   }.run();
 }
