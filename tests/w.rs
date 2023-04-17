@@ -57,6 +57,7 @@ fn write_defaults() {
   IOTest{
     init_buffer: vec!["text"],
     init_io: test_io.clone(),
+    init_clipboard: vec!["dummy"],
     init_filepath: "text",
     command_input: vec![
       "w",
@@ -67,6 +68,7 @@ fn write_defaults() {
     expected_buffer_saved: true,
     expected_selection: (1,1),
     expected_file_changes: vec![("text","text\n")], // buffer overwrites "text"
+    expected_clipboard: vec!["dummy"],
     expected_filepath: "text",
   }.run();
 }
@@ -78,12 +80,14 @@ fn write_fully_specified() {
   IOTest{
     init_buffer: vec!["text","data"],
     init_io: test_io.clone(),
+    init_clipboard: vec!["dummy"],
     init_filepath: "text",
     command_input: vec![",w new_file"],
     expected_buffer: vec!["text","data"],
     expected_buffer_saved: true,
     expected_selection: (1,2),
     expected_file_changes: vec![("new_file","text\ndata\n")],
+    expected_clipboard: vec!["dummy"],
     expected_filepath: "new_file",
   }.run();
 }
@@ -95,12 +99,14 @@ fn write_command() {
   IOTest{
     init_buffer: vec![],
     init_io: test_io,
+    init_clipboard: vec!["dummy"],
     init_filepath: "numbers",
     command_input: vec!["e","w !sort -n"],
     expected_buffer: vec!["4","5","2","1"],
     expected_buffer_saved: true, // Since 'e' sets saved and 'w' doesn't unset
     expected_selection: (1,4),
     expected_file_changes: vec![],
+    expected_clipboard: vec!["dummy"],
     expected_filepath: "numbers",
   }.run()
 }
@@ -122,12 +128,14 @@ fn write_append_defaults() {
   IOTest{
     init_buffer: vec!["3","6"],
     init_io: test_io,
+    init_clipboard: vec!["dummy"],
     init_filepath: "numbers",
     command_input: vec!["W"],
     expected_buffer: vec!["3","6"],
     expected_buffer_saved: true,
     expected_selection: (1,2),
     expected_file_changes: vec![("numbers","4\n5\n2\n1\n3\n6\n")],
+    expected_clipboard: vec!["dummy"],
     expected_filepath: "numbers",
   }.run()
 }
@@ -139,12 +147,14 @@ fn write_append() {
   IOTest{
     init_buffer: vec!["3","6"],
     init_io: test_io,
+    init_clipboard: vec!["dummy"],
     init_filepath: "default",
     command_input: vec!["1W numbers"],
     expected_buffer: vec!["3","6"],
     expected_buffer_saved: true,
     expected_selection: (1,1),
     expected_file_changes: vec![("numbers","4\n5\n2\n1\n3\n")],
+    expected_clipboard: vec!["dummy"],
     expected_filepath: "default",
   }.run()
 }

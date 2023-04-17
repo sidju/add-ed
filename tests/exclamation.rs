@@ -1,4 +1,4 @@
-// Tests for 'r' command
+// Tests for '!' command
 
 use std::collections::HashMap;
 mod shared;
@@ -10,13 +10,18 @@ use shared::fake_io::{
   ShellCommand,
 };
 
-// Verify behaviour of 'r' command
+// Verify behaviour of '!' command
 //
-// - Takes optional index, defaults to state.selection.1
-// - Takes filepath or shell escape after command, defaults to state.path
-// - Inserts contents of file/output of shell command after selection
-// - Sets unsaved
-// - Selection after is all of the newly read data
+// - Takes optional selection
+//   - If given, pipes selection through the shell command
+//     (stdin -> command -> stdout, stderr prints directly)
+//   - If not given, just runs the shell command
+//     (stdin, stdout, stderr passed in)
+// - Takes shell command after '!'
+// - Sets unsaved if selection is given, else not
+// - Selection after is
+//   - Unmodified if no selection given
+//   - Set to the piped lines if selection given
 // - Doesn't modify state.path
 
 // Function to set up the "filesystem" for these tests
@@ -45,11 +50,9 @@ fn test_io() -> FakeIO {
   }
 }
 
-// No selection and no path, verify defaults
-// (As starting selection is all of buffer we should append the data from
-// state.file)
+// No selection, just run command
 #[test]
-fn read_defaults() {
+fn shell_escape() {
   let test_io = test_io();
   IOTest{
     init_buffer: vec!["text"],
@@ -57,17 +60,13 @@ fn read_defaults() {
     init_clipboard: vec!["dummy"],
     init_filepath: "text",
     command_input: vec![
-      "r",
+      "!echo hi",
     ],
     expected_buffer: vec![
       "text",
-      "file",
-      "data",
-      "in",
-      "file",
     ],
-    expected_buffer_saved: false,
-    expected_selection: (2,5),
+    expected_buffer_saved: true,
+    expected_selection: (1,1),
     expected_file_changes: vec![], // No changes to the fs
     expected_clipboard: vec!["dummy"],
     expected_filepath: "text",
@@ -76,25 +75,19 @@ fn read_defaults() {
 
 // Fully specified prepend
 #[test]
-fn read_prepend() {
+fn shell_pipe() {
   let test_io = test_io();
   IOTest{
-    init_buffer: vec!["numbers"],
+    init_buffer: vec!["4","5","2","1"],
     init_io: test_io.clone(),
     init_clipboard: vec!["dummy"],
-    init_filepath: "",
-    command_input: vec!["0r numbers"],
-    expected_buffer: vec![
-      "4",
-      "5",
-      "2",
-      "1",
-      "numbers",
-    ],
+    init_filepath: "numbers",
+    command_input: vec![",!sort -n"],
+    expected_buffer: vec!["1","2","4","5"],
     expected_buffer_saved: false,
     expected_selection: (1,4),
     expected_file_changes: vec![],
-    expected_clipboard: vec!["dummy"],
-    expected_filepath: "",
+    expected_clipboard: vec!["4","5","2","1"],
+    expected_filepath: "numbers",
   }.run();
 }
