@@ -1,4 +1,6 @@
-// Tests for 'x' command
+// Tests for 'x' and 'X' command
+// 'x' tests after includes
+// 'X' tests thereafter
 
 mod shared;
 use shared::fixtures::{
