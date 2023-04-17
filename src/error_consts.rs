@@ -140,6 +140,7 @@ pub const PREV_SHELL_COMMAND_UNSET: &str = "No previous shell command to replace
 pub const UNDEFINED_FLAG: &str = "Unknown flag entered.";
 pub const DUPLICATE_FLAG: &str = "A flag was entered twice.";
 pub const INTEGER_PARSE: &str = "Could not parse argument as integer.";
+pub const CONTRADICTING_ARGUMENT: &str = "The arguments would make the command do nothing.";
 
 // Buffer command errors
 pub const BUFFER_NOT_IMPLEMENTED: &str = "Feature not implemented in buffer.";

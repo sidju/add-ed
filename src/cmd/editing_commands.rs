@@ -23,7 +23,10 @@ pub(super) fn scroll<I: IO>(
   let nr = if nr_end == 0 {
     default_scroll_length
   } else {
-    clean[.. nr_end].parse::<usize>().map_err(|_| INTEGER_PARSE)?
+    let nr = clean[.. nr_end].parse::<usize>().map_err(|_| INTEGER_PARSE)?;
+    // Scrolling 0 lines is invalid, return error
+    if nr == 0 { return Err(CONTRADICTING_ARGUMENT); }
+    nr
   };
   // Check what isn't numeric for flags
   let mut flags = parse_flags(&clean[nr_end ..], "pnl")?;
@@ -38,8 +41,11 @@ pub(super) fn scroll<I: IO>(
     (start, end)
   } else {
     // Gracefully handle going under 0
-    // (If we end up under 1 that is handled by print logic below)
-    (index.saturating_sub(1 + nr), index.saturating_sub(1))
+    let start = 1.max(index.saturating_sub(nr));
+    let end = 1.max(index.saturating_sub(1));
+    (start, end)
+    // Old version
+    //(index.saturating_sub(1 + nr), index.saturating_sub(1))
   };
   // Verify selection before applying. Probably only fails if buffer is empty.
   verify_selection(state.buffer, new_sel)?;
