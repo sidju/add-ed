@@ -13,7 +13,6 @@ use add_ed::{
   ui::ScriptedUI,
   Ed,
 };
-use std::collections::HashMap;
 
 // Verify behaviour of 'n' command
 //
@@ -107,7 +106,6 @@ fn numbered_toggle_on() {
     &mut buffer,
     &mut io,
     "path".to_owned(),
-    HashMap::new(),
   );
   ed.run_macro(&mut ui).expect("Error running test");
   assert_eq!(ed.n, true);
@@ -133,7 +131,6 @@ fn numbered_toggle_off() {
     &mut buffer,
     &mut io,
     "path".to_owned(),
-    HashMap::new(),
   );
   ed.n = true;
   ed.run_macro(&mut ui).expect("Error running test");

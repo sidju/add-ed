@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 
-use std::collections::HashMap;
 use super::{
   dummy_io::DummyIO,
   mock_ui::{Print, MockUI},
@@ -63,7 +62,6 @@ pub fn inner_fixture(
       &mut buffer,
       &mut io,
       init_filepath.to_owned(),
-      HashMap::new(),
     );
     assert_eq!(
       ed.run_macro(&mut ui),

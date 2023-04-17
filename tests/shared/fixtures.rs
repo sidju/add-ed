@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 
-use std::collections::HashMap;
 use super::{
   inner_fixture,
   fake_io::FakeIO,
@@ -193,7 +192,6 @@ impl IOTest {
         &mut buffer,
         &mut self.init_io,
         self.init_filepath.to_owned(),
-        HashMap::new(),
       );
       ed.run_macro(&mut ui).expect("Error running test.");
 

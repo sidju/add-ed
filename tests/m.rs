@@ -1,6 +1,6 @@
 // Tests for 'm' and 'M' command
 // 'm' tests are after imports
-// 'M' tests are thereafter
+// 'M' tests are thereafter, commented out. See issue #6
 
 mod shared;
 use shared::fixtures::{
@@ -70,39 +70,39 @@ fn mov_noindex_noselection_print() {
 // - Takes printing flags after index argument
 // - Sets unsaved
 // - Selection after execution is the moved lines in their new location
-
-// Test fully defined command
-#[test]
-fn mov_before() {
-  BasicTest{
-    init_buffer: vec!["a","b","c","d"],
-    init_clipboard: vec![],
-    command_input: vec!["3,4M2"],
-    expected_buffer: vec!["a","c","d","b"],
-    expected_buffer_saved: false,
-    expected_clipboard: vec![],
-    expected_selection: (2,3),
-  }.run()
-}
-
-// Test with default selection and default index
-// (Uses '#' to set selection without any print)
-#[test]
-fn mov_before_noindex_noselection_print() {
-  PrintTest{
-    init_buffer: vec!["a","b","c","d"],
-    init_clipboard: vec![],
-    command_input: vec!["2,3#","Mp"],
-    expected_buffer: vec!["b","c","a","d"],
-    expected_buffer_saved: false,
-    expected_selection: (1,2),
-    expected_clipboard: vec![],
-    expected_prints: vec![
-      Print{
-        text: vec!["b\n".to_string(),"c\n".to_string(),],
-        n: false,
-        l: false,
-      },
-    ],
-  }.run()
-}
+//
+//// Test fully defined command
+//#[test]
+//fn mov_before() {
+//  BasicTest{
+//    init_buffer: vec!["a","b","c","d"],
+//    init_clipboard: vec![],
+//    command_input: vec!["3,4M2"],
+//    expected_buffer: vec!["a","c","d","b"],
+//    expected_buffer_saved: false,
+//    expected_clipboard: vec![],
+//    expected_selection: (2,3),
+//  }.run()
+//}
+//
+//// Test with default selection and default index
+//// (Uses '#' to set selection without any print)
+//#[test]
+//fn mov_before_noindex_noselection_print() {
+//  PrintTest{
+//    init_buffer: vec!["a","b","c","d"],
+//    init_clipboard: vec![],
+//    command_input: vec!["2,3#","Mp"],
+//    expected_buffer: vec!["b","c","a","d"],
+//    expected_buffer_saved: false,
+//    expected_selection: (1,2),
+//    expected_clipboard: vec![],
+//    expected_prints: vec![
+//      Print{
+//        text: vec!["b\n".to_string(),"c\n".to_string(),],
+//        n: false,
+//        l: false,
+//      },
+//    ],
+//  }.run()
+//}

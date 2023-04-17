@@ -13,7 +13,6 @@ use add_ed::error_consts::{
   SELECTION_EMPTY,
   HELP_TEXT,
 };
-use std::collections::HashMap;
 
 // We have some tests without fixtures in here, as we shouldn't panic on error
 // and care about state.print_errors unlike all other fixtures.
@@ -72,7 +71,6 @@ fn help() {
     &mut buffer,
     &mut io,
     "path".to_owned(),
-    HashMap::new(),
   );
   assert_eq!(ed.run_macro(&mut ui), Err(SELECTION_EMPTY));
   ed.run_macro(&mut ui).expect("Error running test");
@@ -109,7 +107,6 @@ fn help_toggle() {
     &mut buffer,
     &mut io,
     "path".to_owned(),
-    HashMap::new(),
   );
   assert_eq!(ed.print_errors, true);
   ed.run_macro(&mut ui).expect("Error running test");
