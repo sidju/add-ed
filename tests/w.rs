@@ -88,6 +88,23 @@ fn write_fully_specified() {
   }.run();
 }
 
+// Verify that writing to shell commands behaves as intended
+#[test]
+fn write_command() {
+  let test_io = test_io();
+  IOTest{
+    init_buffer: vec![],
+    init_io: test_io,
+    init_filepath: "numbers",
+    command_input: vec!["e","w !sort -n"],
+    expected_buffer: vec!["4","5","2","1"],
+    expected_buffer_saved: true, // Since 'e' sets saved and 'w' doesn't unset
+    expected_selection: (1,4),
+    expected_file_changes: vec![],
+    expected_filepath: "numbers",
+  }.run()
+}
+
 // Verify behaviour of 'W' command
 //
 // - Takes optional selection, defaults to whole buffer
