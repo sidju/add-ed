@@ -1,4 +1,4 @@
-use add_ed::{
+use crate::{
   EdState,
   ui::{UI,UILock},
 };

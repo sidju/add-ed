@@ -7,6 +7,7 @@
 - Look over how IO interactions error, print ! after error to show handing back
   control into add-ed? And consider if 'r' and 'w' should print '!'.
 - Improve classic.rs to support all of ed's command line arguments
+- Look over API documentation again, since refactoring has changed the API.
 
 # Testing improvements:
 ## Unit tests:

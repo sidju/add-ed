@@ -1,4 +1,4 @@
-use add_ed::{
+use crate::{
   io::IO,
   ui::UILock,
 };

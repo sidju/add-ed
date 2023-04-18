@@ -2,7 +2,7 @@
 
 mkdir -p test-env
 cd test-env
-cargo test --features="test_local_io" && \
-cargo test --features="initial_input_data"
+cargo test --features="test_local_io,testing" && \
+cargo test --features="initial_input_data,testing"
 cd ..
 rm -r test-env

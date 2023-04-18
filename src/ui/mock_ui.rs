@@ -1,6 +1,6 @@
 // Mock UI which saves print invocations into a Vec
 // Intended to help verify that editor prints correctly
-use add_ed::{
+use crate::{
   EdState,
   ui::UI,
   ui::UILock,

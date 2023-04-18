@@ -19,6 +19,7 @@ include = [
 [features]
 local_io = []
 test_local_io = ["local_io"]
+testing = [] # Build and export testing structs
 initial_input_data = []
 default = ["local_io"]
 

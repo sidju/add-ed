@@ -3,8 +3,10 @@
 mod shared;
 use shared::fixtures::{
   PrintTest,
+  ErrorTest,
 };
 use shared::mock_ui::Print;
+use add_ed::error_consts::*;
 
 // Verify behaviour of default command
 //
@@ -62,5 +64,15 @@ fn default_noselection() {
         l: false,
       }
     ],
+  }.run()
+}
+
+// Test default with no buffer
+#[test]
+fn default_noselection_nobuffer() {
+  ErrorTest{
+    init_buffer: vec![],
+    command_input: vec![""],
+    expected_error: SELECTION_EMPTY,
   }.run()
 }

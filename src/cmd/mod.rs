@@ -62,6 +62,8 @@ pub fn run<I: IO>(
         state.selection = sel;
         pflags.p = true; // Default command is 'p'
       } else {
+        // Since state.selection may be invalid
+        verify_selection(state.buffer, state.selection)?;
         scroll(state, &mut pflags, selection, 'z', "",
           state.selection.1 - state.selection.0 + 1,
         )?;

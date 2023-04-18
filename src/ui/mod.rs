@@ -10,6 +10,11 @@ pub use lock::UILock;
 mod scripted_ui;
 pub use scripted_ui::ScriptedUI;
 
+#[cfg(any(feature = "testing", fuzzing, test))]
+pub mod mock_ui;
+#[cfg(any(feature = "testing", fuzzing, test))]
+pub mod dummy_ui;
+
 /// The UI trait used to abstract all common UI operations
 pub trait UI {
   /// A basic print for output of commands

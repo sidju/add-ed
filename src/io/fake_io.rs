@@ -1,8 +1,8 @@
-use add_ed::{
+use crate::{
   io::IO,
   ui::UILock,
 };
-use add_ed::error_consts::{
+use crate::error_consts::{
   CHILD_EXIT_ERROR,
   NOT_FOUND,
 };

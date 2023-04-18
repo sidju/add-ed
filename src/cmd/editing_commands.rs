@@ -208,6 +208,7 @@ pub(super) fn transfer<I: IO>(
   pflags.l = flags.remove(&'l').unwrap();
   // Calculate the selection
   let selection = interpret_selection(selection, state.selection, state.buffer)?;
+  verify_selection(state.buffer, selection)?;
   // Beware, is actually 1 less than move size due to inclusive bounds
   let move_size = selection.1 - selection.0;
   match command {
