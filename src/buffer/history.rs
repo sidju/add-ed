@@ -57,7 +57,7 @@ impl History {
   }
 
   /// Get an immutable view into the currently viewed point in history
-  pub fn current(&self) -> &Vec<Line> {
+  pub(super) fn current(&self) -> &Vec<Line> {
     &self.snapshots[self.viewed_i]
   }
   /// Get a mutable state to make new changes
@@ -66,7 +66,7 @@ impl History {
   /// history.
   /// - Unless self.dont_snapshot, will create a new snapshot.
   /// - Returns mutable access to the snapshot at the end of history.
-  pub fn current_mut(&mut self
+  pub(super) fn current_mut(&mut self
   ) -> Result<&mut Vec<Line>, &'static str> {
     self.snapshot()?;
     Ok(&mut self.snapshots[self.viewed_i])

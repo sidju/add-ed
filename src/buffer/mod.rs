@@ -28,7 +28,7 @@ pub use editing::*;
 //mod test;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Line {
+struct Line {
   tag: RefCell<char>,
   matched: RefCell<bool>,
   text: Rc<String>,
@@ -54,7 +54,7 @@ pub struct Line {
 #[derive(Clone, Debug)]
 pub struct Buffer {
   pub history: History,
-  pub clipboard: Vec<Line>,
+  clipboard: Vec<Line>,
 }
 impl Default for Buffer {
   fn default() -> Self { Self::new() }
