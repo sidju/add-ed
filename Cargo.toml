@@ -17,11 +17,11 @@ include = [
 ]
 
 [features]
+testing = [] # Build and export testing structs
 local_io = []
-test_local_io = ["local_io"]
+test_local_io = ["local_io", "testing"]
 initial_input_data = []
 default = ["local_io"]
-testing = [] # Build and export testing structs
 bin_deps = ["clap", "local_io"]
 
 [dependencies]

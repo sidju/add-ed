@@ -3,8 +3,8 @@ use super::*;
 impl Buffer {
   /// `k` command
   ///
-  /// Set the given index's tag to given tag
-  /// Use get_tag to get a line with that tag (lower indices prioritised)
+  /// Set the given index's tag to given tag. Use [´Self.get_tag`] to get a line
+  /// with that tag (lower indices prioritised).
   pub fn tag_line(&mut self, index: usize, tag: char)
     -> Result<(), &'static str>
   {
@@ -69,10 +69,7 @@ impl Buffer {
   ///
   ///Mark all lines in selection matching pattern (or its inverse)
   ///
-  /// Call [`get_marked`] below repeatedly to get the matching indices.
-  ///
-  /// Note, unless you set [`History.dont_snapshot`] this will create a
-  /// snapshot.
+  /// Call [`Self.get_marked`] repeatedly to get the matching indices.
   pub fn mark_matching(&mut self, pattern: &str, selection: (usize, usize), inverse: bool)
     -> Result<(), &'static str>
   {
@@ -105,9 +102,6 @@ impl Buffer {
   /// `g`, `G`, `v` and `V` commands
   ///
   /// Returns the lowest index which is marked and unmarks it.
-  ///
-  /// Note, unless you set [`History.dont_snapshot`] this will create one
-  /// snapshot per call.
   pub fn get_marked(&mut self)
     -> Result<Option<usize>, &'static str>
   {

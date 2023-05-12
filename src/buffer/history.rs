@@ -38,9 +38,9 @@ impl History {
   }
   /// Mark the currently viewed buffer state as saved
   ///
-  /// If [`History.dont_snapshot`] is set this instead behaves as
-  /// [`set_unsaved`], as we cannot be sure a snapshot will exist corresponding
-  /// to the state in which the buffer was saved.
+  /// If [`Self.dont_snapshot`] is set this instead behaves as
+  /// [`Self.set_unsaved`], as we cannot be sure a snapshot will exist
+  /// corresponding to the state in which the buffer was saved.
   pub fn set_saved(&mut self) {
     if !self.dont_snapshot {
       self.saved_i = Some(self.viewed_i);
@@ -109,7 +109,7 @@ impl History {
   ///
   /// The only case this should be needed is before setting `dont_snapshot` for
   /// a script execution. If `dont_snapshot` isn't set snapshots are created
-  /// automatically whenever [`History.current_mut`] is executed.
+  /// automatically whenever [`Self.current_mut`] is executed.
   pub fn snapshot(&mut self) -> Result<(), &'static str> {
     // Verify that we don't overflow history
     // Add two, since two snapshots are created for revert + snapshot

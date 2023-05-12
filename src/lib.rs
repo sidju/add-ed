@@ -3,12 +3,13 @@
 //! Behaviour is initially based off of [GNU Ed] with modifications to improve
 //! on usability. See the [readme] and [release notes] for details.
 //!
-//! This library exports two traits, [IO](io::IO) and [UI](ui::UI), which define the
-//! exchangeable parts of the editor. If you enable the local_io feature there is a
-//! ready implementation of the IO, but you will need to bring your own UI if you
-//! wish to do any user interaction. If you don't wish to do any user interaction,
-//! [ScriptedUI](ui::ScriptedUI) should be quite easy to use.
-//! 
+//! This library exports two traits, [`IO`](io::IO) and [`UI`](ui::UI), which
+//! define the exchangeable parts of the editor. If you enable the `local_io`
+//! feature there is a ready implementation of the IO, but you will need to
+//! bring your own UI if you wish to do any user interaction. If you don't wish
+//! to do any user interaction, [`ScriptedUI`](ui::ScriptedUI) should be quite
+//! easy to use.
+//!
 //! Minimal scripted usage example:
 //! ```
 //! use add_ed::{
@@ -16,7 +17,7 @@
 //!   io::LocalIO,
 //!   Ed,
 //! };
-//! 
+//!
 //! # fn main() -> Result<(),&'static str> {
 //! // Construct all the components
 //! let mut ui = ScriptedUI{ input: vec!["e\n".to_string()].into(), print_ui: None, };
@@ -26,7 +27,7 @@
 //! ed.run(&mut ui)?;
 //! # Ok(()) }
 //! ```
-//! 
+//!
 //!
 //! A full example of how to use this library is in src/bin/classic-ed.rs
 //!

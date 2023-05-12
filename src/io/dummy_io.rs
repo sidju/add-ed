@@ -3,6 +3,8 @@ use crate::{
   ui::UILock,
 };
 
+/// An [`IO`] implementation for when no IO should occur. Intended for non IO
+/// tests.
 pub struct DummyIO {}
 impl DummyIO {
   pub fn new() -> Self { Self{} }

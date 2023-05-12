@@ -1,6 +1,7 @@
-//! This module defines the UI trait
+//! Defines UI trait and some testing implementations
 //!
-//! It is used to allow exchanging the UI of hired and to insert a dummy UI for script input.
+//! It is used to allow exchanging the UI of hired and to insert a dummy UI for
+//! script input.
 
 use super::EdState;
 

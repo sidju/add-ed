@@ -1,3 +1,7 @@
+//! Defines IO Trait, LocalIO (if enabled) and some testing implementations.
+//!
+//! Used to abstract filesystem and shell interactions.
+
 use super::ui::UILock;
 
 #[cfg(any(feature = "testing", fuzzing, test))]

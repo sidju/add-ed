@@ -14,6 +14,9 @@ pub struct ShellCommand {
   pub command: String,
   pub input: String,
 }
+
+/// An [`IO`] implementation intended to simulate filesystem and shell
+/// interactions for testing.
 #[derive(Clone)]
 pub struct FakeIO {
   pub fake_fs: HashMap<String, String>,

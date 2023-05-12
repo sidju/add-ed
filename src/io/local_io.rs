@@ -24,6 +24,8 @@ fn spawn_transfer<'a, I, O>(
     inputlen
   })
 }
+
+/// Filesystem and process tree local [`IO`] implementation.
 pub struct LocalIO {
 }
 impl LocalIO {
