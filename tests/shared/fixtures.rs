@@ -6,7 +6,6 @@ use super::{
   mock_ui::{Print, MockUI},
 };
 use add_ed::{
-  buffer::Buffer,
   ui::ScriptedUI,
   Ed,
 };
@@ -159,8 +158,11 @@ pub struct IOTest {
 }
 impl IOTest {
   pub fn run(mut self) {
-    // Create and init buffer
-    let mut buffer = Buffer::new();
+    // Create and init ed state
+    let mut ed = Ed::new(
+      &mut self.init_io,
+      self.init_filepath.to_owned(),
+    );
     let init_clipboard: Vec<String> = self.init_clipboard.iter()
       .map(|x| x.to_string())
       .collect()
@@ -170,10 +172,10 @@ impl IOTest {
       s.push('\n');
       s
     }).collect();
-    buffer.insert(init_clipboard, 0).unwrap();
-    buffer.cut((1,buffer.len())).unwrap();
-    buffer.insert(init_buffer, 0).unwrap();
-    buffer.set_saved();
+    ed.buffer.insert(init_clipboard, 0).unwrap();
+    ed.buffer.cut((1,ed.buffer.len())).unwrap();
+    ed.buffer.insert(init_buffer, 0).unwrap();
+    ed.buffer.set_saved();
     // Create scripted UI (with mock UI, which tracks print invocations)
     let mut inner_ui = MockUI{ prints_history: Vec::new() };
     let mut ui = ScriptedUI{
@@ -186,35 +188,29 @@ impl IOTest {
       }).collect(),
     };
 
-    // Instantiate editor and run test
-    {
-      let mut ed = Ed::new(
-        &mut buffer,
-        &mut self.init_io,
-        self.init_filepath.to_owned(),
-      );
-      ed.run_macro(&mut ui).expect("Error running test.");
+    // Run test
+    ed.selection = (1,ed.buffer.len());
+    ed.run_macro(&mut ui).expect("Error running test.");
 
-      // Before dropping editor, verify its state against expectations
-      assert_eq!(
-        ed.see_state().selection,
-        self.expected_selection,
-        "Selection after test (left) didn't match expectations (right)."
-      );
-      assert_eq!(
-        ed.see_state().file,
-        self.expected_filepath,
-        "Filepath after test (left) didn't match expectations (right)."
-      );
-    }
+    // Verify state after test execution
     assert_eq!(
-      buffer.saved(),
+      ed.see_state().selection,
+      self.expected_selection,
+      "Selection after test (left) didn't match expectations (right)."
+    );
+    assert_eq!(
+      ed.see_state().file,
+      self.expected_filepath,
+      "Filepath after test (left) didn't match expectations (right)."
+    );
+    assert_eq!(
+    ed.buffer.saved(),
       self.expected_buffer_saved,
       "Buffer.saved() (left) after test didn't match expectations (right)."
     );
     assert_eq!(
-      if buffer.len() != 0 {
-        buffer.get_selection((1,buffer.len()))
+      if ed.buffer.len() != 0 {
+        ed.buffer.get_selection((1,ed.buffer.len()))
           .unwrap()
           .map(|(_,s)| s.trim_end_matches('\n'))
           .collect::<Vec<&str>>()
@@ -225,12 +221,12 @@ impl IOTest {
       "Buffer contents (left) after test didn't match expectations (right)."
     );
     // Switch out buffer contents to clipboard contents
-    let end_of_buf = buffer.len();
-    buffer.paste(end_of_buf).unwrap();
-    if end_of_buf != 0 { buffer.cut((1,end_of_buf)).unwrap(); }
+    let end_of_buf = ed.buffer.len();
+    ed.buffer.paste(end_of_buf).unwrap();
+    if end_of_buf != 0 { ed.buffer.cut((1,end_of_buf)).unwrap(); }
     assert_eq!(
-      if buffer.len() != 0 {
-        buffer.get_selection((1,buffer.len()))
+      if ed.buffer.len() != 0 {
+        ed.buffer.get_selection((1,ed.buffer.len()))
           .unwrap()
           .map(|(_,s)| s.trim_end_matches('\n'))
           .collect::<Vec<&str>>()

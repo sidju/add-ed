@@ -31,8 +31,8 @@ pub(super) fn read_from_file<I: IO>(
 ) -> Result<(), &'static str> {
   let index =
     if command == 'r' {
-      let i = interpret_selection(selection, state.selection, state.buffer)?.1;
-      verify_index(state.buffer, i)?;
+      let i = interpret_selection(selection, state.selection, &state.buffer)?.1;
+      verify_index(&state.buffer, i)?;
       Ok(Some(i))
     }
     else if selection.is_none() {
@@ -67,7 +67,7 @@ pub(super) fn read_from_file<I: IO>(
     };
     // We are forced to aggregate to convert into the format insert wants.
     // This has the bonus of telling us how many lines we are inserting.
-    let data: Vec<&str> = (&unformated_data).split_inclusive('\n').collect();
+    let data: Vec<&str> = unformated_data.split_inclusive('\n').collect();
     let datalen = data.len();
     match index {
       Some(i) => state.buffer.insert(data, i),
@@ -118,7 +118,7 @@ pub(super) fn write_to_file<I: IO>(
     // If selection given we interpret it
     // (When explicit selection is whole buffer we change it to None to signal that)
     Some(s) => {
-      let inter = interpret_selection(Some(s), state.selection, state.buffer)?;
+      let inter = interpret_selection(Some(s), state.selection, &state.buffer)?;
       if inter == (1, state.buffer.len()) {
         None
       } else {
@@ -210,7 +210,7 @@ pub fn run_command<I: IO>(
     None
   }
   else {
-    Some(interpret_selection(selection, state.selection, state.buffer)?)
+    Some(interpret_selection(selection, state.selection, &state.buffer)?)
   };
   let (changed, substituted) = command_substitutions(
     command,
@@ -219,7 +219,7 @@ pub fn run_command<I: IO>(
   )?;
   state.prev_shell_command = substituted.clone();
   if changed {ui.print_message( &substituted )?;}
-  // Depending on selection or not we use run_filter_command or run_command
+  // Depending on selection or not we use run_transform_command or run_command
   match sel {
     // When there is no selection we just run the command, no buffer interaction
     None => {
@@ -227,7 +227,7 @@ pub fn run_command<I: IO>(
         &mut ui.lock_ui(),
         substituted,
       )?;
-      ui.print_message("!")?;
+      ui.print_message(&ch.to_string())?;
     },
     // When there is a selection we pipe that selection through the command and
     // replace it with the output
@@ -238,7 +238,7 @@ pub fn run_command<I: IO>(
         substituted,
         data,
       )?;
-      let lines: Vec<&str> = (&transformed).split_inclusive('\n').collect();
+      let lines: Vec<&str> = transformed.split_inclusive('\n').collect();
       let nr_lines = lines.len();
       state.buffer.change(lines, s)?;
       state.selection = if nr_lines != 0 {

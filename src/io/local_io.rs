@@ -52,6 +52,11 @@ impl LocalIO {
     Ok(written)
   }
 }
+impl Default for LocalIO {
+  fn default() -> Self {
+    Self::new()
+  }
+}
 
 impl IO for LocalIO {
   fn run_command(&mut self,

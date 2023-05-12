@@ -13,13 +13,11 @@ pub fn parse_path(input: &str)
   if trimmed.is_empty() {
     None
   }
+  else if let Some(stripped) = trimmed.strip_prefix('!') {
+    Some(Path::Command(stripped))
+  }
   else {
-    if trimmed.chars().next() == Some('!') {
-      Some(Path::Command(&trimmed[1..]))
-    }
-    else {
-      Some(Path::File(trimmed))
-    }
+    Some(Path::File(trimmed))
   }
 }
 
@@ -69,7 +67,6 @@ pub fn command_substitutions(
   }
   Ok((modified, output))
 }
-
 #[cfg(test)]
 mod test {
   use super::*;

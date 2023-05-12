@@ -16,8 +16,7 @@ use shared::fixtures::{
 //   in history, negative number moves forward.
 //   - If it isn't possible to move the given number of steps prints error,
 //     INVALID_UNDO_STEPS.
-// - Sets unsaved unconditionally for now.
-//   (Tracking of which undo step was saved could be added)
+// - Sets saved / unsaved after if that undo step is saved / unsaved
 // - Currently doesn't modify selection.
 //   (Later it may be good to set selection to the selection _acted upon_ in the
 //   last undone step. But to do that pairing selection with buffer state could
@@ -32,7 +31,7 @@ fn undo() {
     init_clipboard: vec!["dummy"],
     command_input: vec!["1d","3d","u2"],
     expected_buffer: vec!["a","b","c","d"],
-    expected_buffer_saved: false,
+    expected_buffer_saved: true,
     expected_clipboard: vec!["d"], // Because "3d" sets it and 'u' leaves it
     expected_selection: (2,2),
   }.run()

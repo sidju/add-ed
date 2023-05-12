@@ -6,7 +6,6 @@ use shared::fixtures::PrintTest;
 use shared::mock_ui::*;
 
 use shared::dummy_io::DummyIO;
-use add_ed::buffer::Buffer;
 use add_ed::ui::ScriptedUI;
 use add_ed::Ed;
 use add_ed::error_consts::{
@@ -52,8 +51,6 @@ fn help_noerror() {
 #[test]
 fn help() {
   let mut io = DummyIO::new();
-  let mut buffer = Buffer::new();
-  buffer.set_saved();
   let mut inner_ui = MockUI{ prints_history: Vec::new() };
   let mut ui = ScriptedUI{
     print_ui: Some(&mut inner_ui),
@@ -68,13 +65,12 @@ fn help() {
   };
   // Construct editor state and run
   let mut ed = Ed::new(
-    &mut buffer,
     &mut io,
     "path".to_owned(),
   );
   assert_eq!(ed.run_macro(&mut ui), Err(SELECTION_EMPTY));
   ed.run_macro(&mut ui).expect("Error running test");
-  assert!(buffer.is_empty());
+  assert!(ed.buffer.is_empty());
   assert_eq!(
     vec![
       Print{
@@ -90,8 +86,6 @@ fn help() {
 #[test]
 fn help_toggle() {
   let mut io = DummyIO::new();
-  let mut buffer = Buffer::new();
-  buffer.set_saved();
   let mut ui = ScriptedUI{
     print_ui: None,
     input: vec![
@@ -104,14 +98,13 @@ fn help_toggle() {
   };
   // Construct editor state and run
   let mut ed = Ed::new(
-    &mut buffer,
     &mut io,
     "path".to_owned(),
   );
   assert_eq!(ed.print_errors, true);
   ed.run_macro(&mut ui).expect("Error running test");
   assert_eq!(ed.print_errors, false);
-  assert!(buffer.is_empty());
+  assert!(ed.buffer.is_empty());
 }
 
 #[test]

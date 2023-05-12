@@ -11,13 +11,13 @@ pub(super) fn scroll<I: IO>(
   default_scroll_length: usize,
 ) -> Result<(), &'static str> {
   // Depending on forward or backward we use start or end of selection as starting point
-  let sel = interpret_selection(selection, state.selection, state.buffer)?;
+  let sel = interpret_selection(selection, state.selection, &state.buffer)?;
   let index = if command == 'z' {
     sel.1
   } else {
     sel.0
   };
-  verify_index(state.buffer, index)?;
+  verify_index(&state.buffer, index)?;
   // Parse the arguments to see how many lines to scroll
   let nr_end = clean.find( | c: char | !c.is_numeric() ).unwrap_or(clean.len());
   let nr = if nr_end == 0 {
@@ -48,7 +48,7 @@ pub(super) fn scroll<I: IO>(
     //(index.saturating_sub(1 + nr), index.saturating_sub(1))
   };
   // Verify selection before applying. Probably only fails if buffer is empty.
-  verify_selection(state.buffer, new_sel)?;
+  verify_selection(&state.buffer, new_sel)?;
   // If all is well we set it and trust the p,n,l flag catcher to print for us
   state.selection = new_sel;
   Ok(())
@@ -62,16 +62,16 @@ pub(super) fn input<I: IO>(
   command: char,
   flags: &str,
 ) -> Result<(), &'static str> {
-  let sel = interpret_selection(selection, state.selection, state.buffer)?;
+  let sel = interpret_selection(selection, state.selection, &state.buffer)?;
   let mut flags = parse_flags(flags, "pnl")?;
   pflags.p = flags.remove(&'p').unwrap();
   pflags.n = flags.remove(&'n').unwrap();
   pflags.l = flags.remove(&'l').unwrap();
   match command {
-    'a' => verify_index(state.buffer, sel.1)?,
-    'i' => verify_index(state.buffer, sel.0.saturating_sub(1))?,
-    'A' => verify_line(state.buffer, sel.1)?,
-    'I' => verify_line(state.buffer, sel.0)?,
+    'a' => verify_index(&state.buffer, sel.1)?,
+    'i' => verify_index(&state.buffer, sel.0.saturating_sub(1))?,
+    'A' => verify_line(&state.buffer, sel.1)?,
+    'I' => verify_line(&state.buffer, sel.0)?,
     _ => { panic!("Unreachable code reached"); }
   }
   // Now that we have checked that the command is valid, get input
@@ -83,7 +83,7 @@ pub(super) fn input<I: IO>(
     None,
   )?;
   // Run the actual command and save returned selection to state
-  state.selection = if input.len() != 0 {
+  state.selection = if !input.is_empty() {
     let index = match command {
       'a' | 'A' => sel.1,
       'i' => sel.0.saturating_sub(1),
@@ -126,7 +126,7 @@ pub(super) fn change<I: IO>(
   command: char,
   flags: &str,
 ) -> Result<(), &'static str> {
-  let sel = interpret_selection(selection, state.selection, state.buffer)?;
+  let sel = interpret_selection(selection, state.selection, &state.buffer)?;
   let mut flags = parse_flags(flags, "pnl")?;
   pflags.p = flags.remove(&'p').unwrap();
   pflags.n = flags.remove(&'n').unwrap();
@@ -142,7 +142,7 @@ pub(super) fn change<I: IO>(
       return Err(UNDEFINED_COMMAND);
     }
   } else {
-    verify_selection(state.buffer, sel)?;
+    verify_selection(&state.buffer, sel)?;
     None
   };
   let input = ui.get_input(
@@ -199,7 +199,7 @@ pub(super) fn transfer<I: IO>(
       if command == 'M' || command == 'T' { Ind::Literal(1) }
       else { Ind::BufferLen }
     }),
-    state.buffer,
+    &state.buffer,
     state.selection.1,
   )?;
   let mut flags = parse_flags(&tail[ind_end..], "pnl")?;
@@ -207,8 +207,8 @@ pub(super) fn transfer<I: IO>(
   pflags.n = flags.remove(&'n').unwrap();
   pflags.l = flags.remove(&'l').unwrap();
   // Calculate the selection
-  let selection = interpret_selection(selection, state.selection, state.buffer)?;
-  verify_selection(state.buffer, selection)?;
+  let selection = interpret_selection(selection, state.selection, &state.buffer)?;
+  verify_selection(&state.buffer, selection)?;
   // Beware, is actually 1 less than move size due to inclusive bounds
   let move_size = selection.1 - selection.0;
   match command {

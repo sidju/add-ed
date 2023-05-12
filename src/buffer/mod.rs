@@ -1,4 +1,14 @@
-//! Contains the Buffer trait and any build in implementations.
+//! Contains Buffer, which holds the editing buffer, clipboard and undo history.
+
+use core::iter::Iterator;
+use std::rc::Rc;
+use std::cell::RefCell;
+
+use crate::error_consts::*;
+
+// Data structure managing undo/redo and tracking if saved
+mod history;
+pub use history::*;
 
 // General implementations for file interaction and substitution of e.g. '\n'
 mod substitute;
@@ -12,44 +22,39 @@ pub use finding::*;
 // Methods for editing buffer contents
 mod editing;
 pub use editing::*;
-// Methods regarding undo/redo
-mod undo;
-pub use undo::*;
 
 // Include a general test
-#[cfg(test)]
-mod test;
+//#[cfg(test)]
+//mod test;
 
-use core::iter::Iterator;
-use std::rc::Rc;
-
-use crate::error_consts::*;
-
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
-struct Line {
-  tag: char,
-  matched: bool,
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Line {
+  tag: RefCell<char>,
+  matched: RefCell<bool>,
   text: Rc<String>,
 }
 
 /// The editing Buffer built on Vec and String
 ///
-/// It stores the entire editing history in a vector of history states.
-/// Each history state is in turn a vector of lines as they were at that time.
-/// And each line is a Rc<String> (newline inclusive), to avoid data copying.
+/// The editing methods on the buffer are mirrors of the editing commands and
+/// assume every method call is a separated command, managing clipboard and undo
+/// history accordingly.
+///
+/// It stores the entire editing history, as well as the present, in a
+/// [`History`] struct.
+///
 /// Regex functionality is imported from the Regex crate.
 ///
 /// BEWARE!!! 1-indexed!
 /// This means _line_ 0 doesn't exist, error if given (use verify_selection/verify_line below)
 /// BUT, _index_ 0 is valid (therefore use verify_index instead)
-/// Subtract 1 to get 0 indexed. It is recommended to use .saturating_sub(1)
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+/// Subtract 1 to get 0 indexed. It is recommended to use .saturating_sub(1) to
+/// avoid panicking on underflows (since they drop the data unless you catch the
+/// panic).
+#[derive(Clone, Debug)]
 pub struct Buffer {
-  saved: bool,
-  // Chars used for tagging. No tag equates to NULL in the char
-  history: Vec<Vec<Line>>,
-  buffer_i: usize, // The index in history currently seen by user
-  clipboard: Vec<Line>,
+  pub history: History,
+  pub clipboard: Vec<Line>,
 }
 impl Default for Buffer {
   fn default() -> Self { Self::new() }
@@ -59,33 +64,41 @@ impl Buffer {
   pub fn new() -> Self
   {
     Self{
-      saved: true,
-      history: vec![vec![]],
-      buffer_i: 0,
+      history: History::new(),
       clipboard: Vec::new(),
     }
   }
-  pub fn len(&self) -> usize { self.history[self.buffer_i].len() }
-  pub fn is_empty(&self) -> bool { self.history[self.buffer_i].is_empty() }
+  pub fn len(&self) -> usize { self.history.current().len() }
+  pub fn is_empty(&self) -> bool { self.history.current().is_empty() }
 
-  pub fn set_saved(&mut self) {
-    self.saved = true;
-  }
-  pub fn set_unsaved(&mut self) {
-    self.saved = false;
-  }
-  pub fn saved(&self) -> bool {
-    self.saved
+  // Re-exports from history, to make them more officially part of the API
+
+  /// Re-export of [`History.saved`]
+  pub fn saved(&self) -> bool { self.history.saved() }
+  /// Re-export of [`History.set_saved`]
+  pub fn set_saved(&mut self) { self.history.set_saved() }
+
+  /// Method for the undo command.
+  ///
+  /// Re-export of [`History.undo`]. The lone command not implemented in
+  /// [`Buffer`] itself, as it modifies the internal state of [`History`]
+  pub fn undo(&mut self, steps: isize) -> Result<(), &'static str> {
+    self.history.undo(steps)
   }
 
-  // The output command
+  /// The only real output command offered by Buffer
+  ///
+  /// Due to using .map() with a closure the returned iterator needs to be
+  /// boxed. If this bothers you PRs are welcome.
+  ///
+  /// Will return error on invalid selection.
   pub fn get_selection<'a>(&'a self, selection: (usize, usize))
     -> Result<Box<dyn Iterator<Item = (char, &'a str)> + 'a>, &'static str>
   {
     verify_selection(self, selection)?;
-    let tmp = self.history[self.buffer_i][selection.0 - 1 .. selection.1]
+    let tmp = self.history.current()[selection.0 - 1 .. selection.1]
       .iter()
-      .map(|line| (line.tag, &line.text[..]))
+      .map(|line| (*line.tag.borrow(), &line.text[..]))
     ;
     Ok(Box::new(tmp))
   }

@@ -6,7 +6,7 @@ pub(super) fn substitute<I: IO>(
   selection: Option<Sel<'_>>,
   tail: &str,
 ) -> Result<(), &'static str> {
-  let selection = interpret_selection(selection, state.selection, state.buffer)?;
+  let selection = interpret_selection(selection, state.selection, &state.buffer)?;
   // Clip newline from tail if any
   let tail = tail.trim_end_matches('\n');
   // switch based on if tail was given or not
@@ -61,9 +61,9 @@ pub(super) fn global<I: IO>(
   command: char,
   tail: &str,
 ) -> Result<(), &'static str> {
-  let selection = interpret_selection(selection, state.selection, state.buffer)?;
+  let selection = interpret_selection(selection, state.selection, &state.buffer)?;
   // Since this command may take input we need to check just as carefully as with a, i, c
-  verify_selection(state.buffer, selection)?;
+  verify_selection(&state.buffer, selection)?;
   let mut expressions = parse_expressions(tail)?;
   if expressions.len() < 2 { return Err(EXPRESSION_TOO_SHORT); }
   // We first try to mark all matching lines, to tell if there is any issue
@@ -112,9 +112,9 @@ pub(super) fn global_interactive<I: IO>(
   command: char,
   tail: &str,
 ) -> Result<(), &'static str> {
-  let selection = interpret_selection(selection, state.selection, state.buffer)?;
+  let selection = interpret_selection(selection, state.selection, &state.buffer)?;
   // Since this command takes input we need to check just as carefully as with a, i, c
-  verify_selection(state.buffer, selection)?;
+  verify_selection(&state.buffer, selection)?;
   let expressions = parse_expressions(tail)?;
   if expressions.len() != 2 { return Err(EXPRESSION_TOO_SHORT); }
   if !expressions[1].is_empty() && expressions[1] != "\n" { return Err(UNDEFINED_FLAG); }

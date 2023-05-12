@@ -137,11 +137,11 @@ pub fn api_validation(buffer: &mut Buffer) {
 
   // Test undo redo
   assert_eq!(
-    buffer.undo_range().unwrap(),
+    buffer.history.undo_range().unwrap(),
     0..1,
     "Before creating undo checkpoints the undo range should be 0..1."
   );
-  buffer.snapshot().unwrap();
+  buffer.history.snapshot().unwrap();
   buffer.cut((1,buffer.len())).unwrap();
   assert_eq!(
     buffer.len(),
@@ -149,13 +149,13 @@ pub fn api_validation(buffer: &mut Buffer) {
     "After deleting whole buffer no data should remain."
   );
   assert_eq!(
-    buffer.undo_range().unwrap(),
+    buffer.history.undo_range().unwrap(),
     0..2,
     "After creating a checkpoint the undo range should be 0..2."
   );
   buffer.undo(1).unwrap();
   assert_eq!(
-    buffer.undo_range().unwrap(),
+    buffer.history.undo_range().unwrap(),
     -1..1,
     "After undoing x checkpoints range should begin at -x."
   );
@@ -166,7 +166,7 @@ pub fn api_validation(buffer: &mut Buffer) {
 
   // Test text wrapping
   // Requires different buffer contents, snapshot/undo to reset test data after
-  buffer.snapshot().unwrap();
+  buffer.history.snapshot().unwrap();
   {
     let lorem = vec![
       "Verå et quia ad repellendus. Voluptas debitis id consequatur doloremque sed suscipit et tempora. Odit sed est hic non error. Sint itaque et ut alias voluptatem sit. Et sunt totam amet doloribus unde nam velit voluptatem. Odit nisi ut eius et temporibus et.\n",

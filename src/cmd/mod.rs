@@ -57,13 +57,13 @@ pub fn run<I: IO>(
     None => {
       if selection.is_some() {
         // Get and update the selection.
-        let sel = interpret_selection(selection, state.selection, state.buffer)?;
-        verify_selection(state.buffer, sel)?;
+        let sel = interpret_selection(selection, state.selection, &state.buffer)?;
+        verify_selection(&state.buffer, sel)?;
         state.selection = sel;
         pflags.p = true; // Default command is 'p'
       } else {
         // Since state.selection may be invalid
-        verify_selection(state.buffer, state.selection)?;
+        verify_selection(&state.buffer, state.selection)?;
         scroll(state, &mut pflags, selection, 'z', "",
           state.selection.1 - state.selection.0 + 1,
         )?;
@@ -71,30 +71,6 @@ pub fn run<I: IO>(
       Ok(false)
     },
     Some(ch) => {
-      // If command isn't excluded from undoing or state.dont_snapshot, snapshot
-      match ch {
-        // The following commands don't modify the buffer, therefore creating
-        // undo snapshots in the buffer for them is only confusing
-        'q' | 'Q' |
-        'h' | 'H' |
-        '#' |
-        '=' |
-        'N' | 'L' |
-        'f' |
-        'e' | 'E' | 'r' |
-        'w' | 'W' |
-        'p' | 'n' | 'l' |
-        'z' | 'Z' |
-        // If undo creates snapshots then history is changed by "viewing", which
-        // becomes too complex
-        'u' | 'U' => {},
-        // If not in match arm above we check if we may snapshot
-        _ => {
-          if ! state.dont_snapshot {
-            state.buffer.snapshot()?;
-          }
-        },
-      }
       let tail = {
         let mut x = 1;
         while ! command.is_char_boundary(cmd_i + x) { x += 1; }
@@ -135,12 +111,12 @@ pub fn run<I: IO>(
         }
         // Non-editing commands
         '#' => {
-          state.selection = interpret_selection(selection, state.selection, state.buffer)?;
+          state.selection = interpret_selection(selection, state.selection, &state.buffer)?;
           Ok(false)
         },
         '=' => { // Print selection (can set selection)
-          let sel = interpret_selection(selection, state.selection, state.buffer)?;
-          verify_selection(state.buffer, sel)?;
+          let sel = interpret_selection(selection, state.selection, &state.buffer)?;
+          verify_selection(&state.buffer, sel)?;
           state.selection = sel;
           ui.print_message(&format!("({},{})", sel.0, sel.1) )?;
           Ok(false)
@@ -178,8 +154,8 @@ pub fn run<I: IO>(
         },
         // Print commands
         'p' | 'n' | 'l' => {
-          let sel = interpret_selection(selection, state.selection, state.buffer)?;
-          verify_selection(state.buffer, sel)?;
+          let sel = interpret_selection(selection, state.selection, &state.buffer)?;
+          verify_selection(&state.buffer, sel)?;
           // Get the flags
           let mut flags = parse_flags(&command[cmd_i..], "pnl")?;
           // Set the global print pflags (safe to unwrap since parse_flags never removes a key)
@@ -203,7 +179,7 @@ pub fn run<I: IO>(
           Ok(false)
         },
         'd' => { // Cut
-          let sel = interpret_selection(selection, state.selection, state.buffer)?;
+          let sel = interpret_selection(selection, state.selection, &state.buffer)?;
           // Since selection after execution can be 0 it isn't allowed to auto print after
           // Get the flags
           let mut flags = parse_flags(clean, "pnl")?;
@@ -240,7 +216,7 @@ pub fn run<I: IO>(
           Ok(false)
         },
         'y' => { // Copy to clipboard
-          let sel = interpret_selection(selection, state.selection, state.buffer)?;
+          let sel = interpret_selection(selection, state.selection, &state.buffer)?;
           let mut flags = parse_flags(clean, "pnl")?;
           state.buffer.copy(sel)?;
           // Save the selection and export the flags
@@ -251,7 +227,7 @@ pub fn run<I: IO>(
           Ok(false)
         },
         'x' | 'X' => { // Append/prepend (respectively) clipboard contents to selection
-          let sel = interpret_selection(selection, state.selection, state.buffer)?;
+          let sel = interpret_selection(selection, state.selection, &state.buffer)?;
           let mut flags = parse_flags(clean, "pnl")?;
           pflags.p = flags.remove(&'p').unwrap();
           pflags.n = flags.remove(&'n').unwrap();
@@ -285,7 +261,7 @@ pub fn run<I: IO>(
         },
         // Advanced editing commands
         'k' | 'K' => { // Tag first (k) or last (K) line in selection
-          let sel = interpret_selection(selection, state.selection, state.buffer)?;
+          let sel = interpret_selection(selection, state.selection, &state.buffer)?;
           // Expect only the tag, no flags
           if clean.len() > 1 { return Err(INVALID_TAG); }
           let index = if ch == 'k' { sel.0 } else { sel.1 };
@@ -299,7 +275,7 @@ pub fn run<I: IO>(
         }
         'j' => {
           // Calculate the selection
-          let selection = interpret_selection(selection, state.selection, state.buffer)?;
+          let selection = interpret_selection(selection, state.selection, &state.buffer)?;
           let mut flags = parse_flags(clean, "pnl")?;
           pflags.p = flags.remove(&'p').unwrap();
           pflags.n = flags.remove(&'n').unwrap();
@@ -309,7 +285,7 @@ pub fn run<I: IO>(
           Ok(false)
         },
         'J' => {
-          let selection = interpret_selection(selection, state.selection, state.buffer)?;
+          let selection = interpret_selection(selection, state.selection, &state.buffer)?;
           let nr_end = clean.find( | c: char | !c.is_numeric() ).unwrap_or(clean.len());
           let width = if nr_end == 0 {
             80
@@ -331,29 +307,34 @@ pub fn run<I: IO>(
           substitute(state, &mut pflags, selection, tail)?;
           Ok(false)
         },
-        'g' | 'v' => {
-          // Disable snapshotting during execution
-          state.dont_snapshot = true;
-          let res = global(state, ui, selection, ch, clean);
-          state.dont_snapshot = false;
-          res?;
-          Ok(false)
-        },
-        'G' | 'V' => {
-          // Disable snapshotting during execution
-          state.dont_snapshot = true;
-          let res = global_interactive(state, ui, selection, ch, clean);
-          state.dont_snapshot = false;
+        'g' | 'v' | 'G' | 'V' => {
+          // Before disabling snapshotting, create one for this command
+          state.buffer.history.snapshot()?;
+          // Disable snapshotting during execution, reset it after
+          let orig_dont_snapshot = state.buffer.history.dont_snapshot;
+          state.buffer.history.dont_snapshot = true;
+          let res = if ch == 'g' || ch == 'v' {
+            global(state, ui, selection, ch, clean)
+          } else {
+            global_interactive(state, ui, selection, ch, clean)
+          };
+          state.buffer.history.dont_snapshot = orig_dont_snapshot;
+          // If snapshotting was originally enabled we should handle if no
+          // mutation of the buffer occured during the dont_snapshot.
+          if !orig_dont_snapshot { state.buffer.history.dedup_present(); }
           res?;
           Ok(false)
         },
         ':' => {
-          let selection = interpret_selection(selection, state.selection, state.buffer)?;
-          verify_selection(state.buffer, selection)?;
+          let selection = interpret_selection(selection, state.selection, &state.buffer)?;
+          verify_selection(&state.buffer, selection)?;
           match state.macros.get(clean) {
             Some(m) => {
+              // Before disabling snapshotting, create one for this command
+              state.buffer.history.snapshot()?;
               // Disable undo snapshotting during macro execution
-              state.dont_snapshot = true;
+              let orig_dont_snapshot = state.buffer.history.dont_snapshot;
+              state.buffer.history.dont_snapshot = true;
               let mut scripted = ScriptedUI{
                 input: m.lines().map(|x| format!("{}\n",x)).collect(),
                 print_ui: Some(ui),
@@ -361,7 +342,10 @@ pub fn run<I: IO>(
               state.selection = selection;
               let res = state.run_macro(&mut scripted);
               // Re-enable snapshotting after
-              state.dont_snapshot = false;
+              state.buffer.history.dont_snapshot = orig_dont_snapshot;
+              // If snapshotting was originally enabled we should handle if no
+              // mutation of the buffer occured during the dont_snapshot.
+              if !orig_dont_snapshot { state.buffer.history.dedup_present(); }
               res?;
             },
             None => return Err(UNDEFINED_MACRO),
@@ -377,7 +361,7 @@ pub fn run<I: IO>(
 
   // If print flags are set, print
   if pflags.p | pflags.n | pflags.l {
-    verify_selection(state.buffer, state.selection)?;
+    verify_selection(&state.buffer, state.selection)?;
     ui.print_selection(
       state.see_state(),
       state.selection,

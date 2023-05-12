@@ -32,9 +32,9 @@ enum State {
   Offset(usize, bool),
 }
 
-pub fn parse_index<'a> (
-  input: &'a str,
-) -> Result<(usize, Option<Ind<'a>>), &'static str> {
+pub fn parse_index(
+  input: &str,
+) -> Result<(usize, Option<Ind<'_>>), &'static str> {
   // Set up state variables for one-pass parse
   let mut end = None;
   let mut state = State::Default(0);
@@ -85,7 +85,7 @@ pub fn parse_index<'a> (
           _ => {
             // If not numeric (base 10) it must be the end of the index
             // Break the loop and handle the last outside
-            if ! ch.is_digit(10) {
+            if ! ch.is_ascii_digit() {
               // Mark current character as the end of the index
               end = Some(i);
               break;
@@ -189,9 +189,9 @@ pub fn parse_index<'a> (
   }
 }
 
-pub fn parse_selection<'a>(
-  input: &'a str,
-) -> Result<(usize, Option<Sel<'a>>), &'static str> {
+pub fn parse_selection(
+  input: &str,
+) -> Result<(usize, Option<Sel<'_>>), &'static str> {
   // First parse, getting an index and the offset it stopped parsing at
   let (offset, ind) = parse_index(input)?;
   // Match the next char to see what kind of selection this is
@@ -221,8 +221,8 @@ pub fn parse_selection<'a>(
 // Interprets index struct into 1-indexed usize.
 // (1-indexed so append operations can append to line 0 to insert before line 1)
 // Should not be able to return a index bigger than buffer.len().
-pub fn interpret_index<'a> (
-  index: Ind<'a>,
+pub fn interpret_index(
+  index: Ind<'_>,
   buffer: &Buffer,
   old_selection: usize,
 ) -> Result<usize, &'static str> {
@@ -263,8 +263,8 @@ pub fn interpret_index<'a> (
 // Interprets a given selection into two usize.
 // 1-indexed just like indices, since 'i'/'a' use selection start/end as index
 // This function tries to make every selection inclusive towards its ending index
-pub fn interpret_selection<'a>(
-  input: Option<Sel<'a>>,
+pub fn interpret_selection(
+  input: Option<Sel<'_>>,
   old_selection: (usize, usize),
   buffer: &Buffer,
 ) -> Result<(usize, usize), &'static str> {

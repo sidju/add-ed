@@ -5,7 +5,6 @@ use super::{
   mock_ui::{Print, MockUI},
 };
 use add_ed::{
-  buffer::Buffer,
   ui::ScriptedUI,
   Ed,
 };
@@ -26,8 +25,11 @@ pub fn inner_fixture(
 ) {
   // Instantiate dummy IO
   let mut io = DummyIO::new();
-  // Create and init buffer
-  let mut buffer = Buffer::new();
+  // Create ed state and init ed.buffer
+  let mut ed = Ed::new(
+    &mut io,
+    init_filepath.to_owned(),
+  );
   let init_clipboard: Vec<String> = init_clipboard.iter().map(|x| {
     let mut s = x.to_string();
     s.push('\n');
@@ -39,11 +41,11 @@ pub fn inner_fixture(
     s
   }).collect();
   if !init_clipboard.is_empty() {
-    buffer.insert(init_clipboard, 0).unwrap();
-    buffer.cut((1,buffer.len())).unwrap();
+    ed.buffer.insert(init_clipboard, 0).unwrap();
+    ed.buffer.cut((1,ed.buffer.len())).unwrap();
   }
-  buffer.insert(init_buffer, 0).unwrap();
-  if init_buffer_saved { buffer.set_saved(); }
+  ed.buffer.insert(init_buffer, 0).unwrap();
+  if init_buffer_saved { ed.buffer.set_saved(); }
   // Create scripted UI (with mock UI, which tracks print invocations)
   let mut inner_ui = MockUI{ prints_history: Vec::new() };
   let mut ui = ScriptedUI{
@@ -56,39 +58,18 @@ pub fn inner_fixture(
     }).collect(),
   };
 
-  // Instantiate editor and run test
-  {
-    let mut ed = Ed::new(
-      &mut buffer,
-      &mut io,
-      init_filepath.to_owned(),
-    );
-    assert_eq!(
-      ed.run_macro(&mut ui),
-      expected_result,
-      "Result from running test (left) didn't match expectations (right)."
-    );
-
-    // Before dropping editor, verify selection and filepath
-    assert_eq!(
-      ed.see_state().selection,
-      expected_selection,
-      "Selection after test (left) didn't match expectations (right)."
-    );
-    assert_eq!(
-      ed.see_state().file,
-      expected_filepath,
-      "state.filepath after test (left) didn't match expectations (right)."
-    );
-  }
+  // Set correct default selection and run test
+  ed.selection = (1,ed.buffer.len());
   assert_eq!(
-    buffer.saved(),
-    expected_buffer_saved,
-    "Buffer.saved() after test (left) didn't match expectations (right)."
+    ed.run_macro(&mut ui),
+    expected_result,
+    "Result from running test (left) didn't match expectations (right)."
   );
+
+  // Verify state after execution
   assert_eq!(
-    if buffer.len() != 0 {
-      buffer.get_selection((1,buffer.len()))
+    if ed.buffer.len() != 0 {
+      ed.buffer.get_selection((1,ed.buffer.len()))
         .unwrap()
         .map(|(_,s)| s.trim_end_matches('\n'))
         .collect::<Vec<&str>>()
@@ -98,13 +79,28 @@ pub fn inner_fixture(
     expected_buffer,
     "Buffer contents after test (left) didn't match expectations (right)."
   );
-  // Switch out buffer contents to clipboard contents
-  let end_of_buf = buffer.len();
-  buffer.paste(end_of_buf).unwrap();
-  if end_of_buf != 0 { buffer.cut((1,end_of_buf)).unwrap(); }
   assert_eq!(
-    if buffer.len() != 0 {
-      buffer.get_selection((1,buffer.len()))
+    ed.buffer.saved(),
+    expected_buffer_saved,
+    "Buffer.saved() after test (left) didn't match expectations (right)."
+  );
+  assert_eq!(
+    ed.see_state().selection,
+    expected_selection,
+    "Selection after test (left) didn't match expectations (right)."
+  );
+  assert_eq!(
+    ed.see_state().file,
+    expected_filepath,
+    "state.filepath after test (left) didn't match expectations (right)."
+  );
+  // Switch out ed.buffer contents to clipboard contents
+  let end_of_buf = ed.buffer.len();
+  ed.buffer.paste(end_of_buf).unwrap();
+  if end_of_buf != 0 { ed.buffer.cut((1,end_of_buf)).unwrap(); }
+  assert_eq!(
+    if ed.buffer.len() != 0 {
+      ed.buffer.get_selection((1,ed.buffer.len()))
         .unwrap()
         .map(|(_,s)| s.trim_end_matches('\n'))
         .collect::<Vec<&str>>()
