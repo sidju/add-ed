@@ -5,9 +5,10 @@ impl Buffer {
   ///
   /// Set the given index's tag to given tag. Use [´Self.get_tag`] to get a line
   /// with that tag (lower indices prioritised).
-  pub fn tag_line(&mut self, index: usize, tag: char)
-    -> Result<(), &'static str>
-  {
+  pub fn tag_line(&mut self,
+    index: usize,
+    tag: char,
+  ) -> Result<()> {
     verify_line(self, index)?;
     let buffer = self.history.current();
     // Overwrite current char with given char
@@ -18,27 +19,28 @@ impl Buffer {
   ///
   /// Prioritises lower indices
   pub fn get_tag(&self, tag: char)
-    -> Result<usize, &'static str>
+    -> Result<usize>
   {
     let buffer = self.history.current();
     for (index, line) in buffer[..].iter().enumerate() {
       if tag == *line.tag.borrow() { return Ok(index + 1); } // Add one for 1-indexing
     }
-    Err(NO_MATCH)
+    Err(ExecutionError::NoTagMatch).into()
   }
 
   /// `/` and `?` index resolvers
   ///
   /// Get nearest line matching regex pattern, forward or backward
-  pub fn get_matching(&self, pattern: &str, curr_line: usize, backwards: bool)
-    -> Result<usize, &'static str>
-  {
+  pub fn get_matching(&self,
+    pattern: &str,
+    curr_line: usize,
+    backwards: bool,
+  ) -> Result<usize> {
     verify_index(self, curr_line)?;
     use regex::RegexBuilder;
     let regex = RegexBuilder::new(pattern)
       .multi_line(true)
       .build()
-      .map_err(|_| INVALID_REGEX)
     ?;
     let buffer = self.history.current();
     // Figure out how far to iterate
@@ -62,7 +64,7 @@ impl Buffer {
         }
       }
     }
-    Err(NO_MATCH)
+    Err(ExecutionError::NoRegexMatch).into()
   }
 
   /// `g`, `G`, `v` and `V` commands
@@ -70,15 +72,16 @@ impl Buffer {
   ///Mark all lines in selection matching pattern (or its inverse)
   ///
   /// Call [`Self.get_marked`] repeatedly to get the matching indices.
-  pub fn mark_matching(&mut self, pattern: &str, selection: (usize, usize), inverse: bool)
-    -> Result<(), &'static str>
-  {
+  pub fn mark_matching(&mut self,
+    pattern: &str,
+    selection: (usize, usize),
+    inverse: bool,
+  ) -> Result<()> {
     use regex::RegexBuilder;
     verify_selection(self, selection)?;
     let regex = RegexBuilder::new(pattern)
       .multi_line(true)
       .build()
-      .map_err(|_| INVALID_REGEX)
     ?;
     let buffer = self.history.current();
     let mut match_found = false;
@@ -94,7 +97,7 @@ impl Buffer {
       }
     }
     if !match_found {
-      Err(NO_MATCH)
+      Err(ExecutionError::NoRegexMatch).into()
     } else {
       Ok(())
     }
@@ -102,9 +105,8 @@ impl Buffer {
   /// `g`, `G`, `v` and `V` commands
   ///
   /// Returns the lowest index which is marked and unmarks it.
-  pub fn get_marked(&mut self)
-    -> Result<Option<usize>, &'static str>
-  {
+  pub fn get_marked(&mut self,
+  ) -> Result<Option<usize>> {
     let buffer = self.history.current();
     for (index,item) in buffer.iter().enumerate() {
       let mut matched = item.matched.borrow_mut();

@@ -66,17 +66,18 @@ impl History {
   /// history.
   /// - Unless self.dont_snapshot, will create a new snapshot.
   /// - Returns mutable access to the snapshot at the end of history.
-  pub(super) fn current_mut(&mut self
-  ) -> Result<&mut Vec<Line>, &'static str> {
+  pub(super) fn current_mut(&mut self) -> Result<&mut Vec<Line>> {
     self.snapshot()?;
     Ok(&mut self.snapshots[self.viewed_i])
   }
 
   /// Move the given number of steps back into history
-  pub fn undo(&mut self, steps: isize)
-    -> Result<(), &'static str>
-  {
-    if !self.undo_range()?.contains(&steps) { return Err(INVALID_UNDO_STEPS); }
+  pub fn undo(&mut self,
+    steps: isize,
+  ) -> Result<()> {
+    if !self.undo_range()?.contains(&steps) {
+      Err(ExecutionError::InvalidUndoSteps)?
+    }
     if steps.is_negative() {
       self.viewed_i += (-steps) as usize;
     } else {
@@ -85,16 +86,14 @@ impl History {
     Ok(())
   }
   /// Returns how far you can undo/redo
-  pub fn undo_range(&self)
-    -> Result<std::ops::Range<isize>, &'static str>
-  {
+  pub fn undo_range(&self) -> Result<std::ops::Range<isize>> {
     // Negative is redo potential, steps between end of history and buffer_i
     // Positive is undo potential, buffer_i
     if self.snapshots.len() < isize::MAX as usize && self.viewed_i < self.snapshots.len() {
       Ok(self.viewed_i as isize - self.snapshots.len() as isize +1 .. self.viewed_i as isize + 1)
     } else {
       // When we have too much undo history to handle via the api
-      Err(UNDO_HISTORY_TOO_LARGE)
+      Err(InternalError::UndoHistoryTooLarge).into()
     }
   }
 
@@ -110,11 +109,11 @@ impl History {
   /// The only case this should be needed is before setting `dont_snapshot` for
   /// a script execution. If `dont_snapshot` isn't set snapshots are created
   /// automatically whenever [`Self.current_mut`] is executed.
-  pub fn snapshot(&mut self) -> Result<(), &'static str> {
+  pub fn snapshot(&mut self) -> Result<()> {
     // Verify that we don't overflow history
     // Add two, since two snapshots are created for revert + snapshot
     if self.snapshots.len() + 2 > isize::MAX as usize {
-      return Err(UNDO_HISTORY_TOO_LARGE);
+      Err(InternalError::UndoHistoryTooLarge)?;
     }
     // If we are in the past, create a revert snapshot
     // This is needed even if snapshots are disabled, to not change history

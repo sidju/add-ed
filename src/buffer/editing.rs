@@ -5,7 +5,7 @@ impl Buffer {
   pub fn inline_insert<S: Into<String>>(&mut self,
     mut data: Vec<S>,
     index: usize,
-  ) -> Result<(), &'static str> {
+  ) -> Result<()> {
     verify_line(self, index)?;
     let buffer = self.history.current_mut()?;
     let mut tail = buffer.split_off(index);
@@ -33,7 +33,7 @@ impl Buffer {
   pub fn inline_append<S: Into<String>>(&mut self,
     mut data: Vec<S>,
     index: usize,
-  ) -> Result<(), &'static str> {
+  ) -> Result<()> {
     verify_line(self, index)?;
     let buffer = self.history.current_mut()?;
     let mut tail = buffer.split_off(index);
@@ -60,9 +60,10 @@ impl Buffer {
     Ok(())
   }
   /// `i` command
-  pub fn insert<S: Into<String>>(&mut self, mut data: Vec<S>, index: usize)
-    -> Result<(), &'static str>
-  {
+  pub fn insert<S: Into<String>>(&mut self,
+    mut data: Vec<S>,
+    index: usize,
+  ) -> Result<()> {
     verify_index(self, index)?;
     let buffer = self.history.current_mut()?;
     // To minimise time complexity we split the vector immediately
@@ -78,8 +79,9 @@ impl Buffer {
     Ok(())
   }
   /// `d` command
-  pub fn cut(&mut self, selection: (usize, usize)) -> Result<(), &'static str>
-  {
+  pub fn cut(&mut self,
+    selection: (usize, usize),
+  ) -> Result<()> {
     verify_selection(self, selection)?;
     let buffer = self.history.current_mut()?;
     let mut tail = buffer.split_off(selection.1);
@@ -88,9 +90,10 @@ impl Buffer {
     Ok(())
   }
   /// `c` and `C` commands
-  pub fn change<S: Into<String>>(&mut self, mut data: Vec<S>, selection: (usize, usize))
-    -> Result<(), &'static str>
-  {
+  pub fn change<S: Into<String>>(&mut self,
+    mut data: Vec<S>,
+    selection: (usize, usize),
+  ) -> Result<()> {
     verify_selection(self, selection)?;
     let buffer = self.history.current_mut()?;
     let mut tail = buffer.split_off(selection.1);
@@ -108,7 +111,7 @@ impl Buffer {
   // probably break the law of least surprise.
   pub fn replace_buffer<S: Into<String>>(&mut self,
     mut data: Vec<S>,
-  ) -> Result<(), &'static str> {
+  ) -> Result<()> {
     let buffer = self.history.current_mut()?;
     buffer.clear();
     for line in data.drain(..) {
@@ -119,7 +122,10 @@ impl Buffer {
     Ok(())
   }
   /// The `m` command
-  pub fn mov(&mut self, selection: (usize, usize), index: usize) -> Result<(), &'static str> {
+  pub fn mov(&mut self,
+    selection: (usize, usize),
+    index: usize,
+  ) -> Result<()> {
     verify_selection(self, selection)?;
     verify_index(self, index)?;
     let buffer = self.history.current_mut()?;
@@ -147,13 +153,16 @@ impl Buffer {
       Ok(())
     }
     else {
-      Err(MOVE_INTO_SELF)
+      Err(ExecutionError::NoOpArgument).into() // moving into self is not moving
     }
   }
   /// `t` command
   ///
   /// Note that its implementation also duplicates any tags on the copied lines
-  pub fn mov_copy(&mut self, selection: (usize, usize), index: usize) -> Result<(), &'static str> {
+  pub fn mov_copy(&mut self,
+    selection: (usize, usize),
+    index: usize,
+  ) -> Result<()> {
     verify_selection(self, selection)?;
     verify_index(self, index)?;
     let buffer = self.history.current_mut()?;
@@ -168,7 +177,9 @@ impl Buffer {
     Ok(())
   }
    /// `j` command
-  pub fn join(&mut self, selection: (usize, usize)) -> Result<(), &'static str> {
+  pub fn join(&mut self,
+    selection: (usize, usize),
+  ) -> Result<()> {
     verify_selection(self, selection)?;
     let buffer = self.history.current_mut()?;
     // Take out all the selected lines
@@ -196,7 +207,7 @@ impl Buffer {
   pub fn reflow(&mut self,
     selection: (usize, usize),
     width: usize,
-  ) -> Result<usize, &'static str> {
+  ) -> Result<usize> {
     verify_selection(self, selection)?;
     let buffer = self.history.current_mut()?;
     // Take out the selected lines
@@ -249,7 +260,9 @@ impl Buffer {
     Ok(end)
   }
   /// `y` command
-  pub fn copy(&mut self, selection: (usize, usize)) -> Result<(), &'static str> {
+  pub fn copy(&mut self,
+    selection: (usize, usize),
+  ) -> Result<()> {
     verify_selection(self, selection)?;
     self.clipboard = Vec::new();
     let buffer = self.history.current();
@@ -262,7 +275,9 @@ impl Buffer {
   /// `x`/`X` command
   ///
   /// Note that it may duplicate any tags on lines in the clipboard.
-  pub fn paste(&mut self, index: usize) -> Result<usize, &'static str> {
+  pub fn paste(&mut self,
+    index: usize,
+  ) -> Result<usize> {
     verify_index(self, index)?;
     let buffer = self.history.current_mut()?;
     // Cut off the tail in one go, to reduce time complexity
@@ -276,8 +291,11 @@ impl Buffer {
     Ok(self.clipboard.len())
   }
   /// `s` command
-  pub fn search_replace(&mut self, pattern: (&str, &str), selection: (usize, usize), global: bool) -> Result<usize, &'static str>
-  {
+  pub fn search_replace(&mut self,
+    pattern: (&str, &str),
+    selection: (usize, usize),
+    global: bool,
+  ) -> Result<usize> {
     use regex::RegexBuilder;
     // ensure that the selection is valid
     verify_selection(self, selection)?;
@@ -285,7 +303,6 @@ impl Buffer {
     let regex = RegexBuilder::new(pattern.0)
       .multi_line(true)
       .build()
-      .map_err(|_| INVALID_REGEX)
     ?;
 
     // Get view to the buffer contents and verify that there is a match
@@ -296,7 +313,7 @@ impl Buffer {
     }
     if !regex.is_match(&joined) {
       // We haven't modified anything we shouldn't, so just return Err
-      return Err(NO_MATCH);
+      Err(ExecutionError::NoRegexMatch)?
     }
 
     // When we know we will need to modify, get a mutable access to the buffer

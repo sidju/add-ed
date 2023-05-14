@@ -2,7 +2,8 @@ use crate::{Ed, Substitution};
 use crate::buffer::{Buffer, verify_selection, verify_index, verify_line};
 use crate::io::IO;
 use crate::ui::{UI, ScriptedUI};
-use crate::error_consts::*;
+use crate::error::*;
+use crate::messages::*;
 
 mod parse_selection;
 use parse_selection::*;
@@ -43,7 +44,7 @@ pub fn run<I: IO>(
   state: &mut Ed<'_,I>,
   ui: &mut dyn UI,
   command: &str,
-) -> Result<bool, &'static str> {
+) -> Result<bool> {
   // Declare flags for printing after the command has been executed.
   let mut pflags = PrintingFlags::default();
 
@@ -80,18 +81,18 @@ pub fn run<I: IO>(
       match ch {
         // Quit commands
         'q' | 'Q' => {
-          if selection.is_some() { return Err(SELECTION_FORBIDDEN); }
+          if selection.is_some() { return Err(EdError::SelectionForbidden); }
           parse_flags(clean, "")?;
           if state.buffer.saved() || ch == 'Q' {
             Ok(true)
           }
           else {
-            Err(UNSAVED_CHANGES)
+            Err(EdError::UnsavedChanges)
           }
         }
         // Help commands
         'h' => {
-          if selection.is_some() { return Err(SELECTION_FORBIDDEN); }
+          if selection.is_some() { return Err(EdError::SelectionForbidden); }
           // If 'help' was entered, print help
           if clean == "elp" {
             ui.print_message(HELP_TEXT)?;
@@ -104,7 +105,7 @@ pub fn run<I: IO>(
           Ok(false)
         },
         'H' => {
-          if selection.is_some() { return Err(SELECTION_FORBIDDEN); }
+          if selection.is_some() { return Err(EdError::SelectionForbidden); }
           parse_flags(clean, "")?;
           state.print_errors = !state.print_errors; // Toggle the setting
           Ok(false)
@@ -123,20 +124,20 @@ pub fn run<I: IO>(
         },
         // Toggles printing with/without numbering/literal by default
         'N' => {
-          if selection.is_some() { return Err(SELECTION_FORBIDDEN); }
+          if selection.is_some() { return Err(EdError::SelectionForbidden); }
           parse_flags(clean, "")?;
           state.n = !state.n;
           Ok(false)
         },
         'L' => {
-          if selection.is_some() { return Err(SELECTION_FORBIDDEN); }
+          if selection.is_some() { return Err(EdError::SelectionForbidden); }
           parse_flags(clean, "")?;
           state.l = !state.l;
           Ok(false)
         },
         // File/shell commands
         'f' => { // Set or print filename
-          if selection.is_some() { return Err(SELECTION_FORBIDDEN); }
+          if selection.is_some() { return Err(EdError::SelectionForbidden); }
           // Print or update filename
           filename(state, ui, clean)?;
           Ok(false)
@@ -191,7 +192,7 @@ pub fn run<I: IO>(
           if sel.0 == 1 && sel.1 == state.buffer.len() {
             // And we are to print after execution, error
             if pflags.p || pflags.n || pflags.l {
-              return Err(PRINT_AFTER_WIPE);
+              return Err(EdError::PrintAfterWipe);
             }
           }
           state.buffer.cut(sel)?;
@@ -247,11 +248,11 @@ pub fn run<I: IO>(
           Ok(false)
         },
         'u' | 'U' => {
-          if selection.is_some() {return Err(SELECTION_FORBIDDEN); }
+          if selection.is_some() {return Err(EdError::SelectionForbidden); }
           // A undo steps parsing not unlike index parsing would be good later
           // ie. relative AND shorthand for start and end of history
           let steps = if clean.is_empty() { 1 }
-          else { clean.parse::<isize>().map_err(|_| INTEGER_PARSE)? };
+          else { clean.parse::<isize>().map_err(EdError::undo_redo_not_int)? };
           if ch == 'U' {
             state.buffer.undo( -steps )?;
           } else {
@@ -263,7 +264,9 @@ pub fn run<I: IO>(
         'k' | 'K' => { // Tag first (k) or last (K) line in selection
           let sel = interpret_selection(selection, state.selection, &state.buffer)?;
           // Expect only the tag, no flags
-          if clean.len() > 1 { return Err(INVALID_TAG); }
+          if clean.len() > 1 {
+            Err(ExecutionError::InvalidTag(clean.to_owned()))?
+          }
           let index = if ch == 'k' { sel.0 } else { sel.1 };
           state.buffer.tag_line(index, clean.chars().next().unwrap_or('\0'))?;
           Ok(false)
@@ -290,7 +293,8 @@ pub fn run<I: IO>(
           let width = if nr_end == 0 {
             80
           } else {
-            clean[.. nr_end].parse::<usize>().map_err(|_| INTEGER_PARSE)?
+            clean[.. nr_end].parse::<usize>()
+              .map_err(ParsingError::ReflowNotInt)?
           };
           let mut flags = parse_flags(&clean[nr_end ..], "pnl")?;
           pflags.p = flags.remove(&'p').unwrap();
@@ -346,14 +350,14 @@ pub fn run<I: IO>(
               // If snapshotting was originally enabled we should handle if no
               // mutation of the buffer occured during the dont_snapshot.
               if !orig_dont_snapshot { state.buffer.history.dedup_present(); }
-              res?;
+              res
             },
-            None => return Err(UNDEFINED_MACRO),
-          }
+            None => Err(EdError::UndefinedMacro(clean.to_owned())),
+          }?;
           Ok(false)
         },
         _cmd => {
-          Err(UNDEFINED_COMMAND)
+          Err(EdError::UndefinedCommand(ch))
         }
       }
     }

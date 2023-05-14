@@ -37,7 +37,10 @@
 
 use std::collections::HashMap;
 
-pub mod error_consts;
+pub mod messages;
+
+pub mod error;
+use error::Result;
 mod cmd;
 
 pub mod ui;
@@ -166,7 +169,7 @@ impl <'a, I: IO> Ed <'a, I> {
     &mut self,
     ui: &mut dyn UI,
     command: &str,
-  ) -> Result<bool, &'static str> {
+  ) -> Result<bool> {
     // Just hand execution into the cmd module
     match cmd::run(self, ui, command) {
       // If error, note it in state
@@ -185,7 +188,7 @@ impl <'a, I: IO> Ed <'a, I> {
   pub fn get_and_run_command(
     &mut self,
     ui: &mut dyn UI,
-  ) -> Result<bool, &'static str> {
+  ) -> Result<bool> {
     // Define a temporary closure, since try blocks aren't stabilized
     let mut clos = || {
       let cmd = ui.get_command( self.see_state(), self.cmd_prefix )?;
@@ -207,7 +210,7 @@ impl <'a, I: IO> Ed <'a, I> {
   pub fn run_macro(
     &mut self,
     ui: &mut dyn UI,
-  ) -> Result<(), &'static str> {
+  ) -> Result<()> {
     // Loop over it, handling errors, until quit received
     loop {
       if self.get_and_run_command(ui)? { break; }
@@ -222,7 +225,7 @@ impl <'a, I: IO> Ed <'a, I> {
   pub fn run(
     &mut self,
     ui: &mut dyn UI,
-  ) -> Result<(), &'static str> {
+  ) -> Result<()> {
     // Loop getting and running command, handling errors, until quit received
     loop {
       match self.get_and_run_command(ui) {

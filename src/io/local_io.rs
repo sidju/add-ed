@@ -8,7 +8,7 @@ use std::process::{
 };
 use crate::IO;
 use crate::UILock;
-use crate::error_consts::*;
+use crate::error::*;
 
 fn spawn_transfer<'a, I, O>(
   i: I,
@@ -64,7 +64,7 @@ impl IO for LocalIO {
   fn run_command(&mut self,
     _ui: &mut UILock,
     command: String,
-  ) -> Result<(), &'static str> {
+  ) -> Result<()> {
     let shell = std::env::var("SHELL").unwrap_or("sh".to_owned());
     // Create and run child process, passing through all io
     let res = Command::new(shell)
@@ -84,7 +84,7 @@ impl IO for LocalIO {
   fn run_read_command(&mut self,
     _ui: &mut UILock,
     command: String,
-  ) -> Result<String, &'static str> {
+  ) -> Result<String> {
     let shell = std::env::var("SHELL").unwrap_or("sh".to_owned());
     // Create child process
     let child = Command::new(shell)
@@ -109,7 +109,7 @@ impl IO for LocalIO {
     _ui: &mut UILock,
     command: String,
     input: impl Iterator<Item = &'a str>,
-  ) -> Result<usize, &'static str> {
+  ) -> Result<usize> {
     let shell = std::env::var("SHELL").unwrap_or("sh".to_owned());
     // Create child process
     let mut child = Command::new(shell)
@@ -140,7 +140,7 @@ impl IO for LocalIO {
     _ui: &mut UILock,
     command: String,
     input: impl Iterator<Item = &'a str>,
-  ) -> Result<String, &'static str> {
+  ) -> Result<String> {
     let shell = std::env::var("SHELL").unwrap_or("sh".to_owned());
     // Create child process
     let mut child = Command::new(shell)
@@ -173,7 +173,7 @@ impl IO for LocalIO {
     path: &str,
     append: bool,
     data: impl Iterator<Item = &'a str>,
-  ) -> Result<usize, &'static str> {
+  ) -> Result<usize> {
     use std::io::ErrorKind;
     Self::write_internal(path, append, data)
       .map_err(|e: std::io::Error| match e.kind() {
@@ -185,7 +185,7 @@ impl IO for LocalIO {
   fn read_file(&mut self,
     path: &str,
     must_exist: bool,
-  ) -> Result<String, &'static str> {
+  ) -> Result<String> {
     use std::io::ErrorKind;
     match std::fs::read_to_string(path) {
       Ok(data) => Ok(data),

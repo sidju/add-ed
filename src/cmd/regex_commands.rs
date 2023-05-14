@@ -5,7 +5,7 @@ pub(super) fn substitute<I: IO>(
   pflags: &mut PrintingFlags,
   selection: Option<Sel<'_>>,
   tail: &str,
-) -> Result<(), &'static str> {
+) -> Result<()> {
   let selection = interpret_selection(selection, state.selection, &state.buffer)?;
   // Clip newline from tail if any
   let tail = tail.trim_end_matches('\n');
@@ -13,7 +13,7 @@ pub(super) fn substitute<I: IO>(
   if tail.is_empty() {
     // This means we use the arguments stored in state.s_args
     match &state.prev_s {
-      None => return Err(NO_PRIOR_S),
+      None => return Err(EdError::DefaultSArgsUnset),
       Some(s) => {
         pflags.p = s.p;
         pflags.n = s.n;
@@ -29,7 +29,9 @@ pub(super) fn substitute<I: IO>(
   }
   else {
     let expressions = parse_expressions(tail)?;
-    if expressions.len() != 3 { return Err(EXPRESSION_TOO_SHORT); }
+    if expressions.len() != 3 {
+      return Err(EdError::WrongNrArguments(("none or 3", expressions.len())));
+    }
     let mut flags = parse_flags(&(expressions[2]), "gpnl")?;
     let g = flags.remove(&'g').unwrap();
     pflags.p = flags.remove(&'p').unwrap();
@@ -60,12 +62,14 @@ pub(super) fn global<I: IO>(
   selection: Option<Sel<'_>>,
   command: char,
   tail: &str,
-) -> Result<(), &'static str> {
+) -> Result<()> {
   let selection = interpret_selection(selection, state.selection, &state.buffer)?;
   // Since this command may take input we need to check just as carefully as with a, i, c
   verify_selection(&state.buffer, selection)?;
   let mut expressions = parse_expressions(tail)?;
-  if expressions.len() < 2 { return Err(EXPRESSION_TOO_SHORT); }
+  if expressions.len() < 2 {
+    return Err(EdError::WrongNrArguments("2 or more",expressions.len()));
+  }
   // We first try to mark all matching lines, to tell if there is any issue
   state.buffer.mark_matching(&expressions[0], selection, command == 'v')?;
   // Then we get the script to run against them, if not already given
@@ -111,13 +115,17 @@ pub(super) fn global_interactive<I: IO>(
   selection: Option<Sel<'_>>,
   command: char,
   tail: &str,
-) -> Result<(), &'static str> {
+) -> Result<()> {
   let selection = interpret_selection(selection, state.selection, &state.buffer)?;
   // Since this command takes input we need to check just as carefully as with a, i, c
   verify_selection(&state.buffer, selection)?;
   let expressions = parse_expressions(tail)?;
-  if expressions.len() != 2 { return Err(EXPRESSION_TOO_SHORT); }
-  if !expressions[1].is_empty() && expressions[1] != "\n" { return Err(UNDEFINED_FLAG); }
+  if expressions.len() != 2 {
+    return Err( EdError::WrongNrArguments(("2",expressions.len())) );
+  }
+  if !expressions[1].is_empty() && expressions[1] != "\n" {
+    return Err(EdError::UndefinedFlag(expressions[1].chars().next().unwrap()));
+  }
   // Mark first, to check if the expression is valid
   state.buffer.mark_matching(&expressions[0], selection, command == 'V')?;
   // With all data gathered we fetch and iterate over the lines

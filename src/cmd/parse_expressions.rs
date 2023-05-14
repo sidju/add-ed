@@ -1,12 +1,10 @@
-use crate::error_consts::*;
+use crate::error::*;
 
 /// Splits string into strings separated by the first character in given string
 ///
 /// Handles backslash escaping the separator to not split on it,
 /// but does not convert r"\\" into r"\".
-pub fn parse_expressions(input: &str)
-  -> Result<Vec<String>, &'static str>
-{
+pub fn parse_expressions(input: &str) -> Result<Vec<String>> {
   let separator = match input.chars().next() {
     Some(ch) => ch,
     None => return Ok(Vec::new()),

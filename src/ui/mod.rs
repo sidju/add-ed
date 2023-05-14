@@ -3,7 +3,10 @@
 //! It is used to allow exchanging the UI of hired and to insert a dummy UI for
 //! script input.
 
-use super::EdState;
+use crate::{
+  EdState,
+  Result,
+};
 
 mod lock;
 pub use lock::UILock;
@@ -21,7 +24,7 @@ pub trait UI {
   /// A basic print for output of commands
   fn print_message(&mut self,
     data: &str,
-  ) -> Result<(), &'static str>;
+  ) -> Result<()>;
 
   /// Get a command for parsing and execution
   ///
@@ -31,7 +34,7 @@ pub trait UI {
   fn get_command(&mut self,
     ed: EdState,
     prefix: Option<char>,
-  ) -> Result<String, &'static str>;
+  ) -> Result<String>;
 
   /// Get input lines until given character is entered alone on a line
   ///
@@ -42,7 +45,7 @@ pub trait UI {
     terminator: char,
     #[cfg(feature = "initial_input_data")]
     initial_buffer: Option<Vec<String>>,
-  ) -> Result<Vec<String>, &'static str>;
+  ) -> Result<Vec<String>>;
 
   /// Print the given selection with the given options
   ///
@@ -55,7 +58,7 @@ pub trait UI {
     selection: (usize, usize),
     numbered: bool,
     literal: bool,
-  ) -> Result<(), &'static str>;
+  ) -> Result<()>;
 
   /// Prepare UI before handing down stdin/out/err to child process
   ///

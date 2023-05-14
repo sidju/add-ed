@@ -4,7 +4,7 @@ use core::iter::Iterator;
 use std::rc::Rc;
 use std::cell::RefCell;
 
-use crate::error_consts::*;
+use crate::error::*;
 
 // Data structure managing undo/redo and tracking if saved
 mod history;
@@ -82,7 +82,9 @@ impl Buffer {
   ///
   /// Re-export of [`History.undo`]. The lone command not implemented in
   /// [`Buffer`] itself, as it modifies the internal state of [`History`]
-  pub fn undo(&mut self, steps: isize) -> Result<(), &'static str> {
+  pub fn undo(&mut self,
+    steps: isize,
+  ) -> Result<()> {
     self.history.undo(steps)
   }
 
@@ -92,9 +94,9 @@ impl Buffer {
   /// boxed. If this bothers you PRs are welcome.
   ///
   /// Will return error on invalid selection.
-  pub fn get_selection<'a>(&'a self, selection: (usize, usize))
-    -> Result<Box<dyn Iterator<Item = (char, &'a str)> + 'a>, &'static str>
-  {
+  pub fn get_selection<'a>(&'a self,
+    selection: (usize, usize),
+  ) -> Result<Box<dyn Iterator<Item = (char, &'a str)> + 'a>> {
     verify_selection(self, selection)?;
     let tmp = self.history.current()[selection.0 - 1 .. selection.1]
       .iter()

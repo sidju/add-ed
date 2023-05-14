@@ -4,7 +4,7 @@ pub(super) fn filename<I: IO>(
   state: &mut Ed<'_, I>,
   ui: &mut dyn UI,
   path: &str,
-) -> Result<(), &'static str> {
+) -> Result<()> {
   match parse_path(path) {
     None => { // Print current filename
       ui.print_message(
@@ -14,7 +14,7 @@ pub(super) fn filename<I: IO>(
     }
     Some(x) => { // Set new filename
       match x {
-        Path::Command(_) => return Err(INVALID_FILE),
+        Path::Command(_) => return Err(EdError::InvalidDefaultFile),
         Path::File(file) => { state.file = file.to_owned(); },
       }
     }
@@ -28,7 +28,7 @@ pub(super) fn read_from_file<I: IO>(
   selection: Option<Sel<'_>>,
   command: char,
   path: &str,
-) -> Result<(), &'static str> {
+) -> Result<()> {
   let index =
     if command == 'r' {
       let i = interpret_selection(selection, state.selection, &state.buffer)?.1;
@@ -39,11 +39,11 @@ pub(super) fn read_from_file<I: IO>(
       Ok(None)
     }
     else { 
-      Err(SELECTION_FORBIDDEN)
+      Err(EdError::SelectionForbidden)
     }
   ?;
   if !state.buffer.saved() && command == 'e' {
-    Err(UNSAVED_CHANGES)
+    Err(EdError::UnsavedChanges)
   }
   else {
     let path = parse_path(path).unwrap_or(Path::File(&state.file));
@@ -111,7 +111,7 @@ pub(super) fn write_to_file<I: IO>(
   selection: Option<Sel<'_>>,
   command: char,
   path: &str,
-) -> Result<bool, &'static str> {
+) -> Result<bool> {
   // Since 'w' and 'W' should default to the whole buffer rather than previous selection
   // they get some custom code here
   let sel = match selection {
@@ -138,7 +138,7 @@ pub(super) fn write_to_file<I: IO>(
     (true, (Path::File(&state.file)))
   };
   // If the 'q' flag is set the whole buffer must be selected
-  if q && sel.is_some() { return Err(UNSAVED_CHANGES); }
+  if q && sel.is_some() { return Err(EdError::UnsavedChanges); }
   // Read out data from buffer
   let data = state.buffer.get_selection(
     sel.unwrap_or((1, state.buffer.len()))
@@ -204,7 +204,7 @@ pub fn run_command<I: IO>(
   selection: Option<Sel<'_>>,
   ch: char,
   command: &str,
-) -> Result<(), &'static str> {
+) -> Result<()> {
   // If ! we default to no selection, if | we default to prior selection
   let sel = if ch == '!' && selection.is_none() {
     None

@@ -1,4 +1,4 @@
-use crate::error_consts::*;
+use crate::error::*;
 
 pub enum Path<'a> {
   File(&'a str),
@@ -25,7 +25,7 @@ pub fn command_substitutions(
   command: &str,
   state_file: &str,
   prev_command: &str,
-) -> Result<(bool, String), &'static str> {
+) -> Result<(bool, String)> {
   // In command we replace ! with previous command and % with state.file.
   // To not clash with other escape processing we only handle \% and \!,
   // for every other case we print the escaping \ and the escaped char.

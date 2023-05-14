@@ -9,7 +9,7 @@ pub(super) fn scroll<I: IO>(
   command: char,
   clean: &str,
   default_scroll_length: usize,
-) -> Result<(), &'static str> {
+) -> Result<()> {
   // Depending on forward or backward we use start or end of selection as starting point
   let sel = interpret_selection(selection, state.selection, &state.buffer)?;
   let index = if command == 'z' {
@@ -23,9 +23,11 @@ pub(super) fn scroll<I: IO>(
   let nr = if nr_end == 0 {
     default_scroll_length
   } else {
-    let nr = clean[.. nr_end].parse::<usize>().map_err(|_| INTEGER_PARSE)?;
+    let nr = clean[.. nr_end].parse::<usize>()
+      .map_err(EdError::scroll_not_int)
+    ?;
     // Scrolling 0 lines is invalid, return error
-    if nr == 0 { return Err(CONTRADICTING_ARGUMENT); }
+    if nr == 0 { return Err(EdError::NoOpArgument); }
     nr
   };
   // Check what isn't numeric for flags
@@ -61,7 +63,7 @@ pub(super) fn input<I: IO>(
   selection: Option<Sel<'_>>,
   command: char,
   flags: &str,
-) -> Result<(), &'static str> {
+) -> Result<()> {
   let sel = interpret_selection(selection, state.selection, &state.buffer)?;
   let mut flags = parse_flags(flags, "pnl")?;
   pflags.p = flags.remove(&'p').unwrap();
@@ -125,7 +127,7 @@ pub(super) fn change<I: IO>(
   selection: Option<Sel<'_>>,
   command: char,
   flags: &str,
-) -> Result<(), &'static str> {
+) -> Result<()> {
   let sel = interpret_selection(selection, state.selection, &state.buffer)?;
   let mut flags = parse_flags(flags, "pnl")?;
   pflags.p = flags.remove(&'p').unwrap();
@@ -139,7 +141,7 @@ pub(super) fn change<I: IO>(
     }
     #[cfg(not(feature = "initial_input_data"))]
     {
-      return Err(UNDEFINED_COMMAND);
+      return Err(EdError::UndefinedCommand(command));
     }
   } else {
     verify_selection(&state.buffer, sel)?;
@@ -156,7 +158,7 @@ pub(super) fn change<I: IO>(
   if inputlen == 0 && sel.0 == 1 && sel.1 == state.buffer.len() {
     // Verify that we don't have a print flag set, error if we do
     if pflags.p || pflags.n || pflags.l {
-      return Err(PRINT_AFTER_WIPE);
+      return Err(EdError::PrintAfterWipe);
     }
   }
   state.buffer.change(input, sel)?;
@@ -191,7 +193,7 @@ pub(super) fn transfer<I: IO>(
   selection: Option<Sel<'_>>,
   command: char,
   tail: &str,
-) -> Result<(), &'static str> {
+) -> Result<()> {
   // Parse the target index, then the flags if any
   let (ind_end, ind) = parse_index(tail)?;
   let index = interpret_index(

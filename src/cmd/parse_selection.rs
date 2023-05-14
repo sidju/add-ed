@@ -2,7 +2,7 @@
 /// buffer is needed for realisation we parse into an intermediate
 /// struct which is then interpreted using additional data.
 
-use crate::error_consts::*;
+use crate::error::*;
 
 use super::Buffer;
 
@@ -34,7 +34,7 @@ enum State {
 
 pub fn parse_index(
   input: &str,
-) -> Result<(usize, Option<Ind<'_>>), &'static str> {
+) -> Result<(usize, Option<Ind<'_>>)> {
   // Set up state variables for one-pass parse
   let mut end = None;
   let mut state = State::Default(0);
@@ -191,7 +191,7 @@ pub fn parse_index(
 
 pub fn parse_selection(
   input: &str,
-) -> Result<(usize, Option<Sel<'_>>), &'static str> {
+) -> Result<(usize, Option<Sel<'_>>)> {
   // First parse, getting an index and the offset it stopped parsing at
   let (offset, ind) = parse_index(input)?;
   // Match the next char to see what kind of selection this is
@@ -225,7 +225,7 @@ pub fn interpret_index(
   index: Ind<'_>,
   buffer: &Buffer,
   old_selection: usize,
-) -> Result<usize, &'static str> {
+) -> Result<usize> {
   let ind = match index {
     Ind::Selection => Ok(old_selection),
     // Since we want 1-indexed len() points at the last valid line or 0 if none
@@ -267,7 +267,7 @@ pub fn interpret_selection(
   input: Option<Sel<'_>>,
   old_selection: (usize, usize),
   buffer: &Buffer,
-) -> Result<(usize, usize), &'static str> {
+) -> Result<(usize, usize)> {
   let selection = input.unwrap_or(Sel::Pair( Ind::Selection, Ind::Selection ));
   let interpreted = match selection {
     Sel::Lone(ind) => {

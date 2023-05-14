@@ -1,12 +1,12 @@
 use std::collections::HashMap;
-use crate::error_consts::*;
+use crate::error::*;
 
 /// Takes an input string and a map of flags to check for presence of.
 /// If a char in the input doesn't already exist in the map it errors.
 /// A typical call will look like
 /// let flags = parse_flags(&input, [('p', false), ('n', false), ('l', false)]).iter().cloned().collect()?;
 pub fn parse_flags(input: &str, flag_list: &str)
-  -> Result<HashMap<char, bool>, &'static str>
+  -> Result<HashMap<char, bool>>
 {
   let mut flag_map = HashMap::new();
   for flag in flag_list.chars() {
