@@ -58,7 +58,7 @@ pub fn parse_expressions(input: &str) -> Result<Vec<String>> {
     }
   }
   if partial.is_some() { 
-    Err(ESCAPED_LAST_EXPRESSION)
+    Err(EdError::EscapedArgumentListEnd(input.to_owned()))
   }
   else {
     Ok(expressions)

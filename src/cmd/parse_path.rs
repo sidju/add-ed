@@ -45,7 +45,7 @@ pub fn command_substitutions(
         escaped = false;
       } else {
         modified = true;
-        if state_file.is_empty() { return Err(STATE_FILE_UNSET); }
+        if state_file.is_empty() { return Err(EdError::DefaultFileUnset); }
         output.push_str(state_file);
       },
       '!' => if escaped {
@@ -53,7 +53,9 @@ pub fn command_substitutions(
         escaped = false;
       } else {
         modified = true;
-        if prev_command.is_empty() { return Err(PREV_SHELL_COMMAND_UNSET); }
+        if prev_command.is_empty() {
+          return Err(EdError::DefaultShellCommandUnset);
+        }
         output.push_str(prev_command);
       },
       _ => {

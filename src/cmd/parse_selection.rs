@@ -47,11 +47,28 @@ pub fn parse_index(
       // If a state change is coming, populate current ind and make the change
       State::Default(start) => {
         match ch {
+          // Offset is always valid
+          // We need to see if there is a literal before it, before entering state
+          '+' | '-' => {
+            if start != i {
+              // Catches that we had a special index, then some random numbers,
+              // then an offset. Not caught earlier so we can give a more
+              // detailed error. Same error logic as post loop State::Default
+              if let Some(cur) = current_ind {return Err(
+                EdError::UnrelatedIndices((cur, input[start..i].to_owned()))
+              )}
+              // If there is numeric input before, handle that
+              let literal = input[start .. i].parse::<usize>()
+                .map_err(EdError::index_not_int)?;
+              current_ind = Some(Ind::Literal(literal));
+            }
+            state = State::Offset(i + 1, ch == '-');
+          },
+          // Invalid if current_ind is some, but we catch that in their handlers
+          // to be able to give a clearer error
           '/' | '\'' | '?' | '.' | '$' => {
             // These are only valid at the start of an index
-            if start != i { return Err(INDEX_PARSE); }
-            // Since prior tags or patterns reset start, check that current_ind is none
-            if current_ind.is_some() { return Err(INDEX_PARSE); }
+            if start != i { return Err(EdError::SpecialIndex(i - start)); }
             match ch {
               '\'' => {
                 state = State::Tag;
@@ -62,26 +79,20 @@ pub fn parse_index(
               '?' => {
                 state = State::RevPattern(i + 1); // Since we know the length of these chars to be one byte
               },
-              '.' => {
-                current_ind = Some(Ind::Selection);
-                state = State::Default(i + 1); // reset start after moving into current_ind
-              },
-              '$' => {
-                current_ind = Some(Ind::BufferLen);
+              '.' | '$' => {
+                if let Some(cur) = current_ind { return Err(
+                  EdError::UnrelatedIndices((cur, input[i..i+1].to_owned()))
+                )}
+                current_ind = Some(
+                  if ch == '.' { Ind::Selection } else { Ind::BufferLen }
+                );
                 state = State::Default(i + 1); // reset start after moving into current_ind
               },
               _ => panic!("Unreachable"),
             }
           }
-          // For the offset we need to see if there is a literal before it, before entering state
-          '+' | '-' => {
-            if start != i {
-              if current_ind.is_some() { return Err(INDEX_PARSE) }
-              let literal = input[start .. i].parse::<usize>().map_err(|_| INDEX_PARSE)?;
-              current_ind = Some(Ind::Literal(literal));
-            }
-            state = State::Offset(i + 1, ch == '-');
-          },
+          // Numeric input isn't always valid, but we catch that after breaking
+          // so we can have a more detailed report in the error message
           _ => {
             // If not numeric (base 10) it must be the end of the index
             // Break the loop and handle the last outside
@@ -95,21 +106,30 @@ pub fn parse_index(
       },
       // If the tag state was entered, save the next char as tag and return to default
       State::Tag => {
+        if let Some(cur) = current_ind { return Err(
+          EdError::UnrelatedIndices((cur, input[i-1..i+1].to_owned()))
+        )}
         current_ind = Some(Ind::Tag(ch));
         state = State::Default( i + ch.len_utf8() );
       },
       // If the pattern state was entered, save as pattern until end char is given and return to default
       State::Pattern(start) => {
         if ch == '/' {
+          if let Some(cur) = current_ind { return Err(
+            EdError::UnrelatedIndices((cur, input[start-1 .. i+1].to_owned()))
+          )}
           current_ind = Some(Ind::Pattern(&input[start .. i]));
-          state = State::Default( i + ch.len_utf8() );
+          state = State::Default( i + 1 );
         }
       },
       // Same as pattern with different end char
       State::RevPattern(start) => {
         if ch == '?' {
+          if let Some(cur) = current_ind { return Err(
+            EdError::UnrelatedIndices((cur, input[start-1 .. i+1].to_owned()))
+          )}
           current_ind = Some(Ind::RevPattern(&input[start .. i]));
-          state = State::Default( i + ch.len_utf8() );
+          state = State::Default( i + 1 );
         }
       },
       // For Offset we never return to Default, since the only state valid after a non-normal state is Offset
@@ -120,7 +140,8 @@ pub fn parse_index(
           // If we are recursing we parse current offset, put it in current_ind and change state accordingly
           '+' | '-' => {
             let offset = if start != i {
-              input[start .. i].parse::<usize>().map_err(|_| INDEX_PARSE)?
+              input[start .. i].parse::<usize>()
+                .map_err(EdError::offset_not_int)?
             } else { 1 };
             current_ind = Some( if negative {
               Ind::Sub(Box::new(current_ind.unwrap_or(Ind::Selection)), offset)
@@ -154,10 +175,15 @@ pub fn parse_index(
     State::Default(start) => {
       if start < end {
         // If there is both a current ind and a numeral literal it is error
-        if current_ind.is_some() { Err(INDEX_PARSE) }
+        // Occurs if a special index receives a non-offset number after
+        // (Caught here to find end of index for better error message)
+        if let Some(cur) = current_ind { Err(
+          EdError::UnrelatedIndices((cur,input[start..end].to_owned()))
+        )}
         // Else we parse the literal and return it
         else {
-          let literal = input[start .. end].parse::<usize>().map_err(|_| INDEX_PARSE)?;
+          let literal = input[start .. end].parse::<usize>()
+            .map_err(EdError::index_not_int)?;
           Ok((end, Some(Ind::Literal(literal))))
         }
       }
@@ -170,7 +196,8 @@ pub fn parse_index(
     State::Offset(start, negative) => {
       // If the string ends on a + we will have an incorrect i
       let offset = if start < end {
-        input[start .. end].parse::<usize>().map_err(|_| INDEX_PARSE)?
+        input[start .. end].parse::<usize>()
+          .map_err(EdError::offset_not_int)?
       } else {
         1
       };
@@ -184,7 +211,7 @@ pub fn parse_index(
     },
     // If we get here in a state that isn't terminated (returned to Default) there is an error
     _ => {
-      Err(INDEX_PARSE)
+      Err(InternalError::UnreachableCode((file!,line!,column!))).into()
     },
   }
 }
