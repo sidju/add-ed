@@ -14,7 +14,7 @@ pub(super) fn filename<I: IO>(
     }
     Some(x) => { // Set new filename
       match x {
-        Path::Command(_) => return Err(EdError::InvalidDefaultFile),
+        Path::Command(_) => return Err(EdError::DefaultFileUnset),
         Path::File(file) => { state.file = file.to_owned(); },
       }
     }
@@ -55,7 +55,9 @@ pub(super) fn read_from_file<I: IO>(
           &state.prev_shell_command,
         )?;
         state.prev_shell_command = substituted.clone();
-        if changed {ui.print_message( &substituted )?;}
+        if changed {
+          ui.print_message( &substituted )?;
+        }
         state.io.run_read_command(
           &mut ui.lock_ui(),
           substituted,

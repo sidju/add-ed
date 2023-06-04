@@ -8,10 +8,8 @@ use shared::mock_ui::*;
 use shared::dummy_io::DummyIO;
 use add_ed::ui::ScriptedUI;
 use add_ed::Ed;
-use add_ed::error_consts::{
-  SELECTION_EMPTY,
-  HELP_TEXT,
-};
+use add_ed::error::EdError;
+use add_ed::messages::HELP_TEXT;
 
 // We have some tests without fixtures in here, as we shouldn't panic on error
 // and care about state.print_errors unlike all other fixtures.
@@ -68,13 +66,13 @@ fn help() {
     &mut io,
     "path".to_owned(),
   );
-  assert_eq!(ed.run_macro(&mut ui), Err(SELECTION_EMPTY));
+  assert_eq!(ed.run_macro(&mut ui), Err(EdError::SelectionEmpty((1,0))));
   ed.run_macro(&mut ui).expect("Error running test");
   assert!(ed.buffer.is_empty());
   assert_eq!(
     vec![
       Print{
-        text: vec![SELECTION_EMPTY.to_string(),],
+        text: vec![EdError::SelectionEmpty((1,0)).to_string(),],
         n: false,
         l: false,
       },

@@ -4,6 +4,7 @@
   (File, selection_start, selection_end, prev_shell_command, if running script)
 - Improve classic.rs to support all of ed's command line arguments
 - Look over API documentation again, since refactoring has changed the API.
+- Implement parsing under the trait FromStr instead?
 
 # Testing improvements:
 ## Unit tests:

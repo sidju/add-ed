@@ -26,6 +26,8 @@ bin_deps = ["clap", "local_io"]
 
 [dependencies]
 regex = "1"
+# Used in the IOError and UIError traits for better downcasting ergonomy
+as-any = "0.3"
 # Only used when building the `classic` binary
 clap = { version = "4", features = ["derive", "env"], optional = true }
 

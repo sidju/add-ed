@@ -8,7 +8,14 @@ use std::process::{
 };
 use crate::IO;
 use crate::UILock;
-use crate::error::*;
+use super::Result;
+
+
+mod error;
+pub use error::LocalIOError;
+
+#[cfg(all(feature = "test_local_io", test))]
+mod test;
 
 fn spawn_transfer<'a, I, O>(
   i: I,
@@ -71,12 +78,12 @@ impl IO for LocalIO {
       .arg("-c")
       .arg(command)
       .spawn() // When spawn io defaults to inherited
-      .map_err(|_| CHILD_CREATION_FAILED)?
+      .map_err(LocalIOError::ChildCreationFailed)?
       .wait()
-      .map_err(|_| CHILD_FAILED_TO_START)?
+      .map_err(LocalIOError::ChildFailedToStart)?
     ;
     if !(res.success()) {
-      return Err(CHILD_EXIT_ERROR)
+      return Err(LocalIOError::child_return_res(res.code()).into());
     }
     Ok(())
   }
@@ -92,16 +99,18 @@ impl IO for LocalIO {
       .arg(command)
       .stdout(Stdio::piped())
       .spawn()
-      .map_err(|_| CHILD_CREATION_FAILED)?
+      .map_err(LocalIOError::ChildCreationFailed)?
     ;
     // Blocks until child has finished running
     let res = child.wait_with_output()
-      .map_err(|_| CHILD_FAILED_TO_START)
+      .map_err(LocalIOError::ChildFailedToStart)
     ?;
     if !(res.status.success()) {
-      return Err(CHILD_EXIT_ERROR)
+      return Err(LocalIOError::child_return_res(res.status.code()).into());
     }
-    let output = String::from_utf8_lossy(&res.stdout).into_owned();
+    let output = String::from_utf8(res.stdout)
+      .map_err(LocalIOError::BadUtf8)?
+    ;
     Ok(output)
   }
 
@@ -117,7 +126,7 @@ impl IO for LocalIO {
       .arg(command)
       .stdin(Stdio::piped())
       .spawn()
-      .map_err(|_| CHILD_CREATION_FAILED)?
+      .map_err(LocalIOError::ChildCreationFailed)?
     ;
     let i = spawn_transfer(
       input,
@@ -125,13 +134,13 @@ impl IO for LocalIO {
     );
     // Blocks until child has finished running
     let res = child.wait()
-      .map_err(|_| CHILD_FAILED_TO_START)
+      .map_err(LocalIOError::ChildFailedToStart)
     ;
     // Wait for the other child thread before triggering early returns with ?
-    let transfer_res = i.join().map_err(|_| CHILD_PIPING_ERROR)?;
+    let transfer_res = i.join().map_err(|_|LocalIOError::ChildPipingError)?;
     let res = res?;
     if !(res.success()) {
-      return Err(CHILD_EXIT_ERROR)
+      return Err(LocalIOError::child_return_res(res.code()).into());
     }
     Ok(transfer_res)
   }
@@ -149,7 +158,7 @@ impl IO for LocalIO {
       .stdin(Stdio::piped())
       .stdout(Stdio::piped())
       .spawn()
-      .map_err(|_| CHILD_CREATION_FAILED)?
+      .map_err(LocalIOError::ChildCreationFailed)?
     ;
     let i = spawn_transfer(
       input,
@@ -157,13 +166,13 @@ impl IO for LocalIO {
     );
     // Blocks until child has finished running
     let res = child.wait_with_output()
-      .map_err(|_| CHILD_FAILED_TO_START)
+      .map_err(LocalIOError::ChildFailedToStart)
     ;
     // Wait for the other child thread before triggering early returns with ?
-    let _transfer_res = i.join().map_err(|_| CHILD_PIPING_ERROR)?;
+    let _transfer_res = i.join().map_err(|_|LocalIOError::ChildPipingError)?;
     let res = res?;
     if !(res.status.success()) {
-      return Err(CHILD_EXIT_ERROR)
+      return Err(LocalIOError::child_return_res(res.status.code()).into());
     }
     let output = String::from_utf8_lossy(&res.stdout).into_owned();
     Ok(output)
@@ -174,27 +183,22 @@ impl IO for LocalIO {
     append: bool,
     data: impl Iterator<Item = &'a str>,
   ) -> Result<usize> {
-    use std::io::ErrorKind;
     Self::write_internal(path, append, data)
-      .map_err(|e: std::io::Error| match e.kind() {
-        ErrorKind::PermissionDenied => PERMISSION_DENIED,
-        ErrorKind::NotFound => NOT_FOUND,
-        _ => UNKNOWN,
-      })
+      .map_err(|e| LocalIOError::file_error(path, e).into())
   }
   fn read_file(&mut self,
     path: &str,
     must_exist: bool,
   ) -> Result<String> {
-    use std::io::ErrorKind;
-    match std::fs::read_to_string(path) {
+    match std::fs::read_to_string(path)
+      .map_err(|e| LocalIOError::file_error(path, e))
+    {
       Ok(data) => Ok(data),
-      Err(e) => match e.kind() {
-        ErrorKind::PermissionDenied => Err(PERMISSION_DENIED),
-        ErrorKind::NotFound => {
-          if must_exist { Err(NOT_FOUND) } else { Ok(String::new()) }
+      Err(e) => match e {
+        LocalIOError::FileNotFound(_) => {
+          if must_exist { Err(e.into()) } else { Ok(String::new()) }
         },
-        _ => Err(UNKNOWN),
+        _ => Err(e.into()),
       },
     }
   }

@@ -8,6 +8,8 @@ use shared::fixtures::{
 };
 use shared::mock_ui::Print;
 
+use add_ed::error::EdError;
+
 // Verify behaviour of 'd' command
 //
 // - Takes optional selection
@@ -26,7 +28,7 @@ fn delete_noselection_nobuffer() {
   ErrorTest{
     init_buffer: vec![],
     command_input: vec!["d"],
-    expected_error: add_ed::error_consts::SELECTION_EMPTY,
+    expected_error: EdError::SelectionEmpty((1,0)),
   }.run();
 }
 
@@ -52,7 +54,7 @@ fn delete_noselection_allofbuffer_print() {
   ErrorTest{
     init_buffer: vec!["a","b","c"],
     command_input: vec!["dp"],
-    expected_error: add_ed::error_consts::PRINT_AFTER_WIPE,
+    expected_error: EdError::PrintAfterWipe,
   }.run();
 }
 

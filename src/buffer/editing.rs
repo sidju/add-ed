@@ -153,7 +153,7 @@ impl Buffer {
       Ok(())
     }
     else {
-      Err(ExecutionError::NoOpArgument).into() // moving into self is not moving
+      Err(EdError::NoOp).into() // moving into self is not moving
     }
   }
   /// `t` command
@@ -303,6 +303,7 @@ impl Buffer {
     let regex = RegexBuilder::new(pattern.0)
       .multi_line(true)
       .build()
+      .map_err(|e|EdError::regex_error(e, pattern.0))
     ?;
 
     // Get view to the buffer contents and verify that there is a match
@@ -313,7 +314,7 @@ impl Buffer {
     }
     if !regex.is_match(&joined) {
       // We haven't modified anything we shouldn't, so just return Err
-      Err(ExecutionError::NoRegexMatch)?
+      Err(EdError::RegexNoMatch(pattern.0.to_owned()))?
     }
 
     // When we know we will need to modify, get a mutable access to the buffer

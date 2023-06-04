@@ -75,8 +75,9 @@ impl History {
   pub fn undo(&mut self,
     steps: isize,
   ) -> Result<()> {
-    if !self.undo_range()?.contains(&steps) {
-      Err(ExecutionError::InvalidUndoSteps)?
+    let range = self.undo_range()?;
+    if !range.contains(&steps) {
+      Err(EdError::UndoStepsInvalid{undo_steps: steps, undo_range: range})?
     }
     if steps.is_negative() {
       self.viewed_i += (-steps) as usize;
@@ -93,7 +94,7 @@ impl History {
       Ok(self.viewed_i as isize - self.snapshots.len() as isize +1 .. self.viewed_i as isize + 1)
     } else {
       // When we have too much undo history to handle via the api
-      Err(InternalError::UndoHistoryTooLarge).into()
+      Err(InternalError::UndoHistoryTooLarge.into())
     }
   }
 

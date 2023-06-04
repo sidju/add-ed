@@ -94,13 +94,13 @@ pub fn run<I: IO>(
         'h' => {
           if selection.is_some() { return Err(EdError::SelectionForbidden); }
           // If 'help' was entered, print help
-          if clean == "elp" {
-            ui.print_message(HELP_TEXT)?;
-          }
+          if clean == "elp" {ui.print_message(HELP_TEXT)?;}
           // Else no flags accepted and print last error
           else {
             parse_flags(clean, "")?;
-            ui.print_message(state.error.unwrap_or(NO_ERROR))?;
+            ui.print_message(state.error.as_ref()
+              .map(|s| &s[..]).unwrap_or(NO_ERROR)
+            )?;
           }
           Ok(false)
         },
@@ -252,7 +252,10 @@ pub fn run<I: IO>(
           // A undo steps parsing not unlike index parsing would be good later
           // ie. relative AND shorthand for start and end of history
           let steps = if clean.is_empty() { 1 }
-          else { clean.parse::<isize>().map_err(EdError::undo_redo_not_int)? };
+          else { clean.parse::<isize>().map_err(
+            |_|EdError::UndoStepsNotInt(clean.to_owned())
+          )? };
+          if steps == 0 { return Err(EdError::NoOp); }
           if ch == 'U' {
             state.buffer.undo( -steps )?;
           } else {
@@ -265,7 +268,7 @@ pub fn run<I: IO>(
           let sel = interpret_selection(selection, state.selection, &state.buffer)?;
           // Expect only the tag, no flags
           if clean.len() > 1 {
-            Err(ExecutionError::InvalidTag(clean.to_owned()))?
+            Err(EdError::TagInvalid(clean.to_owned()))?
           }
           let index = if ch == 'k' { sel.0 } else { sel.1 };
           state.buffer.tag_line(index, clean.chars().next().unwrap_or('\0'))?;
@@ -294,7 +297,7 @@ pub fn run<I: IO>(
             80
           } else {
             clean[.. nr_end].parse::<usize>()
-              .map_err(ParsingError::ReflowNotInt)?
+              .map_err(|_| EdError::ReflowNotInt(clean[..nr_end].to_owned()))?
           };
           let mut flags = parse_flags(&clean[nr_end ..], "pnl")?;
           pflags.p = flags.remove(&'p').unwrap();
@@ -352,12 +355,12 @@ pub fn run<I: IO>(
               if !orig_dont_snapshot { state.buffer.history.dedup_present(); }
               res
             },
-            None => Err(EdError::UndefinedMacro(clean.to_owned())),
+            None => Err(EdError::MacroUndefined(clean.to_owned())),
           }?;
           Ok(false)
         },
         _cmd => {
-          Err(EdError::UndefinedCommand(ch))
+          Err(EdError::CommandUndefined(ch))
         }
       }
     }

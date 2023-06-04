@@ -6,6 +6,7 @@ use super::{
 };
 use add_ed::{
   ui::ScriptedUI,
+  error::EdError,
   Ed,
 };
 
@@ -15,7 +16,7 @@ pub fn inner_fixture(
   init_buffer_saved: bool,
   init_filepath: &str,
   command_input: Vec<&str>,
-  expected_result: Result<(),&str>,
+  expected_result: Result<(),EdError>,
   expected_buffer: Vec<&str>,
   expected_buffer_saved: bool,
   expected_selection: (usize, usize),

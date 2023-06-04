@@ -1,7 +1,25 @@
-
-use add_ed::EdState;
+use add_ed::{EdState, Result};
+use add_ed::error::{EdError, UIError};
 use add_ed::ui::{UI, UILock};
-use add_ed::error_consts::*;
+/// Error type for a [`ClassicUI`]
+#[derive(Debug)]
+enum ClassicUIError {
+  TerminalError,
+  #[cfg(feature = "initial_input_data")]
+  InitialData,
+}
+impl std::fmt::Display for ClassicUIError {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    use ClassicUIError::*;
+    match self {
+      TerminalError => write!(f, "Failed to read from terminal. This is bad, save if you can."),
+      #[cfg(feature = "initial_input_data")]
+      InitialData => write!(f, "UI received initial data when taking input, this isn't supported."),
+    }
+  }
+}
+impl std::error::Error for ClassicUIError {}
+impl add_ed::error::UIError for ClassicUIError {}
 
 /// A simple UI based on the original ED editor
 struct ClassicUI{}
@@ -9,7 +27,7 @@ impl UI for ClassicUI {
     fn print_message(
     &mut self,
     s: &str
-  ) -> Result<(), &'static str> {
+  ) -> Result<()> {
     println!("{}", s);
     Ok(())
   }
@@ -17,10 +35,10 @@ impl UI for ClassicUI {
     &mut self,
     _ed: EdState,
     _prefix: Option<char>,
-  ) -> Result<String, &'static str> {
+  ) -> Result<String> {
     let mut input = String::new();
     std::io::stdin().read_line(&mut input)
-      .map_err(|_| TERMINAL_READ)?;
+      .map_err(|_| -> Box<dyn UIError> {ClassicUIError::TerminalError.into()})?;
     Ok(input)
   }
   fn get_input(
@@ -29,7 +47,7 @@ impl UI for ClassicUI {
     terminator: char,
     #[cfg(feature = "initial_input_data")]
     initial_buffer: Option<Vec<String>>, // error if Some
-  ) -> Result<Vec<String>, &'static str> {
+  ) -> Result<Vec<String>> {
     #[cfg(feature = "initial_input_data")]
     {
       // If an initial buffer is given that is invalid
@@ -42,7 +60,7 @@ impl UI for ClassicUI {
       let mut buf = String::new();
       let res = stdin.read_line(&mut buf);
       if res.is_err() {
-        return Err(TERMINAL_READ);
+        return Err(EdError::UI(Box::new(ClassicUIError::TerminalError)))?;
       }
       if buf == terminator { return Ok(input); }
       else { input.push(buf); }
@@ -54,7 +72,7 @@ impl UI for ClassicUI {
     selection: (usize, usize),
     numbered: bool,
     literal: bool,
-  ) -> Result<(), &'static str> {
+  ) -> Result<()> {
     let selected = ed.buffer
       .get_selection(selection)?
       .map(|(_, t)| t);
@@ -86,13 +104,15 @@ impl UI for ClassicUI {
 }
 
 fn main() {
-  // Here one should add command line argument parsing, to get the filename
+  // Here is where command line argument parsing should go
   let path = "".to_string();
+  // Construct state components
   let mut ui = ClassicUI{};
-  let mut buffer = add_ed::buffer::Buffer::new();
   let mut io = add_ed::io::LocalIO::new();
-  // Read in the file given and instantiate the editor
-  let mut ed = add_ed::Ed::new(&mut buffer, &mut io, path);
-  // Run the editor with the created UI
+  // Construct Ed
+  let mut ed = add_ed::Ed::new(&mut io, path);
+  // Apply any configurations
+  ed.cmd_prefix = None;
+  // Run
   ed.run(&mut ui).unwrap();
 }

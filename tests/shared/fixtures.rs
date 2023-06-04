@@ -8,6 +8,7 @@ use super::{
 use add_ed::{
   ui::ScriptedUI,
   Ed,
+  error::EdError,
 };
 
 // A basic fixture
@@ -49,12 +50,13 @@ impl BasicTest {
 // Sets up state as though reading buffer contents from a file and runs the
 // given commands via dummy_ui. (Selection is Ed default, buffer.saved is true)
 // Afterwards verifies that state hasn't changed and error matches expectations.
+// (Note the caveats in the PartialEq<EdError> implementation.)
 // Panics if any command tries to print, use PrintTest if this isn't desired.
 // Terminating '\n' aren't needed nor allowed in any of the Vec<&str> arguments.
 pub struct ErrorTest {
   pub init_buffer: Vec<&'static str>,
   pub command_input: Vec<&'static str>,
-  pub expected_error: &'static str,
+  pub expected_error: EdError,
 }
 impl ErrorTest {
   pub fn run(self) {

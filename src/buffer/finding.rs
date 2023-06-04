@@ -25,7 +25,7 @@ impl Buffer {
     for (index, line) in buffer[..].iter().enumerate() {
       if tag == *line.tag.borrow() { return Ok(index + 1); } // Add one for 1-indexing
     }
-    Err(ExecutionError::NoTagMatch).into()
+    Err(EdError::TagNoMatch(tag))
   }
 
   /// `/` and `?` index resolvers
@@ -41,6 +41,7 @@ impl Buffer {
     let regex = RegexBuilder::new(pattern)
       .multi_line(true)
       .build()
+      .map_err(|e|EdError::regex_error(e, pattern))
     ?;
     let buffer = self.history.current();
     // Figure out how far to iterate
@@ -64,7 +65,7 @@ impl Buffer {
         }
       }
     }
-    Err(ExecutionError::NoRegexMatch).into()
+    Err(EdError::RegexNoMatch(pattern.to_owned()))
   }
 
   /// `g`, `G`, `v` and `V` commands
@@ -82,6 +83,7 @@ impl Buffer {
     let regex = RegexBuilder::new(pattern)
       .multi_line(true)
       .build()
+      .map_err(|e| EdError::regex_error(e, pattern))
     ?;
     let buffer = self.history.current();
     let mut match_found = false;
@@ -97,7 +99,7 @@ impl Buffer {
       }
     }
     if !match_found {
-      Err(ExecutionError::NoRegexMatch).into()
+      Err(EdError::RegexNoMatch(pattern.to_owned()))
     } else {
       Ok(())
     }

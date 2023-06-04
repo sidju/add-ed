@@ -17,9 +17,9 @@ pub fn parse_flags(input: &str, flag_list: &str)
     match flag_map.get_mut(&flag) {
       Some(b) => {
         if !(*b) { *b = true; Ok(()) }
-        else { Err(EdError::DuplicateFlag(flag)) }
+        else { Err(EdError::FlagDuplicate(flag)) }
       },
-      None => Err(EdError::UndefinedFlag(flag)),
+      None => Err(EdError::FlagUndefined(flag)),
     }?
   }
   Ok(flag_map)

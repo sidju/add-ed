@@ -2,7 +2,7 @@
 //!
 //! Used to abstract filesystem and shell interactions.
 
-use crate::Result<>;
+type Result<T> = core::result::Result<T, Box<dyn crate::error::IOError>>;
 
 use crate::UILock;
 
@@ -15,9 +15,6 @@ pub mod dummy_io;
 pub mod local_io;
 #[cfg(feature = "local_io")]
 pub use local_io::LocalIO;
-
-#[cfg(all(feature = "test_local_io", test))]
-mod test;
 
 /// Trait that abstracts file interactions and running shell commands
 ///

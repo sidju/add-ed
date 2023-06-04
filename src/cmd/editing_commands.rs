@@ -24,10 +24,10 @@ pub(super) fn scroll<I: IO>(
     default_scroll_length
   } else {
     let nr = clean[.. nr_end].parse::<usize>()
-      .map_err(EdError::scroll_not_int)
+      .map_err(|_|EdError::ScrollNotInt(clean[..nr_end].to_owned()))
     ?;
     // Scrolling 0 lines is invalid, return error
-    if nr == 0 { return Err(EdError::NoOpArgument); }
+    if nr == 0 { return Err(EdError::NoOp); }
     nr
   };
   // Check what isn't numeric for flags
@@ -141,7 +141,7 @@ pub(super) fn change<I: IO>(
     }
     #[cfg(not(feature = "initial_input_data"))]
     {
-      return Err(EdError::UndefinedCommand(command));
+      return Err(EdError::CommandUndefined(command));
     }
   } else {
     verify_selection(&state.buffer, sel)?;

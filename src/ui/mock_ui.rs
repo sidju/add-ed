@@ -5,6 +5,7 @@ use crate::{
   ui::UI,
   ui::UILock,
 };
+use super::Result;
 
 #[derive(Debug, PartialEq)]
 pub struct Print {
@@ -21,7 +22,7 @@ impl UI for MockUI {
   fn print_message(
     &mut self,
     data: &str,
-  ) -> Result<(), &'static str> {
+  ) -> Result<()> {
     self.prints_history.push(
       Print{
         text: vec![data.to_owned()],
@@ -38,7 +39,7 @@ impl UI for MockUI {
     selection: (usize, usize),
     numbered: bool,
     literal: bool,
-  ) -> Result<(), &'static str> {
+  ) -> Result<()> {
     self.prints_history.push(
       Print{
         text: ed.buffer.get_selection(selection)?
@@ -56,7 +57,7 @@ impl UI for MockUI {
     &mut self,
     _ed: EdState,
     _prefix: Option<char>,
-  ) -> Result<String, &'static str> {
+  ) -> Result<String> {
     panic!("get_command not implemented on mock ui")
   }
 
@@ -66,7 +67,7 @@ impl UI for MockUI {
     _terminator: char,
     #[cfg(feature = "initial_input_data")]
     _initial_buffer: Option<Vec<String>>
-  ) -> Result<Vec<String>, &'static str> {
+  ) -> Result<Vec<String>> {
     panic!("get_input not implemented on mock ui")
   }
 

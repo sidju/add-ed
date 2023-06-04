@@ -3,6 +3,8 @@ use crate::{
   ui::UILock,
 };
 
+use super::Result;
+
 /// An [`IO`] implementation for when no IO should occur. Intended for non IO
 /// tests.
 pub struct DummyIO {}
@@ -14,40 +16,40 @@ impl IO for DummyIO {
   fn run_command(&mut self,
     _ui: &mut UILock,
     _command: String,
-  ) -> Result<(), &'static str> {
+  ) -> Result<()> {
     unimplemented!()
   }
   fn run_read_command(&mut self,
     _ui: &mut UILock,
     _command: String,
-  ) -> Result<String, &'static str> {
+  ) -> Result<String> {
     unimplemented!()
   }
   fn run_write_command<'a>(&mut self,
     _ui: &mut UILock,
     _command: String,
     _input: impl Iterator<Item = &'a str>,
-  ) -> Result<usize, &'static str> {
+  ) -> Result<usize> {
     unimplemented!()
   }
   fn run_transform_command<'a>(&mut self,
     _ui: &mut UILock,
     _command: String,
     _input: impl Iterator<Item = &'a str>,
-  ) -> Result<String, &'static str> {
+  ) -> Result<String> {
     unimplemented!()
   }
   fn write_file<'a>(&mut self,
     _path: &str,
     _append: bool,
     _data: impl Iterator<Item = &'a str>,
-  ) -> Result<usize, &'static str> {
+  ) -> Result<usize> {
     unimplemented!()
   }
   fn read_file(&mut self,
     _path: &str,
     _must_exist: bool,
-  ) -> Result<String, &'static str> {
+  ) -> Result<String> {
     unimplemented!()
   }
 }

@@ -1,3 +1,5 @@
+//#![deny(missing_docs)]
+
 //! Add-Ed is a library implementing the parsing, IO and runtime for Ed in rust.
 //!
 //! Behaviour is initially based off of [GNU Ed] with modifications to improve
@@ -16,9 +18,10 @@
 //!   ui::ScriptedUI,
 //!   io::LocalIO,
 //!   Ed,
+//!   EdError,
 //! };
 //!
-//! # fn main() -> Result<(),&'static str> {
+//! # fn main() -> Result<(), EdError> {
 //! // Construct all the components
 //! let mut ui = ScriptedUI{ input: vec!["e\n".to_string()].into(), print_ui: None, };
 //! let mut io = LocalIO::new();
@@ -40,7 +43,10 @@ use std::collections::HashMap;
 pub mod messages;
 
 pub mod error;
-use error::Result;
+pub use error::{
+  Result,
+  EdError,
+};
 mod cmd;
 
 pub mod ui;
@@ -127,7 +133,7 @@ pub struct Ed <'a, I: IO> {
   /// The previous error that occured.
   ///
   /// Is printed by `h` command.
-  pub error: Option<&'static str>,
+  pub error: Option<String>,
   /// Configuration field for macros.
   ///
   /// A map from macro name to string of newline separated commands.
@@ -174,7 +180,7 @@ impl <'a, I: IO> Ed <'a, I> {
     match cmd::run(self, ui, command) {
       // If error, note it in state
       Err(e) => {
-        self.error = Some(e);
+        self.error = Some(e.to_string());
         Err(e)
       },
       x => x,
@@ -197,7 +203,7 @@ impl <'a, I: IO> Ed <'a, I> {
     // Run it, save any error, and forward result
     match clos() {
       Err(e) => {
-        self.error = Some(e);
+        self.error = Some(e.to_string());
         Err(e)
       },
       x => x,
@@ -233,7 +239,7 @@ impl <'a, I: IO> Ed <'a, I> {
         Ok(false) => (),
         Err(e) => {
           if self.print_errors {
-            ui.print_message(e)?;
+            ui.print_message(&e.to_string())?;
           }
           else {
             ui.print_message("?\n")?;

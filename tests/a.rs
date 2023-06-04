@@ -10,6 +10,8 @@ use shared::fixtures::{
 };
 use shared::mock_ui::Print;
 
+use add_ed::error::EdError;
+
 // Verify behaviour of 'a' command
 //
 // - Takes optional index
@@ -181,7 +183,7 @@ fn inline_append_nobuffer() {
   ErrorTest{
     init_buffer: vec![],
     command_input: vec!["A"],
-    expected_error: add_ed::error_consts::INVALID_LINENR0,
+    expected_error: EdError::Line0Invalid,
   }.run();
 }
 

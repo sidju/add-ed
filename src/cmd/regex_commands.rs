@@ -30,7 +30,7 @@ pub(super) fn substitute<I: IO>(
   else {
     let expressions = parse_expressions(tail)?;
     if expressions.len() != 3 {
-      return Err(EdError::WrongNrArguments(("none or 3", expressions.len())));
+      return Err( EdError::ArgumentsWrongNr{expected: "none or 3", received: expressions.len()} );
     }
     let mut flags = parse_flags(&(expressions[2]), "gpnl")?;
     let g = flags.remove(&'g').unwrap();
@@ -68,7 +68,7 @@ pub(super) fn global<I: IO>(
   verify_selection(&state.buffer, selection)?;
   let mut expressions = parse_expressions(tail)?;
   if expressions.len() < 2 {
-    return Err(EdError::WrongNrArguments("2 or more",expressions.len()));
+    return Err( EdError::ArgumentsWrongNr{expected: "2 or more", received: expressions.len()} );
   }
   // We first try to mark all matching lines, to tell if there is any issue
   state.buffer.mark_matching(&expressions[0], selection, command == 'v')?;
@@ -121,10 +121,10 @@ pub(super) fn global_interactive<I: IO>(
   verify_selection(&state.buffer, selection)?;
   let expressions = parse_expressions(tail)?;
   if expressions.len() != 2 {
-    return Err( EdError::WrongNrArguments(("2",expressions.len())) );
+    return Err( EdError::ArgumentsWrongNr{expected: "2", received: expressions.len()} );
   }
   if !expressions[1].is_empty() && expressions[1] != "\n" {
-    return Err(EdError::UndefinedFlag(expressions[1].chars().next().unwrap()));
+    return Err(EdError::FlagUndefined(expressions[1].chars().next().unwrap()));
   }
   // Mark first, to check if the expression is valid
   state.buffer.mark_matching(&expressions[0], selection, command == 'V')?;

@@ -6,7 +6,10 @@ use shared::fixtures::{
 };
 use shared::dummy_io::DummyIO;
 use shared::dummy_ui::DummyUI;
-use add_ed::Ed;
+use add_ed::{
+  error::EdError,
+  Ed,
+};
 
 // Verify behaviour of 'q' and 'Q' command
 //
@@ -34,7 +37,7 @@ fn quit_unsaved() {
   ErrorTest{
     init_buffer: vec![],
     command_input: vec!["q"],
-    expected_error: add_ed::error_consts::UNSAVED_CHANGES,
+    expected_error: EdError::UnsavedChanges,
   }.run()
 }
 

@@ -9,7 +9,8 @@ use shared::fixtures::{
   ErrorTest,
 };
 use shared::mock_ui::Print;
-use add_ed::error_consts::SELECTION_EMPTY;
+
+use add_ed::error::EdError;
 
 // Verify behaviour of 'm' command
 //
@@ -66,7 +67,7 @@ fn mov_default_nobuffer() {
   ErrorTest{
     init_buffer: vec![],
     command_input: vec!["m"],
-    expected_error: SELECTION_EMPTY,
+    expected_error: EdError::SelectionEmpty((1,0)),
   }.run()
 }
 

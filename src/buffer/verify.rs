@@ -1,4 +1,8 @@
 use super::Buffer;
+use crate::{
+  Result,
+  error::EdError,
+};
 
 // General index, line and selection validation functions
 // These are good to run before using arguments to your buffer
@@ -10,10 +14,12 @@ use super::Buffer;
 pub fn verify_index(
   buffer: &Buffer,
   index: usize,
-) -> Result<(), &'static str> {
+) -> Result<()> {
   // Indices are valid at len.
   // Needed to be able to append to the buffer via insert operations.
-  if index > buffer.len() { return Err(crate::error_consts::INDEX_TOO_BIG); }
+  if index > buffer.len() { return Err(
+    EdError::IndexTooBig{index: index, buffer_len: buffer.len()}
+  ); }
   Ok(())
 }
 /// Verify that index is between 1 and buffer.len() inclusive
@@ -23,9 +29,13 @@ pub fn verify_index(
 pub fn verify_line(
   buffer: &Buffer,
   index: usize,
-) -> Result<(), &'static str> {
-  if index < 1 { Err(crate::error_consts::INVALID_LINENR0) }
-  else if index > buffer.len() { Err(crate::error_consts::INDEX_TOO_BIG) }
+) -> Result<()> {
+  if index < 1 { Err(
+    EdError::Line0Invalid
+  )}
+  else if index > buffer.len() { Err(
+    EdError::IndexTooBig{index: index, buffer_len: buffer.len()}
+  )}
   else { Ok(()) }
 }
 
@@ -35,12 +45,18 @@ pub fn verify_line(
 pub fn verify_selection(
   buffer: &Buffer,
   selection: (usize, usize),
-) -> Result<(), &'static str> {
+) -> Result<()> {
   // Line 0 doesn't exist, even though index 0 is valid
-  if selection.0 == 0 { return Err(crate::error_consts::INVALID_LINENR0); }
+  if selection.0 == 0 { return Err(
+    EdError::Line0Invalid
+  ); }
   // A selection must contain something to be valid
-  if selection.0 > selection.1 { return Err(crate::error_consts::SELECTION_EMPTY); }
+  if selection.0 > selection.1 { return Err(
+    EdError::SelectionEmpty(selection)
+  ); }
   // It cannot contain non-existent lines, such as index buffer.len() and beyond
-  if selection.1 > buffer.len() { return Err(crate::error_consts::INDEX_TOO_BIG); }
+  if selection.1 > buffer.len() { return Err(
+    EdError::IndexTooBig{index: selection.1, buffer_len: buffer.len()}
+  ); }
   Ok(())
 }

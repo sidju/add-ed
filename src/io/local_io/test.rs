@@ -80,6 +80,7 @@ fn test_file_io() {
 
 #[test]
 fn test_command_io() {
+  use as_any::Downcast;
   let mut io = LocalIO::new();
   let mut mock_ui = DummyUI{};
   let mut mock_ui_lock = mock_ui.lock_ui();
@@ -99,11 +100,19 @@ fn test_command_io() {
     &mut mock_ui_lock,
     "false".to_owned(),
   );
-  assert_eq!(
-    res,
-    Err(crate::error_consts::CHILD_EXIT_ERROR),
-    "No error returned when child process failed to run."
-  );
+  match res {
+    Ok(_) => panic!("No error returned when child process failed to run."),
+    Err(e) => {
+      let inner = (*e).downcast_ref::<LocalIOError>()
+        .expect("Wrong error type returned when child process failed to run.")
+      ;
+      assert_eq!(
+        inner,
+        &super::LocalIOError::ChildReturnedError(1),
+        "Wrong error when child process failed to run."
+      )
+    }
+  };
   // Cleanup
   std::fs::remove_file("io_command_test_file").unwrap();
   // Test reading from command
