@@ -7,6 +7,7 @@ use std::process::{
   Stdio,
 };
 use crate::IO;
+use crate::buffer::SelectionIter;
 use crate::UILock;
 use super::Result;
 
@@ -114,10 +115,10 @@ impl IO for LocalIO {
     Ok(output)
   }
 
-  fn run_write_command<'a>(&mut self,
+  fn run_write_command(&mut self,
     _ui: &mut UILock,
     command: String,
-    input: impl Iterator<Item = &'a str>,
+    input: SelectionIter,
   ) -> Result<usize> {
     let shell = std::env::var("SHELL").unwrap_or("sh".to_owned());
     // Create child process
@@ -145,10 +146,10 @@ impl IO for LocalIO {
     Ok(transfer_res)
   }
 
-  fn run_transform_command<'a>(&mut self,
+  fn run_transform_command(&mut self,
     _ui: &mut UILock,
     command: String,
-    input: impl Iterator<Item = &'a str>,
+    input: SelectionIter,
   ) -> Result<String> {
     let shell = std::env::var("SHELL").unwrap_or("sh".to_owned());
     // Create child process
@@ -178,10 +179,10 @@ impl IO for LocalIO {
     Ok(output)
   }
 
-  fn write_file<'a>(&mut self,
+  fn write_file(&mut self,
     path: &str,
     append: bool,
-    data: impl Iterator<Item = &'a str>,
+    data: SelectionIter,
   ) -> Result<usize> {
     Self::write_internal(path, append, data)
       .map_err(|e| LocalIOError::file_error(path, e).into())

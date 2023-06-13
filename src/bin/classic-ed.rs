@@ -1,4 +1,4 @@
-use add_ed::{EdState, Result};
+use add_ed::{Ed, Result};
 use add_ed::error::{EdError, UIError};
 use add_ed::ui::{UI, UILock};
 /// Error type for a [`ClassicUI`]
@@ -33,7 +33,7 @@ impl UI for ClassicUI {
   }
   fn get_command(
     &mut self,
-    _ed: EdState,
+    _ed: &Ed,
     _prefix: Option<char>,
   ) -> Result<String> {
     let mut input = String::new();
@@ -43,7 +43,7 @@ impl UI for ClassicUI {
   }
   fn get_input(
     &mut self,
-    _ed: EdState,
+    _ed: &Ed,
     terminator: char,
     #[cfg(feature = "initial_input_data")]
     initial_buffer: Option<Vec<String>>, // error if Some
@@ -68,14 +68,12 @@ impl UI for ClassicUI {
   }
   fn print_selection(
     &mut self,
-    ed: EdState,
+    ed: &Ed,
     selection: (usize, usize),
     numbered: bool,
     literal: bool,
   ) -> Result<()> {
-    let selected = ed.buffer
-      .get_selection(selection)?
-      .map(|(_, t)| t);
+    let selected = ed.buffer.get_selection(selection)?;
     let mut line_nr = selection.0;
     for line in selected {
       if numbered {
@@ -110,7 +108,7 @@ fn main() {
   let mut ui = ClassicUI{};
   let mut io = add_ed::io::LocalIO::new();
   // Construct Ed
-  let mut ed = add_ed::Ed::new(&mut io, path);
+  let mut ed = Ed::new(&mut io, path);
   // Apply any configurations
   ed.cmd_prefix = None;
   // Run

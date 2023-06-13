@@ -1,6 +1,5 @@
 use crate::{Ed, Substitution};
 use crate::buffer::{Buffer, verify_selection, verify_index, verify_line};
-use crate::io::IO;
 use crate::ui::{UI, ScriptedUI};
 use crate::error::*;
 use crate::messages::*;
@@ -40,8 +39,8 @@ struct PrintingFlags {
 ///   index doesn't exist...
 /// * Forbid input you don't handle. This should prevent accidentally force
 ///   exiting with ',Q file.txt' because you pressed 'Q' instead of 'W'.
-pub fn run<I: IO>(
-  state: &mut Ed<'_,I>,
+pub fn run(
+  state: &mut Ed<'_>,
   ui: &mut dyn UI,
   command: &str,
 ) -> Result<bool> {
@@ -370,7 +369,7 @@ pub fn run<I: IO>(
   if pflags.p | pflags.n | pflags.l {
     verify_selection(&state.buffer, state.selection)?;
     ui.print_selection(
-      state.see_state(),
+      state,
       state.selection,
       state.n^pflags.n,
       state.l^pflags.l

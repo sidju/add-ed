@@ -72,7 +72,7 @@ pub fn inner_fixture(
     if ed.buffer.len() != 0 {
       ed.buffer.get_selection((1,ed.buffer.len()))
         .unwrap()
-        .map(|(_,s)| s.trim_end_matches('\n'))
+        .map(|s| s.trim_end_matches('\n'))
         .collect::<Vec<&str>>()
     } else {
       vec![]
@@ -86,12 +86,12 @@ pub fn inner_fixture(
     "Buffer.saved() after test (left) didn't match expectations (right)."
   );
   assert_eq!(
-    ed.see_state().selection,
+    ed.selection,
     expected_selection,
     "Selection after test (left) didn't match expectations (right)."
   );
   assert_eq!(
-    ed.see_state().file,
+    ed.file,
     expected_filepath,
     "state.filepath after test (left) didn't match expectations (right)."
   );
@@ -103,7 +103,7 @@ pub fn inner_fixture(
     if ed.buffer.len() != 0 {
       ed.buffer.get_selection((1,ed.buffer.len()))
         .unwrap()
-        .map(|(_,s)| s.trim_end_matches('\n'))
+        .map(|s| s.trim_end_matches('\n'))
         .collect::<Vec<&str>>()
     } else {
       vec![]

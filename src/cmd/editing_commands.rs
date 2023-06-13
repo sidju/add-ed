@@ -2,8 +2,8 @@
 
 use super::*;
 
-pub(super) fn scroll<I: IO>(
-  state: &mut Ed<'_, I>,
+pub(super) fn scroll(
+  state: &mut Ed<'_>,
   pflags: &mut PrintingFlags,
   selection: Option<Sel<'_>>,
   command: char,
@@ -56,8 +56,8 @@ pub(super) fn scroll<I: IO>(
   Ok(())
 }
 
-pub(super) fn input<I: IO>(
-  state: &mut Ed<'_, I>,
+pub(super) fn input(
+  state: &mut Ed<'_>,
   ui: &mut dyn UI,
   pflags: &mut PrintingFlags,
   selection: Option<Sel<'_>>,
@@ -79,7 +79,7 @@ pub(super) fn input<I: IO>(
   // Now that we have checked that the command is valid, get input
   // This is done so we don't drop text input, that would be annoying
   let input = ui.get_input(
-    state.see_state(),
+    state,
     '.',
     #[cfg(feature = "initial_input_data")]
     None,
@@ -120,8 +120,8 @@ pub(super) fn input<I: IO>(
   Ok(())
 }
 
-pub(super) fn change<I: IO>(
-  state: &mut Ed<'_, I>,
+pub(super) fn change(
+  state: &mut Ed<'_>,
   ui: &mut dyn UI,
   pflags: &mut PrintingFlags,
   selection: Option<Sel<'_>>,
@@ -137,7 +137,7 @@ pub(super) fn change<I: IO>(
   let initial_input_data: Option<Vec<String>> = if command == 'C' {
     #[cfg(feature = "initial_input_data")]
     {
-      Some(state.buffer.get_selection(sel)?.map(|s| s.1.to_string()).collect())
+      Some(state.buffer.get_selection(sel)?.map(|s| s.to_string()).collect())
     }
     #[cfg(not(feature = "initial_input_data"))]
     {
@@ -148,7 +148,7 @@ pub(super) fn change<I: IO>(
     None
   };
   let input = ui.get_input(
-    state.see_state(),
+    state,
     '.',
     #[cfg(feature = "initial_input_data")]
     initial_input_data,
@@ -187,8 +187,8 @@ pub(super) fn change<I: IO>(
   Ok(())
 }
 
-pub(super) fn transfer<I: IO>(
-  state: &mut Ed<'_, I>,
+pub(super) fn transfer(
+  state: &mut Ed<'_>,
   pflags: &mut PrintingFlags,
   selection: Option<Sel<'_>>,
   command: char,

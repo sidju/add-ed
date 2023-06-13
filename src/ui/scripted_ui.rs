@@ -3,7 +3,7 @@
 //! It optionally takes a mutable UI reference, to support printing when the script requests it.
 
 use super::{UI, UILock};
-use super::EdState;
+use super::Ed;
 
 #[cfg(feature = "initial_input_data")]
 use crate::EdError;
@@ -42,7 +42,7 @@ pub struct ScriptedUI<'a> {
 }
 impl <'a> UI for ScriptedUI<'a> {
   fn get_command(&mut self,
-    _ed: EdState,
+    _ed: &Ed,
     _prefix: Option<char>
   ) -> Result<String> {
     match self.input.pop_front() {
@@ -52,7 +52,7 @@ impl <'a> UI for ScriptedUI<'a> {
     }
   }
   fn get_input(&mut self,
-    _ed: EdState,
+    _ed: &Ed,
     terminator: char,
     #[cfg(feature = "initial_input_data")]
     initial_buffer: Option<Vec<String>>, // causes error
@@ -87,7 +87,7 @@ impl <'a> UI for ScriptedUI<'a> {
     }
   }
   fn print_selection(&mut self,
-    ed: EdState,
+    ed: &Ed,
     selection: (usize, usize),
     numbered: bool,
     literal: bool,

@@ -1,6 +1,7 @@
 use crate::{
   io::IO,
   ui::UILock,
+  buffer::SelectionIter,
 };
 use super::Result;
 
@@ -63,10 +64,10 @@ impl IO for FakeIO {
       None => Err(FakeIOError::ChildExitError.into()),
     }
   }
-  fn run_write_command<'a>(&mut self,
+  fn run_write_command(&mut self,
     _ui: &mut UILock,
     command: String,
-    input: impl Iterator<Item = &'a str>,
+    input: SelectionIter,
   ) -> Result<usize> {
     let input = input.fold(String::new(), |mut s, x| {s.push_str(x); s});
     let inputlen = input.len();
@@ -78,10 +79,10 @@ impl IO for FakeIO {
       None => Err(FakeIOError::ChildExitError.into()),
     }
   }
-  fn run_transform_command<'a>(&mut self,
+  fn run_transform_command(&mut self,
     _ui: &mut UILock,
     command: String,
-    input: impl Iterator<Item = &'a str>,
+    input: SelectionIter,
   ) -> Result<String> {
     let input = input.fold(String::new(), |mut s, x| {s.push_str(x); s});
     match self.fake_shell.get(
@@ -92,10 +93,10 @@ impl IO for FakeIO {
       None => Err(FakeIOError::ChildExitError.into()),
     }
   }
-  fn write_file<'a>(&mut self,
+  fn write_file(&mut self,
     path: &str,
     append: bool,
-    data: impl Iterator<Item = &'a str>,
+    data: SelectionIter,
   ) -> Result<usize> {
     let base_data = if append {
       match self.fake_fs.get(path) {

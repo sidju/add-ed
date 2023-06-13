@@ -1,5 +1,5 @@
 use crate::{
-  EdState,
+  Ed,
   ui::{UI,UILock},
 };
 
@@ -16,13 +16,13 @@ impl UI for DummyUI {
     unimplemented!()
   }
   fn get_command(&mut self,
-    _ed: EdState,
+    _ed: &Ed,
     _prefix: Option<char>,
   ) -> Result<String> {
     unimplemented!()
   }
   fn get_input(&mut self,
-    _ed: EdState,
+    _ed: &Ed,
     _terminator: char,
     #[cfg(feature = "initial_input_data")]
     _initial_buffer: Option<Vec<String>>,
@@ -30,7 +30,7 @@ impl UI for DummyUI {
     unimplemented!()
   }
   fn print_selection(&mut self,
-    _ed: EdState,
+    _ed: &Ed,
     _selection: (usize, usize),
     _numbered: bool,
     _literal: bool,

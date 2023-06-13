@@ -1,7 +1,7 @@
 // Mock UI which saves print invocations into a Vec
 // Intended to help verify that editor prints correctly
 use crate::{
-  EdState,
+  Ed,
   ui::UI,
   ui::UILock,
 };
@@ -35,7 +35,7 @@ impl UI for MockUI {
 
   fn print_selection(
     &mut self,
-    ed: EdState,
+    ed: &Ed,
     selection: (usize, usize),
     numbered: bool,
     literal: bool,
@@ -43,7 +43,7 @@ impl UI for MockUI {
     self.prints_history.push(
       Print{
         text: ed.buffer.get_selection(selection)?
-          .map(|(_, s)|s.to_string())
+          .map(|s| s.to_string())
           .collect()
         ,
         n: numbered,
@@ -55,7 +55,7 @@ impl UI for MockUI {
 
   fn get_command(
     &mut self,
-    _ed: EdState,
+    _ed: &Ed,
     _prefix: Option<char>,
   ) -> Result<String> {
     panic!("get_command not implemented on mock ui")
@@ -63,7 +63,7 @@ impl UI for MockUI {
 
   fn get_input(
     &mut self,
-    _ed: EdState,
+    _ed: &Ed,
     _terminator: char,
     #[cfg(feature = "initial_input_data")]
     _initial_buffer: Option<Vec<String>>

@@ -57,23 +57,19 @@ use io::IO;
 pub mod buffer;
 use buffer::Buffer;
 
-/// A small reference struct that gives insight into the editor's state
-///
-/// Primarily built to hand out data needed by [`UI`] implementations. For other
-/// uses consider direct interaction with the [`Ed`] instance.
-pub struct EdState<'a> {
-  pub selection: (usize, usize),
-  pub buffer: &'a Buffer,
-  pub file: &'a str,
-}
-
 /// A ready parsed 's' invocation, including command and printing flags
 pub struct Substitution {
+  /// Regex pattern to match against
   pub pattern: String,
+  /// Substitution template to replace it with
   pub substitute: String,
+  /// Set true to apply to all occurences (instead of only the first)
   pub global: bool,
+  /// Flag to print after execution
   pub p: bool,
+  /// Flag to print with line numbers after execution
   pub n: bool,
+  /// Flag to print with literal escapes after execution
   pub l: bool,
 }
 
@@ -81,7 +77,7 @@ pub struct Substitution {
 ///
 /// It is designed to support mutation and analysis by library users, but be
 /// careful: modifying this state wrong will cause user facing errors.
-pub struct Ed <'a, I: IO> {
+pub struct Ed <'a> {
   /// The buffer holds Ed's text data.
   ///
   /// It also abstracts basically all Ed editing operations, though it is
@@ -99,7 +95,7 @@ pub struct Ed <'a, I: IO> {
   ///
   /// It will be used to handle file interactions and command execution as
   /// required during command execution
-  pub io: &'a mut I,
+  pub io: &'a mut dyn IO,
   /// The path to the currently selected file.
   pub file: String,
 
@@ -140,12 +136,12 @@ pub struct Ed <'a, I: IO> {
   pub macros: HashMap<String, String>,
 }
 
-impl <'a, I: IO> Ed <'a, I> {
+impl <'a, > Ed <'a> {
   /// Construct a new instance of Ed
   ///
   /// * An empty file string is recommended if no filepath is opened
   pub fn new(
-    io: &'a mut I,
+    io: &'a mut dyn IO,
     file: String,
   ) -> Self {
     let selection = (1,0);
@@ -197,7 +193,7 @@ impl <'a, I: IO> Ed <'a, I> {
   ) -> Result<bool> {
     // Define a temporary closure, since try blocks aren't stabilized
     let mut clos = || {
-      let cmd = ui.get_command( self.see_state(), self.cmd_prefix )?;
+      let cmd = ui.get_command(self, self.cmd_prefix)?;
       self.run_command(ui, &cmd)
     };
     // Run it, save any error, and forward result
@@ -248,17 +244,5 @@ impl <'a, I: IO> Ed <'a, I> {
       }
     }
     Ok(())
-  }
-
-  /// Get an immutable reference to some internal parts of the editors state
-  ///
-  /// Creates the data struct used by [`UI`] implementations. For other uses
-  /// consider direct access to the [`Ed`] instance.
-  pub fn see_state(&self) -> EdState {
-    EdState{
-      selection: self.selection,
-      file: &self.file,
-      buffer: &self.buffer,
-    }
   }
 }

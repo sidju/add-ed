@@ -1,7 +1,7 @@
 use super::*;
 
-pub(super) fn substitute<I: IO>(
-  state: &mut Ed<'_, I>,
+pub(super) fn substitute(
+  state: &mut Ed<'_>,
   pflags: &mut PrintingFlags,
   selection: Option<Sel<'_>>,
   tail: &str,
@@ -56,8 +56,8 @@ pub(super) fn substitute<I: IO>(
   Ok(())
 }
 
-pub(super) fn global<I: IO>(
-  state: &mut Ed<'_, I>,
+pub(super) fn global(
+  state: &mut Ed<'_>,
   ui: &mut dyn UI,
   selection: Option<Sel<'_>>,
   command: char,
@@ -80,7 +80,7 @@ pub(super) fn global<I: IO>(
   if commands.last().map(|s| s.trim()) != Some("") {
     // expressions.len() would be 0 if no command, so safe to unwrap
     let mut input = ui.get_input(
-      state.see_state(),
+      state,
       tail.chars().next().unwrap(),
       #[cfg(feature = "initial_input_data")]
       None,
@@ -109,8 +109,8 @@ pub(super) fn global<I: IO>(
   Ok(())
 }
 
-pub(super) fn global_interactive<I: IO>(
-  state: &mut Ed<'_, I>,
+pub(super) fn global_interactive(
+  state: &mut Ed<'_>,
   ui: &mut dyn UI,
   selection: Option<Sel<'_>>,
   command: char,
@@ -131,11 +131,11 @@ pub(super) fn global_interactive<I: IO>(
   // With all data gathered we fetch and iterate over the lines
   while let Some(index) = state.buffer.get_marked()? {
     // Print the line, so the user knows what they are changing
-    ui.print_selection(state.see_state(), (index, index), state.n, state.l)?;
+    ui.print_selection(state, (index, index), state.n, state.l)?;
     // Get input and create dummy-ui with it
     // expressions.len() == 2 implies that a separator was given
     let input = ui.get_input(
-      state.see_state(),
+      state,
       tail.chars().next().unwrap(),
       #[cfg(feature = "initial_input_data")]
       None,

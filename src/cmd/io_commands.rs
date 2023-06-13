@@ -1,7 +1,7 @@
 use super::*;
 
-pub(super) fn filename<I: IO>(
-  state: &mut Ed<'_, I>,
+pub(super) fn filename(
+  state: &mut Ed<'_>,
   ui: &mut dyn UI,
   path: &str,
 ) -> Result<()> {
@@ -22,8 +22,8 @@ pub(super) fn filename<I: IO>(
   Ok(())
 }
 
-pub(super) fn read_from_file<I: IO>(
-  state: &mut Ed<'_, I>,
+pub(super) fn read_from_file(
+  state: &mut Ed<'_>,
   ui: &mut dyn UI,
   selection: Option<Sel<'_>>,
   command: char,
@@ -107,8 +107,8 @@ pub(super) fn read_from_file<I: IO>(
   }
 }
 
-pub(super) fn write_to_file<I: IO>(
-  state: &mut Ed<'_, I>,
+pub(super) fn write_to_file(
+  state: &mut Ed<'_>,
   ui: &mut dyn UI,
   selection: Option<Sel<'_>>,
   command: char,
@@ -145,7 +145,6 @@ pub(super) fn write_to_file<I: IO>(
   let data = state.buffer.get_selection(
     sel.unwrap_or((1, state.buffer.len()))
   )?
-    .map(|x| x.1)
   ;
   // Write into command or file, print nr of bytes written
   match path {
@@ -200,8 +199,8 @@ pub(super) fn write_to_file<I: IO>(
   Ok(q)
 }
 
-pub fn run_command<I: IO>(
-  state: &mut Ed<'_, I>,
+pub fn run_command(
+  state: &mut Ed<'_>,
   ui: &mut dyn UI,
   selection: Option<Sel<'_>>,
   ch: char,
@@ -234,7 +233,7 @@ pub fn run_command<I: IO>(
     // When there is a selection we pipe that selection through the command and
     // replace it with the output
     Some(s) => {
-      let data = state.buffer.get_selection(s)?.map(|x| x.1);
+      let data = state.buffer.get_selection(s)?;
       let transformed = state.io.run_transform_command(
         &mut ui.lock_ui(),
         substituted,

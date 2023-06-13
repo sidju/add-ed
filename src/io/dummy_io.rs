@@ -1,6 +1,7 @@
 use crate::{
   io::IO,
   ui::UILock,
+  buffer::SelectionIter,
 };
 
 use super::Result;
@@ -25,24 +26,24 @@ impl IO for DummyIO {
   ) -> Result<String> {
     unimplemented!()
   }
-  fn run_write_command<'a>(&mut self,
+  fn run_write_command(&mut self,
     _ui: &mut UILock,
     _command: String,
-    _input: impl Iterator<Item = &'a str>,
+    _input: SelectionIter,
   ) -> Result<usize> {
     unimplemented!()
   }
-  fn run_transform_command<'a>(&mut self,
+  fn run_transform_command(&mut self,
     _ui: &mut UILock,
     _command: String,
-    _input: impl Iterator<Item = &'a str>,
+    _input: SelectionIter,
   ) -> Result<String> {
     unimplemented!()
   }
-  fn write_file<'a>(&mut self,
+  fn write_file(&mut self,
     _path: &str,
     _append: bool,
-    _data: impl Iterator<Item = &'a str>,
+    _data: SelectionIter,
   ) -> Result<usize> {
     unimplemented!()
   }

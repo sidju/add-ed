@@ -25,7 +25,7 @@ impl History {
     Self{
       snapshots: vec![vec![]],
       viewed_i: 0,
-      saved_i: None,
+      saved_i: Some(0),
       dont_snapshot: false,
     }
   }

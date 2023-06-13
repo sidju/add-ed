@@ -196,12 +196,12 @@ impl IOTest {
 
     // Verify state after test execution
     assert_eq!(
-      ed.see_state().selection,
+      ed.selection,
       self.expected_selection,
       "Selection after test (left) didn't match expectations (right)."
     );
     assert_eq!(
-      ed.see_state().file,
+      ed.file,
       self.expected_filepath,
       "Filepath after test (left) didn't match expectations (right)."
     );
@@ -214,7 +214,7 @@ impl IOTest {
       if ed.buffer.len() != 0 {
         ed.buffer.get_selection((1,ed.buffer.len()))
           .unwrap()
-          .map(|(_,s)| s.trim_end_matches('\n'))
+          .map(|s| s.trim_end_matches('\n'))
           .collect::<Vec<&str>>()
       } else {
         vec![]
@@ -230,7 +230,7 @@ impl IOTest {
       if ed.buffer.len() != 0 {
         ed.buffer.get_selection((1,ed.buffer.len()))
           .unwrap()
-          .map(|(_,s)| s.trim_end_matches('\n'))
+          .map(|s| s.trim_end_matches('\n'))
           .collect::<Vec<&str>>()
       } else {
         vec![]

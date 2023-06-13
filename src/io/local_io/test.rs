@@ -3,6 +3,7 @@
 // wherefore they are locked behind the features test_local_io
 
 use super::*;
+use crate::io::test_helpers::PseudoBuf;
 // Needed to build fake UI whose UILock we hand in to command tests
 use crate::UI;
 
@@ -18,10 +19,11 @@ fn test_file_io() {
   let path = "io_test_file";
 
   // Create new file
+  let pseudobuf = PseudoBuf::new("1\n2\n");
   io.write_file(
     path,
     false, // don't append
-    data.iter().map(|x| *x),
+    pseudobuf.as_selectioniter(),
   ).unwrap();
   let read = std::fs::read_to_string(path).unwrap();
   let read: Vec<&str> = (&read).split_inclusive('\n').collect();
@@ -31,10 +33,11 @@ fn test_file_io() {
     "After creating file with write_file it didn't have the expected contents."
   );
   // Overwrite the file
+  let pseudobuf = PseudoBuf::new("1\n2\n");
   io.write_file(
     path,
     false, // don't append
-    data.iter().map(|x| *x),
+    pseudobuf.as_selectioniter(),
   ).unwrap();
   let read = std::fs::read_to_string(path).unwrap();
   let read: Vec<&str> = (&read).split_inclusive('\n').collect();
@@ -44,10 +47,11 @@ fn test_file_io() {
     "After overwriting write_file the file didn't have the expected contents."
   );
   // Append to the file
+  let pseudobuf = PseudoBuf::new("1\n2\n");
   io.write_file(
     path,
     true, // Append
-    data.iter().map(|x| *x),
+    pseudobuf.as_selectioniter(),
   ).unwrap();
   let read = std::fs::read_to_string(path).unwrap();
   let read: Vec<&str> = (&read).split_inclusive('\n').collect();
@@ -127,10 +131,11 @@ fn test_command_io() {
   );
   // Test writing to command
   let input = "hurr\ndurr\ndunn\n";
+  let pseudobuf = PseudoBuf::new(input);
   let written = io.run_write_command(
     &mut mock_ui_lock,
     "cat > io_command_test_file".to_owned(),
-    input.split_inclusive('\n'),
+    pseudobuf.as_selectioniter(),
   ).unwrap();
   assert_eq!(
     written,
@@ -146,10 +151,11 @@ fn test_command_io() {
   // Cleanup
   std::fs::remove_file("io_command_test_file").unwrap();
   // Test transform command
+  let pseudobuf = PseudoBuf::new("4\n5\n8\n1\n3\n2\n6\n0\n9\n7\n10\n");
   let output = io.run_transform_command(
     &mut mock_ui_lock,
     "sort -n".to_owned(),
-    "4\n5\n8\n1\n3\n2\n6\n0\n9\n7\n10\n".split_inclusive('\n'),
+    pseudobuf.as_selectioniter(),
   ).unwrap();
   assert_eq!(
     &output,

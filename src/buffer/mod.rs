@@ -28,11 +28,34 @@ pub use editing::*;
 //mod test;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-struct Line {
-  tag: RefCell<char>,
-  matched: RefCell<bool>,
-  text: Rc<String>,
+pub struct Line {
+  pub(crate)tag: RefCell<char>,
+  pub(crate)matched: RefCell<bool>,
+  pub(crate)text: Rc<String>,
 }
+
+/// Exact type of the iterator returned by [`get_selection`]
+///
+/// Exported to enable taking the iterator as an argument without any dyn or
+/// impl, which is mainly needed by IO implementations.
+///
+/// This is very implementation specific, so avoid depending on it more than you
+/// would on a boxed iterator.
+pub type SelectionIter<'b> = std::iter::Map<
+  std::slice::Iter<'b, Line>,
+  for<'a> fn(&'a Line) -> &'a str
+>;
+/// Exact type of the iterator returned by [`get_tagged_selection`]
+///
+/// Exported to enable taking the iterator as an argument without any dyn or
+/// impl.
+///
+/// This is very implementation specific, so avoid depending on it more than you
+/// would on a boxed iterator.
+pub type TaggedSelectionIter<'b> = std::iter::Map<
+  std::slice::Iter<'b, Line>,
+  for<'a> fn(&'a Line) -> (char, &'a str)
+>;
 
 /// The editing Buffer built on Vec and String
 ///
@@ -94,14 +117,37 @@ impl Buffer {
   /// boxed. If this bothers you PRs are welcome.
   ///
   /// Will return error on invalid selection.
-  pub fn get_selection<'a>(&'a self,
+  pub fn get_selection(&self,
     selection: (usize, usize),
-  ) -> Result<Box<dyn Iterator<Item = (char, &'a str)> + 'a>> {
+  ) -> Result<SelectionIter> {
     verify_selection(self, selection)?;
     let tmp = self.history.current()[selection.0 - 1 .. selection.1]
       .iter()
-      .map(|line| (*line.tag.borrow(), &line.text[..]))
+      .map(get_selection_helper as fn(&Line) -> &str)
     ;
-    Ok(Box::new(tmp))
+    Ok(tmp)
   }
+
+  /// Same as [`get_selection`] but with each line's tag beside the text data
+  ///
+  /// Will return error on invalid selection.
+  pub fn get_tagged_selection(&self,
+    selection: (usize, usize),
+  ) -> Result<TaggedSelectionIter> {
+    verify_selection(self, selection)?;
+    let tmp = self.history.current()[selection.0 - 1 .. selection.1]
+      .iter()
+      .map(get_tagged_selection_helper as fn(&Line) -> (char, &str))
+    ;
+    Ok(tmp)
+  }
+}
+
+/// Helper to allow [`get_selection`] to return only text of lines.
+pub fn get_selection_helper(line: &Line) -> &str {
+  &line.text[..]
+}
+/// Helper to allow [`get_tagged_selection`] to return only text and tag of lines.
+pub fn get_tagged_selection_helper(line: &Line) -> (char, &str) {
+  (*line.tag.borrow(), &line.text[..])
 }
