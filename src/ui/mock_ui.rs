@@ -1,5 +1,3 @@
-// Mock UI which saves print invocations into a Vec
-// Intended to help verify that editor prints correctly
 use crate::{
   Ed,
   ui::UI,
@@ -7,13 +5,18 @@ use crate::{
 };
 use super::Result;
 
+/// Struct describing a print invocation.
 #[derive(Debug, PartialEq)]
 pub struct Print {
+  /// The lines printed. Each string is a separate line.
   pub text: Vec<String>,
+  /// If true, would have printed with line numbers.
   pub n: bool,
+  /// If true, would have printed with literal escapes.
   pub l: bool,
 }
 
+/// A mock UI that logs all prints and panics when asked for input.
 pub struct MockUI {
   pub prints_history: Vec<Print>,
 }

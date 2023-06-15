@@ -11,16 +11,30 @@ pub use super::*;
 /// [`History.snapshot`] (for use during script/macro execution, to make each
 /// snapshot correspond to a user action).
 #[derive(Clone, Debug)]
-pub struct History {
-  snapshots: Vec<Vec<Line>>,
+pub struct History<T>{
+  snapshots: Vec<Vec<T>>,
   viewed_i: usize,
   saved_i: Option<usize>,
+  /// If true all calls to [`History::snapshot`] are ignored
+  ///
+  /// Intended for macro execution, when it would be confusing to create
+  /// multiple snapshots for what the user sees as a single action.
   pub dont_snapshot: bool,
 }
-impl Default for History {
+impl<T> Default for History<T>
+where
+  T: std::cmp::PartialEq + Clone
+{
   fn default() -> Self { Self::new() }
 }
-impl History {
+impl<T> History<T>
+where
+  T: std::cmp::PartialEq + Clone
+{
+  /// Create new [`History`] instance
+  ///
+  /// - Only an empty present state exists.
+  /// - Considered saved at initial empty state.
   pub fn new() -> Self {
     Self{
       snapshots: vec![vec![]],
@@ -57,7 +71,7 @@ impl History {
   }
 
   /// Get an immutable view into the currently viewed point in history
-  pub(super) fn current(&self) -> &Vec<Line> {
+  pub fn current(&self) -> &Vec<T> {
     &self.snapshots[self.viewed_i]
   }
   /// Get a mutable state to make new changes
@@ -66,7 +80,7 @@ impl History {
   /// history.
   /// - Unless self.dont_snapshot, will create a new snapshot.
   /// - Returns mutable access to the snapshot at the end of history.
-  pub(super) fn current_mut(&mut self) -> Result<&mut Vec<Line>> {
+  pub(super) fn current_mut(&mut self) -> Result<&mut Vec<T>> {
     self.snapshot()?;
     Ok(&mut self.snapshots[self.viewed_i])
   }

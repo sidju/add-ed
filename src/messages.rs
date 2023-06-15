@@ -1,3 +1,4 @@
+/// Help text, printed when "help" is entered as a command.
 #[cfg(feature = "initial_input_data")]
 pub const HELP_TEXT: &str = concat!(
 "Application commands:\n",
@@ -113,5 +114,7 @@ pub const HELP_TEXT: &str = concat!(
 "  v/V: Same as their 'g' counterparts except they invert the pattern.\n",
 );
 
+/// Printed when 'h' command is called and no error has occured yet.
 pub const NO_ERROR: &str = "No errors recorded.";
+/// Printed when 'f' command is called and no default path is yet set.
 pub const NO_FILE: &str = "No default file currently set.";

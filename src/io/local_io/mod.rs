@@ -37,6 +37,11 @@ fn spawn_transfer<'a, I, O>(
 pub struct LocalIO {
 }
 impl LocalIO {
+  /// Construct LocalIO instance
+  ///
+  /// Currently there are no internal members in [`LocalIO`], but for stability
+  /// into the future I'd still recommend using this method in case a need for
+  /// state is found.
   pub fn new() -> Self {
     Self{}
   }
@@ -196,7 +201,7 @@ impl IO for LocalIO {
     {
       Ok(data) => Ok(data),
       Err(e) => match e {
-        LocalIOError::FileNotFound(_) => {
+        LocalIOError::FileNotFound{..} => {
           if must_exist { Err(e.into()) } else { Ok(String::new()) }
         },
         _ => Err(e.into()),

@@ -5,23 +5,27 @@
 use super::{UI, UILock};
 use super::Ed;
 
-#[cfg(feature = "initial_input_data")]
-use crate::EdError;
-
 use super::Result;
 
 use std::collections::VecDeque;
 
+#[cfg(feature = "initial_input_data")]
+use crate::EdError;
+
 /// Error type for Scripted UI which can only occur if you enable the feature
 /// `initial_input_data` and given initial data to [`ScriptedUI::get_input`]
+#[cfg(feature = "initial_input_data")]
 #[derive(Debug)]
 pub struct UnsupportedInitialData{}
+#[cfg(feature = "initial_input_data")]
 impl std::fmt::Display for UnsupportedInitialData {
   fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
     write!(f, "You cannot take input with initial data in a script.")
   }
 }
+#[cfg(feature = "initial_input_data")]
 impl std::error::Error for UnsupportedInitialData {}
+#[cfg(feature = "initial_input_data")]
 impl crate::error::UIError for UnsupportedInitialData {}
 
 /// This is a scripted UI. It returns the scripted input without querying user.

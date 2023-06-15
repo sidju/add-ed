@@ -57,6 +57,9 @@ use io::IO;
 pub mod buffer;
 use buffer::Buffer;
 
+mod history;
+pub use history::History;
+
 /// A ready parsed 's' invocation, including command and printing flags
 pub struct Substitution {
   /// Regex pattern to match against
@@ -78,6 +81,10 @@ pub struct Substitution {
 /// It is designed to support mutation and analysis by library users, but be
 /// careful: modifying this state wrong will cause user facing errors.
 pub struct Ed <'a> {
+  /// Holds the past, present and sometimes future states of the editing buffer
+  ///
+  /// See [`History`] documentation for how to use.
+  pub history: History,
   /// The buffer holds Ed's text data.
   ///
   /// It also abstracts basically all Ed editing operations, though it is
@@ -148,6 +155,7 @@ impl <'a, > Ed <'a> {
     Self {
       // Init internal state
       selection,
+      history: History::new(),
       buffer: Buffer::new(),
       prev_s: None,
       prev_shell_command: String::new(),

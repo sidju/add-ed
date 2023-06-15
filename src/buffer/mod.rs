@@ -27,6 +27,12 @@ pub use editing::*;
 //#[cfg(test)]
 //mod test;
 
+/// All data stored for every line
+///
+/// Note the [`RefCells`] placed around internal variables we wish to be able to
+/// modify without mutable access to the Line itself. This is to let [`History`]
+/// enforce use of [`History::current_mut`] to edit the text, while allowing
+/// changes to other data.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Line {
   pub(crate)tag: RefCell<char>,
@@ -76,8 +82,10 @@ pub type TaggedSelectionIter<'b> = std::iter::Map<
 /// panic).
 #[derive(Clone, Debug)]
 pub struct Buffer {
-  pub history: History,
-  clipboard: Vec<Line>,
+  /// The undo history _and_ present
+  pub history: History<Line>,
+  /// The current clipboard
+  pub clipboard: Vec<Line>,
 }
 impl Default for Buffer {
   fn default() -> Self { Self::new() }
@@ -91,7 +99,9 @@ impl Buffer {
       clipboard: Vec::new(),
     }
   }
+  /// Returns the nr of lines in the buffer at the current point in history
   pub fn len(&self) -> usize { self.history.current().len() }
+  /// Returns true if the buffer at the current point in history is empty
   pub fn is_empty(&self) -> bool { self.history.current().is_empty() }
 
   // Re-exports from history, to make them more officially part of the API

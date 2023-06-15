@@ -52,6 +52,7 @@ or a GUI frontend implementing the UI trait.
 ## Feature flags:
 ### local_io:
 Include and expose a simple local fs and shell `IO` implementation.
+
 ### initial_input_data:
 Add 'C' command. This modifies the UI trait.
 
