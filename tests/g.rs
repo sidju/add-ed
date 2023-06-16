@@ -143,6 +143,64 @@ fn global_grep_noselection_commandafter() {
   }.run();
 }
 
+// Tracks an old bug, where a shared variable was used to mark which lines had
+// been matched by a 'g', 'G', 'v' or 'V' command. This could cause infinite
+// recursion, as helpfully shown by fuzzing (though it took me a while to
+// figure out what was going on.)
+//
+// In this test this is shown since the inner 'g' invocation marks line 2, acts
+// on it, and then unmarks it (causing it to be skipped in the outer 'g', and
+// some more trouble I don't care to figure out).
+#[test]
+fn global_nested() {
+  let buffer = vec![
+    "hello",
+    "1",
+    "4",
+  ];
+  PrintTest{
+    init_buffer: buffer.clone(),
+    init_clipboard: vec![],
+    command_input: vec![r",g/.*/p/,g_1_n_/"],
+    expected_buffer: buffer,
+    expected_buffer_saved: true,
+    expected_selection: (3,3),
+    expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: vec!["hello\n".to_string(),],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec!["1\n".to_string(),],
+        n: true,
+        l: false,
+      },
+      Print{
+        text: vec!["1\n".to_string(),],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec!["1\n".to_string(),],
+        n: true,
+        l: false,
+      },
+      Print{
+        text: vec!["4\n".to_string(),],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec!["1\n".to_string(),],
+        n: true,
+        l: false,
+      },
+    ],
+  }.run();
+}
+
 // Verify behaviour of 'G'
 //
 // - Takes optional selection.
