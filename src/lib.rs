@@ -1,114 +1,192 @@
-//! Add-Ed is a library implementing the parsing and runtime for Ed in rust.
+//#![deny(missing_docs)]
+
+//! Add-Ed is a library implementing the parsing, IO and runtime for Ed in rust.
 //!
-//! It exports two traits, Buffer and UI, which define the exchangeable parts of the editor.
+//! Behaviour is initially based off of [GNU Ed] with modifications to improve
+//! on usability. See the [readme] and [release notes] for details.
 //!
-//! An implementation of the UI trait is needed to support the 'g' command and similar, DummyUI.
-//! It is used for macro execution, by taking prepared input from a input list rather than prompting the user.
+//! This library exports two traits, [`IO`](io::IO) and [`UI`](ui::UI), which
+//! define the exchangeable parts of the editor. If you enable the `local_io`
+//! feature there is a ready implementation of the IO, but you will need to
+//! bring your own UI if you wish to do any user interaction. If you don't wish
+//! to do any user interaction, [`ScriptedUI`](ui::ScriptedUI) should be quite
+//! easy to use.
 //!
-//! Since the buffer is rather complex a standard Buffer implementation is included in the feature "vecbuffer".
-//! It is recommended to compare the behaviour of any Buffer implementation to the VecBuffer in addition to the api tests.
+//! Minimal scripted usage example:
+//! ```
+//! use add_ed::{
+//!   ui::ScriptedUI,
+//!   io::LocalIO,
+//!   Ed,
+//!   EdError,
+//! };
 //!
-//! An example of how to use this library is in src/bin/classic.rs
+//! # fn main() -> Result<(), EdError> {
+//! // Construct all the components
+//! let mut ui = ScriptedUI{
+//!   input: vec![format!("e {}\n", "Cargo.toml")].into(),
+//!   print_ui: None,
+//! };
+//! let mut io = LocalIO::new();
+//! // Construct and run ed
+//! let mut ed = Ed::new(&mut io);
+//! ed.run(&mut ui)?;
+//! # Ok(()) }
+//! ```
+//!
+//!
+//! A full example of how to use this library is in src/bin/classic-ed.rs
+//!
+//! [GNU Ed]: https://www.gnu.org/software/ed/manual/ed_manual.html
+//! [readme]: https://github.com/sidju/add-ed/blob/main/README.md
+//! [release notes]: https://github.com/sidju/add-ed/blob/main/RELEASE_NOTES.md
 
 use std::collections::HashMap;
 
-pub mod error_consts;
+pub mod messages;
+
+#[macro_use]
+pub mod error;
+pub use error::{
+  Result,
+  EdError,
+};
+use error::InternalError;
+
 mod cmd;
 
 pub mod ui;
-pub mod buffer;
-pub mod io;
-
 use ui::{UI, UILock};
-use buffer::Buffer;
+pub mod io;
 use io::IO;
 
-/// A small reference struct that gives insight into the editor's state
-pub struct EdState<'a> {
-  pub selection: (usize, usize),
-  pub buffer: &'a Buffer,
-  pub file: &'a str,
-}
+mod history;
+pub use history::History;
 
-/// A ready parsed 's' invocation
-struct Substitution {
-  pattern: String,
-  substitute: String,
-  global: bool,
-  p: bool,
-  n: bool,
-  l: bool,
-}
+pub use buffer::iters::*;
+mod buffer;
+pub use buffer::{
+  Line, // Cannot be directly constructed by lib users, but still relevant
+  Buffer,
+  PubLine,
+  Clipboard,
+};
 
-/// The state variable used by the editor to track its internal state
-pub struct Ed <'a, I: IO> {
-  // Track the currently selected lines in the buffer
-  // This is usually separate from viewed lines in the UI
-  selection: (usize, usize),
-  // A mutable reference to a Buffer implementor
-  // The buffer implementor will handle most of the operations and store the data
-  buffer: &'a mut Buffer,
-  // The path to the currently selected file
-  file: String,
-  // The fully processed command last given by the user
-  // (Saved before successful run, so may be invalid)
-  prev_shell_command: String,
-  // A mutable reference to an IO implementor
-  // It will handle file interactions and command execution
-  io: &'a mut I,
-  // The previous search_replace's arguments, to support repeating the last
-  prev_s: Option<Substitution>,
-  // Flag to prevent auto-creating undo-points when running macros or the like
-  dont_snapshot: bool,
-
-  // Variables after this are essentially just configurations with no
-  // representable invalid state, so we can allow free access to them.
-
-  // Prefix for command input. Traditionally ':' so that by default
-  pub cmd_prefix: Option<char>,
-  // Default states for printing flags
-  // Allows to print numbered or literal by default
+/// A ready parsed 's' invocation, including command and printing flags
+pub struct Substitution {
+  /// Regex pattern to match against
+  pub pattern: String,
+  /// Substitution template to replace it with
+  pub substitute: String,
+  /// Set true to apply to all occurences (instead of only the first)
+  pub global: bool,
+  /// Flag to print after execution
+  pub p: bool,
+  /// Flag to print with line numbers after execution
   pub n: bool,
+  /// Flag to print with literal escapes after execution
   pub l: bool,
-  // Wether or not to print errors when they occur (if not, print ? instead of error)
-  pub print_errors: bool,
-  // The previous error that occured, since we may not have printed it
-  pub error: Option<&'static str>,
-  // Map of macro name to macro script
-  pub macros: HashMap<String, String>,
 }
 
-impl <'a, I: IO> Ed <'a, I> {
-  /// Construct a new instance of Ed
+/// The state variable used to track the editor's internal state.
+///
+/// It is designed to support mutation and analysis by library users, but be
+/// careful: modifying this state wrong will cause user facing errors.
+pub struct Ed <'a> {
+  /// Holds the past, present and sometimes future states of the editing buffer
   ///
-  /// * An empty file string is recommended if no filepath is opened
-  /// * Note that you can initialise the buffer with contents before this.
-  /// * macros behave like scripts given to the 'g' command
-  ///   an example is "a\n\n.\n" which appends an empty line
+  /// See [`History`] documentation for how to use.
+  pub history: History<Buffer>,
+  /// The current clipboard contents
+  ///
+  /// Uses a reduced Line, since some of the internal data in Line could cause
+  /// unexpected behavior if pasted as is.
+  pub clipboard: Clipboard,
+  /// Tracks the currently selected lines in the buffer.
+  ///
+  /// Inclusive 1-indexed start and end bounds over selected lines. Selected
+  /// lines aren't required to exist, but it is recommended for user comfort.
+  /// Empty selection should only occur when the buffer is empty, and in that
+  /// case exactly (1,0). Invalid selections cause errors, not crashes.
+  pub selection: (usize, usize),
+  /// Currently used IO implementor
+  ///
+  /// It will be used to handle file interactions and command execution as
+  /// required during command execution
+  pub io: &'a mut dyn IO,
+  /// The path to the currently selected file.
+  pub file: String,
+
+  /// Shell command last given by the user
+  ///
+  /// Fully processed, meaning all substitutions of % to current file and 
+  /// similar should already have occured before saving here.
+  /// (Currently saved before successful run, so may be invalid).
+  pub prev_shell_command: String,
+  /// The previous `s` commands arguments, to support repeating last `s` command
+  /// when no arguments are given to `s`.
+  pub prev_s: Option<Substitution>,
+
+  /// Configuration of prefix before command input.
+  ///
+  /// Traditionally ':' so set to that by default.
+  pub cmd_prefix: Option<char>,
+  /// Set default to print numbered lines.
+  ///
+  /// If set `n` printing flag behaviour inverts and disables line numbers.
+  pub n: bool,
+  /// Set default to print literal lines. (A type of escaped print.)
+  ///
+  /// If set `l` printing flag behaviour inverts and disables literal printing.
+  pub l: bool,
+  /// Wether or not to print errors when they occur.
+  ///
+  /// If not true Ed prints ? on error, expecting use of `h` command to get
+  /// the error.
+  pub print_errors: bool,
+  /// The previous error that occured.
+  ///
+  /// Is printed by `h` command.
+  ///
+  /// UI errors occuring outside of Ed should also be written to this variable,
+  /// so `h` prints the latest error that occured in the whole application.
+  pub error: Option<EdError>,
+  /// Configuration field for macros.
+  ///
+  /// A map from macro name to string of newline separated commands.
+  pub macros: HashMap<String, String>,
+  /// Set how many recursions should be allowed.
+  ///
+  /// One recursion is counted as one macro or 'g'/'v'/'G'/'V' invocation. Under
+  /// 2 is likely to interfere with basic use, 4 will require that macros don't
+  /// call into eachother, 16 is unlikely to abort needlessly.
+  pub recursion_limit: usize,
+}
+
+impl <'a, > Ed <'a> {
+  /// Construct a new instance of Ed
   pub fn new(
-    buffer: &'a mut Buffer,
-    io: &'a mut I,
-    file: String,
+    io: &'a mut dyn IO,
   ) -> Self {
-    // let selection = (1,0); // Empty, but that is handled in cmd module
-    // This selection matches the selection after opening file with 'e' command
-    let selection = (1, buffer.len()); // May be empty, handled in cmd module
+    let selection = (1,0);
     Self {
-      // Sane defaults for initial settings
+      // Init internal state
+      selection,
+      history: History::new(),
+      prev_s: None,
+      prev_shell_command: String::new(),
+      // Sane defaults for externally visible variables
+      file: String::new(),
+      clipboard: Clipboard::new(),
+      error: None,
       print_errors: true,
       n: false,
       l: false,
-      error: None,
-      prev_s: None,
       cmd_prefix: Some(':'),
-      selection,
-      dont_snapshot: false,
-      prev_shell_command: String::new(),
       macros: HashMap::new(),
+      recursion_limit: 16,
       // And the given values
-      buffer,
       io,
-      file,
     }
   }
 
@@ -119,12 +197,57 @@ impl <'a, I: IO> Ed <'a, I> {
     &mut self,
     ui: &mut dyn UI,
     command: &str,
-  ) -> Result<bool, &'static str> {
+  ) -> Result<bool> {
+    self.private_run_command(ui, command, 0)
+  }
+  // Exists to handle nesting depth, for nested 'g' invocations, without
+  // exposing that argument to the public interface (since it will always be 0
+  // when called from the public API).
+  fn private_run_command(
+    &mut self,
+    ui: &mut dyn UI,
+    command: &str,
+    recursion_depth: usize,
+  ) -> Result<bool> {
     // Just hand execution into the cmd module
-    match cmd::run(self, ui, command) {
+    match cmd::run(self, ui, command, recursion_depth) {
       // If error, note it in state
       Err(e) => {
-        self.error = Some(e);
+        self.error = Some(e.clone());
+        Err(e)
+      },
+      x => x,
+    }
+  }
+
+  /// Get a single command from the UI and run it
+  ///
+  /// Returns true if the command was to quit, false otherwise.
+  /// Returns error if any occurs
+  pub fn get_and_run_command(
+    &mut self,
+    ui: &mut dyn UI,
+  ) -> Result<bool> {
+    self.private_get_and_run_command(ui, 0)
+  }
+  // Exists to handle nesting depth, for nested 'g' invocations, without
+  // exposing that argument to the public interface (since it will always be 0
+  // when called from the public API).
+  fn private_get_and_run_command(
+    &mut self,
+    ui: &mut dyn UI,
+    recursion_depth: usize,
+  ) -> Result<bool> {
+    // Define a temporary closure to catch UI errors, needed since try blocks
+    // aren't stabilized
+    let mut clos = || {
+      let cmd = ui.get_command(self, self.cmd_prefix)?;
+      self.private_run_command(ui, &cmd, recursion_depth)
+    };
+    // Run it, save any error, and forward result
+    match clos() {
+      Err(e) => {
+        self.error = Some(e.clone());
         Err(e)
       },
       x => x,
@@ -133,33 +256,44 @@ impl <'a, I: IO> Ed <'a, I> {
 
   /// Run given instance of Ed until it receives a command to quit or errors
   ///
-  /// The returned error type could be improved, suggestions welcome.
+  /// Returns Ok(()) when quit by command (or end of macro input)
   pub fn run_macro(
     &mut self,
     ui: &mut dyn UI,
-  ) -> Result<(), &'static str> {
-    // Loop until quit or error
+  ) -> Result<()> {
+    self.private_run_macro(ui, 0)
+  }
+  // Exists to handle nesting depth, for nested 'g' invocations, without
+  // exposing that argument to the public interface (since it will always be 0
+  // when called from the public API).
+  fn private_run_macro(
+    &mut self,
+    ui: &mut dyn UI,
+    recursion_depth: usize,
+  ) -> Result<()> {
+    // Loop over it, handling errors, until quit received
     loop {
-      let cmd = match ui.get_command( self.see_state(), self.cmd_prefix ) {
-        Err(e) => { self.error = Some(e); return Err(e) },
-        Ok(x) => x,
-      };
-      if self.run_command(ui, &cmd)? {
-        break;
-      }
+      if self.private_get_and_run_command(ui, recursion_depth)? { break; }
     }
     Ok(())
   }
+
+  /// Run until quit by command
+  ///
+  /// Prints ? or error message as errors occur (depending on `print_errors`).
+  /// Returns error if error occurs when printing.
   pub fn run(
     &mut self,
     ui: &mut dyn UI,
-  ) -> Result<(), &'static str> {
+  ) -> Result<()> {
+    // Loop getting and running command, handling errors, until quit received
     loop {
-      match self.run_macro(ui) {
-        Ok(()) => break,
+      match self.get_and_run_command(ui) {
+        Ok(true) => break,
+        Ok(false) => (),
         Err(e) => {
           if self.print_errors {
-            ui.print_message(e)?;
+            ui.print_message(&e.to_string())?;
           }
           else {
             ui.print_message("?\n")?;
@@ -168,14 +302,5 @@ impl <'a, I: IO> Ed <'a, I> {
       }
     }
     Ok(())
-  }
-
-  /// Get an immutable reference to some internal parts of the editors state
-  pub fn see_state(&self) -> EdState {
-    EdState{
-      selection: self.selection,
-      file: &self.file,
-      buffer: self.buffer,
-    }
   }
 }

@@ -132,7 +132,7 @@ fn edit_selection() {
     command_input: vec![
       ",e",
     ],
-    expected_error: add_ed::error_consts::SELECTION_FORBIDDEN,
+    expected_error: add_ed::EdError::SelectionForbidden,
   }.run();
 }
 
@@ -144,7 +144,7 @@ fn edit_unsaved() {
     command_input: vec![
       "e",
     ],
-    expected_error: add_ed::error_consts::UNSAVED_CHANGES,
+    expected_error: add_ed::EdError::UnsavedChanges,
   }.run();
 }
 

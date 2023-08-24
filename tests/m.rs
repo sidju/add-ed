@@ -6,8 +6,11 @@ mod shared;
 use shared::fixtures::{
   BasicTest,
   PrintTest,
+  ErrorTest,
 };
 use shared::mock_ui::Print;
+
+use add_ed::error::EdError;
 
 // Verify behaviour of 'm' command
 //
@@ -55,6 +58,16 @@ fn mov_noindex_noselection_print() {
         l: false,
       },
     ],
+  }.run()
+}
+
+// Test defaults with no buffer
+#[test]
+fn mov_default_nobuffer() {
+  ErrorTest{
+    init_buffer: vec![],
+    command_input: vec!["m"],
+    expected_error: EdError::IndexTooBig{index:1, buffer_len:0},
   }.run()
 }
 

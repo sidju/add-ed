@@ -7,7 +7,7 @@ use shared::fixtures::{
 use shared::dummy_io::DummyIO;
 use shared::dummy_ui::DummyUI;
 use add_ed::{
-  buffer::Buffer,
+  error::EdError,
   Ed,
 };
 
@@ -21,15 +21,12 @@ use add_ed::{
 #[test]
 fn quit() {
   let mut io = DummyIO::new();
-  let mut buffer = Buffer::new();
-  buffer.set_saved();
   let mut ui = DummyUI{};
   // Construct editor state and run
   let mut ed = Ed::new(
-    &mut buffer,
     &mut io,
-    "path".to_owned(),
   );
+  ed.history.set_saved();
   assert!(ed.run_command(&mut ui, "q\n").expect("Error running test"));
 }
 
@@ -39,7 +36,7 @@ fn quit_unsaved() {
   ErrorTest{
     init_buffer: vec![],
     command_input: vec!["q"],
-    expected_error: add_ed::error_consts::UNSAVED_CHANGES,
+    expected_error: EdError::UnsavedChanges,
   }.run()
 }
 
@@ -47,14 +44,11 @@ fn quit_unsaved() {
 #[test]
 fn force_quit_unsaved() {
   let mut io = DummyIO::new();
-  let mut buffer = Buffer::new();
-  buffer.set_unsaved();
   let mut ui = DummyUI{};
   // Construct editor state and run
   let mut ed = Ed::new(
-    &mut buffer,
     &mut io,
-    "path".to_owned(),
   );
+  ed.history.set_unsaved();
   assert!(ed.run_command(&mut ui, "Q\n").expect("Error running test"));
 }

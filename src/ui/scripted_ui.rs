@@ -3,29 +3,52 @@
 //! It optionally takes a mutable UI reference, to support printing when the script requests it.
 
 use super::{UI, UILock};
-use super::EdState;
+use super::Ed;
+
+use super::Result;
 
 use std::collections::VecDeque;
+
+#[cfg(feature = "initial_input_data")]
+use crate::error::UIError;
+
+/// Error type for Scripted UI which can only occur if you enable the feature
+/// `initial_input_data` and given initial data to [`ScriptedUI::get_input`]
+#[cfg(feature = "initial_input_data")]
+#[derive(Debug)]
+pub struct UnsupportedInitialData{}
+#[cfg(feature = "initial_input_data")]
+impl std::fmt::Display for UnsupportedInitialData {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    write!(f, "You cannot take input with initial data in a script.")
+  }
+}
+#[cfg(feature = "initial_input_data")]
+impl std::error::Error for UnsupportedInitialData {}
+#[cfg(feature = "initial_input_data")]
+impl crate::error::UIErrorTrait for UnsupportedInitialData {}
 
 /// This is a scripted UI. It returns the scripted input without querying user.
 ///
 /// How to use:
 /// * Put the input to simulate line-by-line in the input variable.
-///   (terminating '\n' required, errors may arise if missing)
-/// * If you want output from print commands put a UI to print with in print_ui.
-///   (If none given prints will quietly be ignored)
+///   (terminating '\n' required, errors may arize if missing)
+/// * If you want output from print commands put a UI to print with in
+///   `print_ui`.
+///   (If none given prints will be quietly ignored)
 
-// Things not derived here since they would require the same being implemented on the UI trait,
-// which is too extreme for me at this stage. If you have need, complain and I'll add it.
+// Things not derived here since they would require the same being implemented
+// on the UI trait, which is too extreme for me at this stage. If you have need,
+// complain and I'll add it.
 pub struct ScriptedUI<'a> {
   pub input: VecDeque<String>,
   pub print_ui: Option<&'a mut dyn UI>,
 }
 impl <'a> UI for ScriptedUI<'a> {
   fn get_command(&mut self,
-    _ed: EdState,
+    _ed: &Ed,
     _prefix: Option<char>
-  ) -> Result<String, &'static str> {
+  ) -> Result<String> {
     match self.input.pop_front() {
       Some(x) => Ok(x),
       // Returns from the macro execution no matter what.
@@ -33,14 +56,16 @@ impl <'a> UI for ScriptedUI<'a> {
     }
   }
   fn get_input(&mut self,
-    _ed: EdState,
+    _ed: &Ed,
     terminator: char,
     #[cfg(feature = "initial_input_data")]
     initial_buffer: Option<Vec<String>>, // causes error
-  ) -> Result<Vec<String>, &'static str> {
+  ) -> Result<Vec<String>> {
     #[cfg(feature = "initial_input_data")]
     {
-      if initial_buffer.is_some() { return Err(crate::error_consts::UNSUPPORTED_INITIAL_DATA); }
+      if initial_buffer.is_some() {
+        return Err(Into::<UIError>::into(UnsupportedInitialData{}).into())
+      }
     }
     let mut ret = Vec::new();
     let term = format!("{}\n", terminator);
@@ -59,18 +84,18 @@ impl <'a> UI for ScriptedUI<'a> {
   fn print_message(
     &mut self,
     text: &str
-  ) -> Result<(), &'static str> {
+  ) -> Result<()> {
     match &mut self.print_ui {
       Some(ui) => ui.print_message(text),
       None => Ok(()),
     }
   }
   fn print_selection(&mut self,
-    ed: EdState,
+    ed: &Ed,
     selection: (usize, usize),
     numbered: bool,
     literal: bool,
-  ) -> Result<(), &'static str> {
+  ) -> Result<()> {
     match &mut self.print_ui {
       Some(ui) => {
         ui.print_selection(ed, selection, numbered, literal)

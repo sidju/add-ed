@@ -9,7 +9,6 @@ use shared::fixtures::{
 use shared::mock_ui::Print;
 use shared::dummy_io::DummyIO;
 use add_ed::{
-  buffer::Buffer,
   ui::ScriptedUI,
   Ed,
 };
@@ -89,8 +88,6 @@ fn numbered_literal_noselection() {
 #[test]
 fn numbered_toggle_on() {
   let mut io = DummyIO::new();
-  let mut buffer = Buffer::new();
-  buffer.set_saved();
   let mut ui = ScriptedUI{
     print_ui: None,
     input: vec![
@@ -103,19 +100,16 @@ fn numbered_toggle_on() {
   };
   // Construct editor state and run
   let mut ed = Ed::new(
-    &mut buffer,
     &mut io,
-    "path".to_owned(),
   );
+  ed.history.set_saved();
   ed.run_macro(&mut ui).expect("Error running test");
   assert_eq!(ed.n, true);
-  assert!(buffer.is_empty());
+  assert!(ed.history.current().is_empty());
 }
 #[test]
 fn numbered_toggle_off() {
   let mut io = DummyIO::new();
-  let mut buffer = Buffer::new();
-  buffer.set_saved();
   let mut ui = ScriptedUI{
     print_ui: None,
     input: vec![
@@ -128,12 +122,11 @@ fn numbered_toggle_off() {
   };
   // Construct editor state and run
   let mut ed = Ed::new(
-    &mut buffer,
     &mut io,
-    "path".to_owned(),
   );
+  ed.history.set_saved();
   ed.n = true;
   ed.run_macro(&mut ui).expect("Error running test");
   assert_eq!(ed.n, false);
-  assert!(buffer.is_empty());
+  assert!(ed.history.current().is_empty());
 }

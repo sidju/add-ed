@@ -1,9 +1,11 @@
 // Tests for 'r' command
 
+use add_ed::EdError;
 use std::collections::HashMap;
 mod shared;
 use shared::fixtures::{
   IOTest,
+  ErrorTest,
 };
 use shared::fake_io::{
   FakeIO,
@@ -96,5 +98,15 @@ fn read_prepend() {
     expected_file_changes: vec![],
     expected_clipboard: vec!["dummy"],
     expected_filepath: "",
+  }.run();
+}
+
+// Fully specified prepend with errant space before command
+#[test]
+fn read_prepend_but_with_space() {
+  ErrorTest{
+    init_buffer: vec!["numbers"],
+    command_input: vec!["0 r numbers"],
+    expected_error: EdError::CommandUndefined(' '),
   }.run();
 }

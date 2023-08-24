@@ -10,6 +10,8 @@ use shared::fixtures::{
 };
 use shared::mock_ui::Print;
 
+use add_ed::error::EdError;
+
 // Verify behaviour of 'ai' command
 //
 // - Takes optional index
@@ -181,7 +183,7 @@ fn inline_insert_nobuffer() {
   ErrorTest{
     init_buffer: vec![],
     command_input: vec!["I"],
-    expected_error: add_ed::error_consts::INDEX_TOO_BIG,
+    expected_error: EdError::IndexTooBig{index: 1, buffer_len: 0},
   }.run();
 }
 

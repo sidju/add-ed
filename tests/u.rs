@@ -5,7 +5,9 @@
 mod shared;
 use shared::fixtures::{
   BasicTest,
+  PrintTest,
 };
+use shared::mock_ui::Print;
 
 // Verify behaviour of 'u' command
 //
@@ -16,8 +18,7 @@ use shared::fixtures::{
 //   in history, negative number moves forward.
 //   - If it isn't possible to move the given number of steps prints error,
 //     INVALID_UNDO_STEPS.
-// - Sets unsaved unconditionally for now.
-//   (Tracking of which undo step was saved could be added)
+// - Sets saved / unsaved after if that undo step is saved / unsaved
 // - Currently doesn't modify selection.
 //   (Later it may be good to set selection to the selection _acted upon_ in the
 //   last undone step. But to do that pairing selection with buffer state could
@@ -32,7 +33,7 @@ fn undo() {
     init_clipboard: vec!["dummy"],
     command_input: vec!["1d","3d","u2"],
     expected_buffer: vec!["a","b","c","d"],
-    expected_buffer_saved: false,
+    expected_buffer_saved: true,
     expected_clipboard: vec!["d"], // Because "3d" sets it and 'u' leaves it
     expected_selection: (2,2),
   }.run()
@@ -49,6 +50,38 @@ fn undo_default() {
     expected_buffer_saved: false,
     expected_clipboard: vec!["d"], // Because 'd' sets it and 'u' leaves it
     expected_selection: (2,2),
+  }.run()
+}
+
+// Verify that line tags exist on their lines throughout history
+#[test]
+fn undo_tag_move() {
+  PrintTest{
+    init_buffer: vec!["a","b","c"],
+    init_clipboard: vec![],
+    command_input: vec![
+      "2m", // move line 2 to end of buffer
+      "2kp", // mark new line 2, previously line 3
+      "'p=", // print index of marked line (should be 2)
+      "u", // undo the move (move is the only snapshot creating command here)
+      "'p=", // print index of marked line _before it was marked_ (should be 3)
+    ],
+    expected_buffer: vec!["a","b","c"],
+    expected_buffer_saved: true,
+    expected_selection: (3,3),
+    expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: vec!["(2,2)".to_owned()],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec!["(3,3)".to_owned()],
+        n: false,
+        l: false,
+      }
+    ],
   }.run()
 }
 

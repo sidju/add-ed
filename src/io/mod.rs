@@ -1,12 +1,19 @@
-use super::ui::UILock;
+//! Defines IO Trait, LocalIO (if enabled) and some testing implementations.
+//!
+//! Used to abstract filesystem and shell interactions.
+
+type Result<T> = core::result::Result<T, crate::error::IOError>;
+
+use crate::UILock;
+use crate::LinesIter;
+
+pub mod fake_io;
+pub mod dummy_io;
 
 #[cfg(feature = "local_io")]
 pub mod local_io;
 #[cfg(feature = "local_io")]
 pub use local_io::LocalIO;
-
-#[cfg(all(feature = "test_local_io", test))]
-mod test;
 
 /// Trait that abstracts file interactions and running shell commands
 ///
@@ -25,7 +32,7 @@ pub trait IO {
     ui: &mut UILock,
     // Command string from user (with basic substitutions interpreted)
     command: String,
-  ) -> Result<(), &'static str>;
+  ) -> Result<()>;
 
   /// Run a read command, collecting stdout to add into buffer
   ///
@@ -36,46 +43,46 @@ pub trait IO {
     ui: &mut UILock,
     // Command string from user (with basic substitutions interpreted)
     command: String,
-  ) -> Result<String, &'static str>;
+  ) -> Result<String>;
 
   /// Run a write command, receiving part of buffer via stdin
   ///
   /// Stdout and Stderr should be passed through to UI
   /// Returns number of bytes written
-  fn run_write_command<'a>(&mut self,
+  fn run_write_command(&mut self,
     // UI handle. Created by setting up the UI for passing through std-in/-err
     // to child process.
     ui: &mut UILock,
     // Command string from user (with basic substitutions interpreted)
     command: String,
     // Iterator over string slices to send over stdin
-    input: impl Iterator<Item = &'a str>,
-  ) -> Result<usize, &'static str>;
+    input: LinesIter,
+  ) -> Result<usize>;
 
   /// Run a transform command, taking part of buffer via stdin and returning it
   /// via stdout.
   ///
   /// Stderr should be passed through to UI
-  fn run_transform_command<'a>(&mut self,
+  fn run_transform_command(&mut self,
     // UI handle. Created by setting up the UI for passing through
     // std-in/-out/-err to child process.
     ui: &mut UILock,
     // Command string from user (with basic substitutions interpreted)
     command: String,
     // Iterator over string slices to send over stdin
-    input: impl Iterator<Item = &'a str>,
-  ) -> Result<String, &'static str>;
+    input: LinesIter,
+  ) -> Result<String>;
 
   /// Normal file write
   /// Returns number of bytes written
-  fn write_file<'a>(&mut self,
+  fn write_file(&mut self,
     // Path to file as give by user. Not checked beyond shell escape parsing
     path: &str,
     // If appending
     append: bool,
     // Data to write to file
-    data: impl Iterator<Item = &'a str>,
-  ) -> Result<usize, &'static str>;
+    data: LinesIter,
+  ) -> Result<usize>;
 
   /// Normal file read
   fn read_file(&mut self,
@@ -83,5 +90,5 @@ pub trait IO {
     path: &str,
     // If true the method should error if no file is found at path
     must_exist: bool,
-  ) -> Result<String, &'static str>;
+  ) -> Result<String>;
 }

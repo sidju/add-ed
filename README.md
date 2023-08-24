@@ -43,7 +43,6 @@ or a GUI frontend implementing the UI trait.
 - 'C' command, acts as 'c' but hands out previous value to the Ui's input method.
   This enables you to edit the selection instead of replacing it (depends on UI).
 - 'N' and 'L' commands, toggle the default print conf. Line numbers and escapes respectively.
-- 'K' command tags the last line in selection (instead of first as 'k'). (selection adjustment)
 - ':' command, runs the macro with the name given as argument (whitespace trimmed).
   Macro execution behaves like 'g' execution. 'q' or error returns early.
 - 'J' command, joins all lines in selection and then splits them so they all are
@@ -51,8 +50,9 @@ or a GUI frontend implementing the UI trait.
   It doesn't understand indentation, but improvement PRs are very welcome.
 
 ## Feature flags:
-### vecbuffer:
-Include and expose a simple in-memory buffer implementation
+### local_io:
+Include and expose a simple local fs and shell `IO` implementation.
+
 ### initial_input_data:
 Add 'C' command. This modifies the UI trait.
 
