@@ -164,7 +164,7 @@ fn global_nested() {
     command_input: vec![r",g/.*/p/,g_1_n_/"],
     expected_buffer: buffer,
     expected_buffer_saved: true,
-    expected_selection: (3,3),
+    expected_selection: (2,2), // Since 1 is printed last and that is line 2
     expected_clipboard: vec![],
     expected_prints: vec![
       Print{

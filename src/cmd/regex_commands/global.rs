@@ -86,7 +86,7 @@ pub fn global(
     return Err( EdError::ArgumentsWrongNr{expected: "2 or more", received: expressions.len()} );
   }
   // We first try to mark all matching lines, to tell if there is any issue
-  mark_matching(state, selection, &expressions[0], command == 'v', recursion_depth)?;
+  mark_matching(state, selection, &expressions[0], command == 'v', recursion_depth + 1)?;
   // Then we get the script to run against them, if not already given
   // First grab commands given on command line
   let mut commands: Vec<String> = expressions.split_off(1).iter().map(|s| s.to_string()).collect();
@@ -112,14 +112,14 @@ pub fn global(
     commands.push("p\n".to_string())
   }
   // After command collection we get the matching lines to run them at and do so
-  while let Some(index) = get_marked(state, recursion_depth) {
+  while let Some(index) = get_marked(state, recursion_depth + 1) {
     // Use dummy UI to recurse while supporting text input
     let mut scripted = ScriptedUI{
       input: commands.iter().cloned().collect(),
       print_ui: Some(ui),
     };
     state.selection = (index, index);
-    state.private_run_macro(&mut scripted, recursion_depth)?;
+    state.private_run_macro(&mut scripted, recursion_depth + 1)?;
   }
   Ok(())
 }
@@ -143,9 +143,9 @@ pub fn global_interactive(
   }
 
   // Mark first, to check if the expression is valid
-  mark_matching(state, selection, &expressions[0], command == 'V', recursion_depth)?;
+  mark_matching(state, selection, &expressions[0], command == 'V', recursion_depth + 1)?;
   // With all data gathered we fetch and iterate over the lines
-  while let Some(index) = get_marked(state, recursion_depth) {
+  while let Some(index) = get_marked(state, recursion_depth + 1) {
     // Print the line, so the user knows what they are changing
     ui.print_selection(state, (index, index), state.n, state.l)?;
     // Get input and create dummy-ui with it
@@ -161,7 +161,7 @@ pub fn global_interactive(
       print_ui: Some(ui),
     };
     state.selection = (index, index);
-    state.private_run_macro(&mut scripted, recursion_depth)?;
+    state.private_run_macro(&mut scripted, recursion_depth + 1)?;
   }
   Ok(())
 }
