@@ -105,7 +105,7 @@ fn literal_toggle_on() {
   );
   ed.run_macro(&mut ui).expect("Error running test");
   assert_eq!(ed.l, true);
-  assert!(ed.buffer.is_empty());
+  assert!(ed.history.current().is_empty());
 }
 #[test]
 fn literal_toggle_off() {
@@ -128,5 +128,5 @@ fn literal_toggle_off() {
   ed.l = true;
   ed.run_macro(&mut ui).expect("Error running test");
   assert_eq!(ed.l, false);
-  assert!(ed.buffer.is_empty());
+  assert!(ed.history.current().is_empty());
 }

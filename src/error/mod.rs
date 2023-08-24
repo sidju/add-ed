@@ -1,13 +1,44 @@
 //! Holds Error type for the crate
 
+use std::rc::Rc;
+
 pub type Result<T> = std::result::Result<T, EdError>;
 
+#[macro_use]
 mod internal;
 pub use internal::*;
 
-// Define traits for UI and IO errors
-pub trait UIError: std::error::Error + as_any::AsAny + 'static {}
-pub trait IOError: std::error::Error + as_any::AsAny + 'static {}
+// Define structs and traits for UI and IO errors
+pub trait UIErrorTrait: std::error::Error + as_any::AsAny + 'static {}
+#[derive(Clone, Debug)]
+pub struct UIError {
+  pub inner: Rc<dyn UIErrorTrait>,
+}
+impl UIError {
+  /// Helper for downcasting into the internal error type
+  ///
+  /// Due to how finnicky this is to get right, with coercing the Rc<T> into &T
+  /// before downcasting, I very much recommend using this helper.
+  pub fn downcast_ref<T: UIErrorTrait>(&self) -> Option<&T> {
+    use as_any::Downcast;
+    (&*self.inner).downcast_ref::<T>()
+  }
+}
+pub trait IOErrorTrait: std::error::Error + as_any::AsAny + 'static {}
+#[derive(Clone, Debug)]
+pub struct IOError {
+  pub inner: Rc<dyn IOErrorTrait>,
+}
+impl IOError {
+  /// Helper for downcasting into the internal error type
+  ///
+  /// Due to how finnicky this is to get right, with coercing the Rc<T> into &T
+  /// before downcasting, I very much recommend using this helper.
+  pub fn downcast_ref<T: IOErrorTrait>(&self) -> Option<&T> {
+    use as_any::Downcast;
+    (&*self.inner).downcast_ref::<T>()
+  }
+}
 
 // Large trait implementations in their own files
 mod display;
@@ -19,14 +50,20 @@ mod partialeq;
 /// IO errors aren't sure to be comparable they are assumed to be equal, so 
 /// library users can easily identify UI resp. IO errors and downcast them for
 /// the proper comparison for the abstracted type.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum EdError {
   /// Internal error, usually from something OS related.
   Internal(InternalError),
   /// A holder for errors from the IO implementation.
-  IO(Box<dyn IOError>),
+  IO(IOError),
   /// A holder for errors from the UI implementation.
-  UI(Box<dyn UIError>),
+  UI(UIError),
+
+  /// Execution recursed more times than [`Ed.recursion_limit`], indicating
+  /// infinite recursion.
+  ///
+  /// Contains no details until someone writes stack unwinding for it.
+  InfiniteRecursion,
 
   // Selection/index interpretation/validation errors
   /// Given index exceeds size of buffer.
@@ -103,7 +140,7 @@ pub enum EdError {
   UndoStepsNotInt(String),
   /// `J` command received a non numeric number of columns to reflow within.
   /// Holds given argument.
-  ReflowNotInt(String),
+  ReflowNotInt{error: String, text: String},
   /// The macro invoked wasn't found.
   /// Holds given macro name.
   MacroUndefined(String),
@@ -119,26 +156,40 @@ pub enum EdError {
 
 impl std::error::Error for EdError {}
 
-impl From<Box<dyn UIError>> for EdError {
-  fn from(e: Box<dyn UIError>) -> Self {
+impl From<UIError> for EdError {
+  fn from(e: UIError) -> Self {
     Self::UI(e)
   }
 }
-impl<E: UIError> From<E> for Box<dyn UIError> {
+impl<E: UIErrorTrait> From<E> for UIError {
   fn from(e: E) -> Self {
-    Box::new(e)
+    Self{ inner: Rc::new(e) }
   }
 }
-impl From<Box<dyn IOError>> for EdError {
-  fn from(e: Box<dyn IOError>) -> Self {
+// Causes conflicting trait bounds error for now. Instead use
+// Into::<UIError>::into(error).into() to convert via UIError.
+//impl<E: UIErrorTrait> From<E> for EdError {
+//  fn from(e: E) -> Self {
+//    Self::UI(e.into())
+//  }
+//}
+impl From<IOError> for EdError {
+  fn from(e: IOError) -> Self {
     Self::IO(e)
   }
 }
-impl<E: IOError> From<E> for Box<dyn IOError> {
+impl<E: IOErrorTrait> From<E> for IOError {
   fn from(e: E) -> Self {
-    Box::new(e)
+    Self{ inner: Rc::new(e) }
   }
 }
+// Causes conflicting trait bounds error for now. Instead use
+// Into::<IOError>::into(error).into() to convert via IOError.
+//impl<E: IOErrorTrait> From<E> for EdError {
+// fn from(e: E) -> Self {
+//   Self::IO(e.into())
+// }
+//}
 impl From<InternalError> for EdError {
   fn from(e: InternalError) -> Self {
     Self::Internal(e)

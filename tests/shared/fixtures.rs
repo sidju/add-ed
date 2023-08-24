@@ -9,7 +9,10 @@ use add_ed::{
   ui::ScriptedUI,
   Ed,
   error::EdError,
+  PubLine,
+  Clipboard,
 };
+use std::rc::Rc;
 
 // A basic fixture
 // Sets up state as though reading buffer contents from a file and runs the
@@ -165,19 +168,23 @@ impl IOTest {
       &mut self.init_io,
       self.init_filepath.to_owned(),
     );
-    let init_clipboard: Vec<String> = self.init_clipboard.iter()
-      .map(|x| x.to_string())
-      .collect()
-    ;
-    let init_buffer: Vec<String> = self.init_buffer.iter().map(|x| {
-      let mut s = x.to_string();
-      s.push('\n');
-      s
-    }).collect();
-    ed.buffer.insert(init_clipboard, 0).unwrap();
-    ed.buffer.cut((1,ed.buffer.len())).unwrap();
-    ed.buffer.insert(init_buffer, 0).unwrap();
-    ed.buffer.set_saved();
+    let init_clipboard = self.init_clipboard.iter().fold(Clipboard::new(), |mut c, x| {
+      c.push(PubLine{
+        tag: '\0',
+        text: Rc::new(format!("{}\n", x)),
+      });
+      c
+    });
+    ed.clipboard = init_clipboard;
+    let init_buffer = self.init_buffer.iter().fold(Clipboard::new(), |mut c, x| {
+      c.push(PubLine{
+        tag: '\0',
+        text: Rc::new(format!("{}\n", x)),
+      });
+      c
+    });
+    ed.history.current_mut().unwrap().append(&mut (&init_buffer).into());
+    ed.history.set_saved();
     // Create scripted UI (with mock UI, which tracks print invocations)
     let mut inner_ui = MockUI{ prints_history: Vec::new() };
     let mut ui = ScriptedUI{
@@ -191,7 +198,7 @@ impl IOTest {
     };
 
     // Run test
-    ed.selection = (1,ed.buffer.len());
+    ed.selection = (1,ed.history.current().len());
     ed.run_macro(&mut ui).expect("Error running test.");
 
     // Verify state after test execution
@@ -206,35 +213,23 @@ impl IOTest {
       "Filepath after test (left) didn't match expectations (right)."
     );
     assert_eq!(
-    ed.buffer.saved(),
+      ed.history.saved(),
       self.expected_buffer_saved,
       "Buffer.saved() (left) after test didn't match expectations (right)."
     );
     assert_eq!(
-      if ed.buffer.len() != 0 {
-        ed.buffer.get_selection((1,ed.buffer.len()))
-          .unwrap()
-          .map(|s| s.trim_end_matches('\n'))
-          .collect::<Vec<&str>>()
-      } else {
-        vec![]
-      },
+      ed.history.current().iter()
+        .map(|l| l.text.trim_end_matches('\n'))
+        .collect::<Vec<&str>>()
+      ,
       self.expected_buffer,
       "Buffer contents (left) after test didn't match expectations (right)."
     );
-    // Switch out buffer contents to clipboard contents
-    let end_of_buf = ed.buffer.len();
-    ed.buffer.paste(end_of_buf).unwrap();
-    if end_of_buf != 0 { ed.buffer.cut((1,end_of_buf)).unwrap(); }
     assert_eq!(
-      if ed.buffer.len() != 0 {
-        ed.buffer.get_selection((1,ed.buffer.len()))
-          .unwrap()
-          .map(|s| s.trim_end_matches('\n'))
-          .collect::<Vec<&str>>()
-      } else {
-        vec![]
-      },
+      ed.clipboard[..].iter()
+        .map(|l| l.text.trim_end_matches('\n'))
+        .collect::<Vec<&str>>()
+      ,
       self.expected_clipboard,
       "Cliboard contents (left) after test didn't match expectations (right)."
     );

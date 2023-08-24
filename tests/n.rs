@@ -103,10 +103,10 @@ fn numbered_toggle_on() {
     &mut io,
     "path".to_owned(),
   );
-  ed.buffer.set_saved();
+  ed.history.set_saved();
   ed.run_macro(&mut ui).expect("Error running test");
   assert_eq!(ed.n, true);
-  assert!(ed.buffer.is_empty());
+  assert!(ed.history.current().is_empty());
 }
 #[test]
 fn numbered_toggle_off() {
@@ -126,9 +126,9 @@ fn numbered_toggle_off() {
     &mut io,
     "path".to_owned(),
   );
-  ed.buffer.set_saved();
+  ed.history.set_saved();
   ed.n = true;
   ed.run_macro(&mut ui).expect("Error running test");
   assert_eq!(ed.n, false);
-  assert!(ed.buffer.is_empty());
+  assert!(ed.history.current().is_empty());
 }

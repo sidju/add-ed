@@ -42,11 +42,14 @@ use std::collections::HashMap;
 
 pub mod messages;
 
+#[macro_use]
 pub mod error;
 pub use error::{
   Result,
   EdError,
 };
+use error::InternalError;
+
 mod cmd;
 
 pub mod ui;
@@ -54,11 +57,17 @@ use ui::{UI, UILock};
 pub mod io;
 use io::IO;
 
-pub mod buffer;
-use buffer::Buffer;
-
 mod history;
 pub use history::History;
+
+pub use buffer::iters::*;
+mod buffer;
+pub use buffer::{
+  Line, // Cannot be directly constructed by lib users, but still relevant
+  Buffer,
+  PubLine,
+  Clipboard,
+};
 
 /// A ready parsed 's' invocation, including command and printing flags
 pub struct Substitution {
@@ -84,13 +93,12 @@ pub struct Ed <'a> {
   /// Holds the past, present and sometimes future states of the editing buffer
   ///
   /// See [`History`] documentation for how to use.
-  pub history: History,
-  /// The buffer holds Ed's text data.
+  pub history: History<Buffer>,
+  /// The current clipboard contents
   ///
-  /// It also abstracts basically all Ed editing operations, though it is
-  /// often recommended to use Ed::run_command instead so state is updated
-  /// correctly.
-  pub buffer: Buffer,
+  /// Uses a reduced Line, since some of the internal data in Line could cause
+  /// unexpected behavior if pasted as is.
+  pub clipboard: Clipboard,
   /// Tracks the currently selected lines in the buffer.
   ///
   /// Inclusive 1-indexed start and end bounds over selected lines. Selected
@@ -136,11 +144,20 @@ pub struct Ed <'a> {
   /// The previous error that occured.
   ///
   /// Is printed by `h` command.
-  pub error: Option<String>,
+  ///
+  /// UI errors occuring outside of Ed should also be written to this variable,
+  /// so `h` prints the latest error that occured in the whole application.
+  pub error: Option<EdError>,
   /// Configuration field for macros.
   ///
   /// A map from macro name to string of newline separated commands.
   pub macros: HashMap<String, String>,
+  /// Set how many recursions should be allowed.
+  ///
+  /// One recursion is counted as one macro or 'g'/'v'/'G'/'V' invocation. Under
+  /// 2 is likely to interfere with basic use, 4 will require that macros don't
+  /// call into eachother, 16 is unlikely to abort needlessly.
+  pub recursion_limit: usize,
 }
 
 impl <'a, > Ed <'a> {
@@ -156,16 +173,17 @@ impl <'a, > Ed <'a> {
       // Init internal state
       selection,
       history: History::new(),
-      buffer: Buffer::new(),
       prev_s: None,
       prev_shell_command: String::new(),
       // Sane defaults for externally visible variables
+      clipboard: Clipboard::new(),
       error: None,
       print_errors: true,
       n: false,
       l: false,
       cmd_prefix: Some(':'),
       macros: HashMap::new(),
+      recursion_limit: 16,
       // And the given values
       io,
       file,
@@ -180,11 +198,22 @@ impl <'a, > Ed <'a> {
     ui: &mut dyn UI,
     command: &str,
   ) -> Result<bool> {
+    self.private_run_command(ui, command, 0)
+  }
+  // Exists to handle nesting depth, for nested 'g' invocations, without
+  // exposing that argument to the public interface (since it will always be 0
+  // when called from the public API).
+  fn private_run_command(
+    &mut self,
+    ui: &mut dyn UI,
+    command: &str,
+    recursion_depth: usize,
+  ) -> Result<bool> {
     // Just hand execution into the cmd module
-    match cmd::run(self, ui, command) {
+    match cmd::run(self, ui, command, recursion_depth) {
       // If error, note it in state
       Err(e) => {
-        self.error = Some(e.to_string());
+        self.error = Some(e.clone());
         Err(e)
       },
       x => x,
@@ -199,15 +228,26 @@ impl <'a, > Ed <'a> {
     &mut self,
     ui: &mut dyn UI,
   ) -> Result<bool> {
-    // Define a temporary closure, since try blocks aren't stabilized
+    self.private_get_and_run_command(ui, 0)
+  }
+  // Exists to handle nesting depth, for nested 'g' invocations, without
+  // exposing that argument to the public interface (since it will always be 0
+  // when called from the public API).
+  fn private_get_and_run_command(
+    &mut self,
+    ui: &mut dyn UI,
+    recursion_depth: usize,
+  ) -> Result<bool> {
+    // Define a temporary closure to catch UI errors, needed since try blocks
+    // aren't stabilized
     let mut clos = || {
       let cmd = ui.get_command(self, self.cmd_prefix)?;
-      self.run_command(ui, &cmd)
+      self.private_run_command(ui, &cmd, recursion_depth)
     };
     // Run it, save any error, and forward result
     match clos() {
       Err(e) => {
-        self.error = Some(e.to_string());
+        self.error = Some(e.clone());
         Err(e)
       },
       x => x,
@@ -221,9 +261,19 @@ impl <'a, > Ed <'a> {
     &mut self,
     ui: &mut dyn UI,
   ) -> Result<()> {
+    self.private_run_macro(ui, 0)
+  }
+  // Exists to handle nesting depth, for nested 'g' invocations, without
+  // exposing that argument to the public interface (since it will always be 0
+  // when called from the public API).
+  fn private_run_macro(
+    &mut self,
+    ui: &mut dyn UI,
+    recursion_depth: usize,
+  ) -> Result<()> {
     // Loop over it, handling errors, until quit received
     loop {
-      if self.get_and_run_command(ui)? { break; }
+      if self.private_get_and_run_command(ui, recursion_depth)? { break; }
     }
     Ok(())
   }

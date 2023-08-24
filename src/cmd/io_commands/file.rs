@@ -1,6 +1,6 @@
 use super::*;
 
-pub(super) fn filename(
+pub fn filename(
   state: &mut Ed<'_>,
   ui: &mut dyn UI,
   path: &str,
@@ -14,7 +14,7 @@ pub(super) fn filename(
     }
     Some(x) => { // Set new filename
       match x {
-        Path::Command(_) => return Err(EdError::DefaultFileUnset),
+        Path::Command(_) => return Err(EdError::DefaultFileInvalid(path.into())),
         Path::File(file) => { state.file = file.to_owned(); },
       }
     }
@@ -22,7 +22,32 @@ pub(super) fn filename(
   Ok(())
 }
 
-pub(super) fn read_from_file(
+fn insert<'a>(
+  buffer: &mut Buffer,
+  data: impl Iterator<Item = &'a str>,
+  index: usize,
+) -> Result<usize> {
+  // Index should be verified by calling function
+  let mut tail = buffer.split_off(index);
+  let start = buffer.len();
+  for line in data {
+    buffer.push(Line::new(line, '\0'));
+  }
+  let end = buffer.len();
+  buffer.append(&mut tail);
+  Ok(end - start)
+}
+fn replace_buffer<'a>(
+  buffer: &mut Buffer,
+  data: impl Iterator<Item = &'a str>,
+) -> Result<usize> {
+  buffer.clear();
+  for line in data {
+    buffer.push(Line::new(line, '\0'));
+  }
+  Ok(buffer.len())
+}
+pub fn read_from_file(
   state: &mut Ed<'_>,
   ui: &mut dyn UI,
   selection: Option<Sel<'_>>,
@@ -31,8 +56,8 @@ pub(super) fn read_from_file(
 ) -> Result<()> {
   let index =
     if command == 'r' {
-      let i = interpret_selection(selection, state.selection, &state.buffer)?.1;
-      verify_index(&state.buffer, i)?;
+      let i = interpret_selection(&state, selection, state.selection)?.1;
+      state.history.current().verify_index(i)?;
       Ok(Some(i))
     }
     else if selection.is_none() {
@@ -42,7 +67,7 @@ pub(super) fn read_from_file(
       Err(EdError::SelectionForbidden)
     }
   ?;
-  if !state.buffer.saved() && command == 'e' {
+  if !state.history.saved() && command == 'e' {
     Err(EdError::UnsavedChanges)
   }
   else {
@@ -54,26 +79,24 @@ pub(super) fn read_from_file(
           &state.file,
           &state.prev_shell_command,
         )?;
-        state.prev_shell_command = substituted.clone();
         if changed {
           ui.print_message( &substituted )?;
         }
-        state.io.run_read_command(
+        let data = state.io.run_read_command(
           &mut ui.lock_ui(),
-          substituted,
-        )?
+          substituted.clone(),
+        )?;
+        state.prev_shell_command = substituted;
+        data
       },
       Path::File(file) => {
         state.io.read_file(file, command == 'E')?
       },
     };
-    // We are forced to aggregate to convert into the format insert wants.
-    // This has the bonus of telling us how many lines we are inserting.
-    let data: Vec<&str> = unformated_data.split_inclusive('\n').collect();
-    let datalen = data.len();
-    match index {
-      Some(i) => state.buffer.insert(data, i),
-      None => state.buffer.replace_buffer(data),
+    let data = unformated_data.split_inclusive('\n');
+    let datalen = match index {
+      Some(i) => insert(state.history.current_mut()?, data, i),
+      None => replace_buffer(state.history.current_mut()?, data),
     }?;
     // Handle after-effects
     let index = index.unwrap_or(0) + 1;
@@ -97,9 +120,9 @@ pub(super) fn read_from_file(
         // Should only occur if we cleared buffer or it was empty before read.
         // Rule of least surprise means 'r' shouldn't do this even then, since
         // it normally won't.
-        if state.buffer.len() == datalen && command != 'r' {
+        if state.history.current().len() == datalen && command != 'r' {
           state.file = file.to_owned();
-          state.buffer.set_saved();
+          state.history.set_saved();
         }
       },
     }
@@ -107,7 +130,7 @@ pub(super) fn read_from_file(
   }
 }
 
-pub(super) fn write_to_file(
+pub fn write_to_file(
   state: &mut Ed<'_>,
   ui: &mut dyn UI,
   selection: Option<Sel<'_>>,
@@ -120,8 +143,8 @@ pub(super) fn write_to_file(
     // If selection given we interpret it
     // (When explicit selection is whole buffer we change it to None to signal that)
     Some(s) => {
-      let inter = interpret_selection(Some(s), state.selection, &state.buffer)?;
-      if inter == (1, state.buffer.len()) {
+      let inter = interpret_selection(&state, Some(s), state.selection)?;
+      if inter == (1, state.history.current().len()) {
         None
       } else {
         Some(inter)
@@ -141,9 +164,9 @@ pub(super) fn write_to_file(
   };
   // If the 'q' flag is set the whole buffer must be selected
   if q && sel.is_some() { return Err(EdError::UnsavedChanges); }
-  // Read out data from buffer
-  let data = state.buffer.get_selection(
-    sel.unwrap_or((1, state.buffer.len()))
+  // Read out data from buffer (Also verifies selection, to the extent needed)
+  let data = state.history.current().get_lines(
+    sel.unwrap_or((1, state.history.current().len()))
   )?
   ;
   // Write into command or file, print nr of bytes written
@@ -166,7 +189,7 @@ pub(super) fn write_to_file(
       // normally won't
       if sel.is_none() && command != 'W' {
         state.file = file.to_string();
-        state.buffer.set_saved();
+        state.history.set_saved();
       }
     },
     Path::Command(cmd) => {
@@ -197,64 +220,4 @@ pub(super) fn write_to_file(
     },
   }
   Ok(q)
-}
-
-pub fn run_command(
-  state: &mut Ed<'_>,
-  ui: &mut dyn UI,
-  selection: Option<Sel<'_>>,
-  ch: char,
-  command: &str,
-) -> Result<()> {
-  // If ! we default to no selection, if | we default to prior selection
-  let sel = if ch == '!' && selection.is_none() {
-    None
-  }
-  else {
-    Some(interpret_selection(selection, state.selection, &state.buffer)?)
-  };
-  let (changed, substituted) = command_substitutions(
-    command,
-    &state.file,
-    &state.prev_shell_command,
-  )?;
-  state.prev_shell_command = substituted.clone();
-  if changed {ui.print_message( &substituted )?;}
-  // Depending on selection or not we use run_transform_command or run_command
-  match sel {
-    // When there is no selection we just run the command, no buffer interaction
-    None => {
-      state.io.run_command(
-        &mut ui.lock_ui(),
-        substituted,
-      )?;
-      ui.print_message(&ch.to_string())?;
-    },
-    // When there is a selection we pipe that selection through the command and
-    // replace it with the output
-    Some(s) => {
-      let data = state.buffer.get_selection(s)?;
-      let transformed = state.io.run_transform_command(
-        &mut ui.lock_ui(),
-        substituted,
-        data,
-      )?;
-      let lines: Vec<&str> = transformed.split_inclusive('\n').collect();
-      let nr_lines = lines.len();
-      state.buffer.change(lines, s)?;
-      state.selection = if nr_lines != 0 {
-        (s.0, s.0 + nr_lines - 1)
-      }
-      // Same logic as in 'd' and 'c' command
-      else {
-        (1.max(s.0 - 1), s.0 - 1)
-      };
-      ui.print_message(&format!(
-        "Transformation returned {} bytes through command `{}`",
-        transformed.len(),
-        &state.prev_shell_command,
-      ))?;
-    },
-  }
-  Ok(())
 }

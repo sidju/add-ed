@@ -1,7 +1,7 @@
 use crate::{
   io::IO,
   ui::UILock,
-  buffer::SelectionIter,
+  buffer::iters::LinesIter,
 };
 use super::Result;
 
@@ -20,7 +20,7 @@ impl std::fmt::Display for FakeIOError {
   }
 }
 impl std::error::Error for FakeIOError {}
-impl crate::error::IOError for FakeIOError {}
+impl crate::error::IOErrorTrait for FakeIOError {}
 
 use std::collections::HashMap;
 
@@ -67,7 +67,7 @@ impl IO for FakeIO {
   fn run_write_command(&mut self,
     _ui: &mut UILock,
     command: String,
-    input: SelectionIter,
+    input: LinesIter,
   ) -> Result<usize> {
     let input = input.fold(String::new(), |mut s, x| {s.push_str(x); s});
     let inputlen = input.len();
@@ -82,7 +82,7 @@ impl IO for FakeIO {
   fn run_transform_command(&mut self,
     _ui: &mut UILock,
     command: String,
-    input: SelectionIter,
+    input: LinesIter,
   ) -> Result<String> {
     let input = input.fold(String::new(), |mut s, x| {s.push_str(x); s});
     match self.fake_shell.get(
@@ -96,7 +96,7 @@ impl IO for FakeIO {
   fn write_file(&mut self,
     path: &str,
     append: bool,
-    data: SelectionIter,
+    data: LinesIter,
   ) -> Result<usize> {
     let base_data = if append {
       match self.fake_fs.get(path) {

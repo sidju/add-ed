@@ -1,6 +1,22 @@
-pub use super::*;
+//! Module for history snapshotting and management.
 
-/// A history abstraction over the `Vec<Line>` style of buffer used by add-ed.
+use crate::{EdError, InternalError, Result};
+use std::fmt::Debug;
+
+/// A special type of Clone for [`History`]
+///
+/// Needed because [`History`] requires a Clone that re-uses as much memory as
+/// possible, while normal Clone is usually expected to create unrelated copies
+/// of data.
+pub trait Snapshot{
+  /// Create a memory efficient copy of self
+  ///
+  /// Beware, mutation of the created copy (if even possible) may modify the
+  /// original.
+  fn create_snapshot(&self) -> Self;
+}
+
+/// A history abstraction over generic objects used by add-ed.
 ///
 /// Handles snapshotting and undo/redo to move over the history of snapshots.
 /// Currently uses a revert style of undo, more details/links on github.
@@ -11,8 +27,10 @@ pub use super::*;
 /// [`History.snapshot`] (for use during script/macro execution, to make each
 /// snapshot correspond to a user action).
 #[derive(Clone, Debug)]
-pub struct History<T>{
-  snapshots: Vec<Vec<T>>,
+pub struct History<T> where
+  T: Default + Debug + Snapshot + PartialEq,
+{
+  snapshots: Vec<T>,
   viewed_i: usize,
   saved_i: Option<usize>,
   /// If true all calls to [`History::snapshot`] are ignored
@@ -21,15 +39,13 @@ pub struct History<T>{
   /// multiple snapshots for what the user sees as a single action.
   pub dont_snapshot: bool,
 }
-impl<T> Default for History<T>
-where
-  T: std::cmp::PartialEq + Clone
+impl<T> Default for History<T> where
+  T: Default + Debug + Snapshot + PartialEq,
 {
   fn default() -> Self { Self::new() }
 }
-impl<T> History<T>
-where
-  T: std::cmp::PartialEq + Clone
+impl <T> History<T> where
+  T: Default + Debug + Snapshot + PartialEq,
 {
   /// Create new [`History`] instance
   ///
@@ -37,7 +53,7 @@ where
   /// - Considered saved at initial empty state.
   pub fn new() -> Self {
     Self{
-      snapshots: vec![vec![]],
+      snapshots: vec![T::default()],
       viewed_i: 0,
       saved_i: Some(0),
       dont_snapshot: false,
@@ -71,7 +87,7 @@ where
   }
 
   /// Get an immutable view into the currently viewed point in history
-  pub fn current(&self) -> &Vec<T> {
+  pub fn current(&self) -> &T {
     &self.snapshots[self.viewed_i]
   }
   /// Get a mutable state to make new changes
@@ -80,7 +96,7 @@ where
   /// history.
   /// - Unless self.dont_snapshot, will create a new snapshot.
   /// - Returns mutable access to the snapshot at the end of history.
-  pub(super) fn current_mut(&mut self) -> Result<&mut Vec<T>> {
+  pub fn current_mut(&mut self) -> Result<&mut T> {
     self.snapshot()?;
     Ok(&mut self.snapshots[self.viewed_i])
   }
@@ -115,7 +131,7 @@ where
   fn internal_create_snapshot(&mut self) {
     // Push the current index to end of history
     // (reverts if in history, snapshots if at end of history)
-    self.snapshots.push(self.snapshots[self.viewed_i].clone());
+    self.snapshots.push(self.snapshots[self.viewed_i].create_snapshot());
     // Move to end of history
     self.viewed_i = self.snapshots.len() - 1;
   }

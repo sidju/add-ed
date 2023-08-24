@@ -10,7 +10,7 @@ use super::Result;
 use std::collections::VecDeque;
 
 #[cfg(feature = "initial_input_data")]
-use crate::EdError;
+use crate::error::UIError;
 
 /// Error type for Scripted UI which can only occur if you enable the feature
 /// `initial_input_data` and given initial data to [`ScriptedUI::get_input`]
@@ -26,7 +26,7 @@ impl std::fmt::Display for UnsupportedInitialData {
 #[cfg(feature = "initial_input_data")]
 impl std::error::Error for UnsupportedInitialData {}
 #[cfg(feature = "initial_input_data")]
-impl crate::error::UIError for UnsupportedInitialData {}
+impl crate::error::UIErrorTrait for UnsupportedInitialData {}
 
 /// This is a scripted UI. It returns the scripted input without querying user.
 ///
@@ -64,7 +64,7 @@ impl <'a> UI for ScriptedUI<'a> {
     #[cfg(feature = "initial_input_data")]
     {
       if initial_buffer.is_some() {
-        return Err(EdError::UI(Box::new(UnsupportedInitialData{})))
+        return Err(Into::<UIError>::into(UnsupportedInitialData{}).into())
       }
     }
     let mut ret = Vec::new();

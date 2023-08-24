@@ -8,7 +8,10 @@ use add_ed::{
   ui::ScriptedUI,
   error::EdError,
   Ed,
+  Clipboard,
+  PubLine,
 };
+use std::rc::Rc;
 
 pub fn inner_fixture(
   init_clipboard: Vec<&str>,
@@ -31,22 +34,27 @@ pub fn inner_fixture(
     &mut io,
     init_filepath.to_owned(),
   );
-  let init_clipboard: Vec<String> = init_clipboard.iter().map(|x| {
-    let mut s = x.to_string();
-    s.push('\n');
-    s
-  }).collect();
-  let init_buffer: Vec<String> = init_buffer.iter().map(|x| {
-    let mut s = x.to_string();
-    s.push('\n');
-    s
-  }).collect();
+  let init_clipboard = init_clipboard.iter().fold(Clipboard::new(), |mut c, x| {
+    c.push(PubLine{
+      tag: '\0',
+      text: Rc::new(format!("{}\n", x)),
+    });
+    c
+  });
   if !init_clipboard.is_empty() {
-    ed.buffer.insert(init_clipboard, 0).unwrap();
-    ed.buffer.cut((1,ed.buffer.len())).unwrap();
+    ed.clipboard = init_clipboard;
   }
-  ed.buffer.insert(init_buffer, 0).unwrap();
-  if init_buffer_saved { ed.buffer.set_saved(); }
+  // We construct a Clipboard, since we cannot construct Buffer directly and it
+  // can be easily converted into Buffer when needed.
+  let init_buffer = init_buffer.iter().fold(Clipboard::new(), |mut c, x| {
+    c.push(PubLine{
+      tag: '\0',
+      text: Rc::new(format!("{}\n", x)),
+    });
+    c
+  });
+  ed.history.current_mut().unwrap().append(&mut (&init_buffer).into());
+  if init_buffer_saved { ed.history.set_saved(); }
   // Create scripted UI (with mock UI, which tracks print invocations)
   let mut inner_ui = MockUI{ prints_history: Vec::new() };
   let mut ui = ScriptedUI{
@@ -60,7 +68,7 @@ pub fn inner_fixture(
   };
 
   // Set correct default selection and run test
-  ed.selection = (1,ed.buffer.len());
+  ed.selection = (1,ed.history.current().len());
   assert_eq!(
     ed.run_macro(&mut ui),
     expected_result,
@@ -69,19 +77,15 @@ pub fn inner_fixture(
 
   // Verify state after execution
   assert_eq!(
-    if ed.buffer.len() != 0 {
-      ed.buffer.get_selection((1,ed.buffer.len()))
-        .unwrap()
-        .map(|s| s.trim_end_matches('\n'))
-        .collect::<Vec<&str>>()
-    } else {
-      vec![]
-    },
+    ed.history.current()[..].iter()
+      .map(|l| l.text.trim_end_matches('\n'))
+      .collect::<Vec<&str>>()
+    ,
     expected_buffer,
     "Buffer contents after test (left) didn't match expectations (right)."
   );
   assert_eq!(
-    ed.buffer.saved(),
+    ed.history.saved(),
     expected_buffer_saved,
     "Buffer.saved() after test (left) didn't match expectations (right)."
   );
@@ -95,19 +99,11 @@ pub fn inner_fixture(
     expected_filepath,
     "state.filepath after test (left) didn't match expectations (right)."
   );
-  // Switch out ed.buffer contents to clipboard contents
-  let end_of_buf = ed.buffer.len();
-  ed.buffer.paste(end_of_buf).unwrap();
-  if end_of_buf != 0 { ed.buffer.cut((1,end_of_buf)).unwrap(); }
   assert_eq!(
-    if ed.buffer.len() != 0 {
-      ed.buffer.get_selection((1,ed.buffer.len()))
-        .unwrap()
-        .map(|s| s.trim_end_matches('\n'))
-        .collect::<Vec<&str>>()
-    } else {
-      vec![]
-    },
+    ed.clipboard[..].iter()
+      .map(|l| l.text.trim_end_matches('\n'))
+      .collect::<Vec<&str>>()
+    ,
     expected_clipboard,
     "Clipboard contents after test (left) didn't match expectations (right)."
   );

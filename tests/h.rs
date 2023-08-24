@@ -66,13 +66,13 @@ fn help() {
     &mut io,
     "path".to_owned(),
   );
-  assert_eq!(ed.run_macro(&mut ui), Err(EdError::SelectionEmpty((1,0))));
+  assert_eq!(ed.run_macro(&mut ui), Err(EdError::IndexTooBig{index:1,buffer_len:0}));
   ed.run_macro(&mut ui).expect("Error running test");
-  assert!(ed.buffer.is_empty());
+  assert!(ed.history.current().is_empty());
   assert_eq!(
     vec![
       Print{
-        text: vec![EdError::SelectionEmpty((1,0)).to_string(),],
+        text: vec![EdError::IndexTooBig{index:1,buffer_len:0}.to_string(),],
         n: false,
         l: false,
       },
@@ -102,7 +102,7 @@ fn help_toggle() {
   assert_eq!(ed.print_errors, true);
   ed.run_macro(&mut ui).expect("Error running test");
   assert_eq!(ed.print_errors, false);
-  assert!(ed.buffer.is_empty());
+  assert!(ed.history.current().is_empty());
 }
 
 #[test]

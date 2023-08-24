@@ -27,7 +27,7 @@ fn quit() {
     &mut io,
     "path".to_owned(),
   );
-  ed.buffer.set_saved();
+  ed.history.set_saved();
   assert!(ed.run_command(&mut ui, "q\n").expect("Error running test"));
 }
 
@@ -51,6 +51,6 @@ fn force_quit_unsaved() {
     &mut io,
     "path".to_owned(),
   );
-  ed.buffer.history.set_unsaved();
+  ed.history.set_unsaved();
   assert!(ed.run_command(&mut ui, "Q\n").expect("Error running test"));
 }

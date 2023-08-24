@@ -31,7 +31,7 @@ fn change_nobuffer() {
   ErrorTest{
     init_buffer: vec![],
     command_input: vec!["c"],
-    expected_error: EdError::SelectionEmpty((1,0)),
+    expected_error: EdError::IndexTooBig{index:1,buffer_len:0},
   }.run();
 }
 // We don't do any noselection versions of 'c' testing, since default selection

@@ -2,17 +2,15 @@
 //!
 //! Used to abstract filesystem and shell interactions.
 
-type Result<T> = core::result::Result<T, Box<dyn crate::error::IOError>>;
+type Result<T> = core::result::Result<T, crate::error::IOError>;
 
 use crate::UILock;
-use crate::buffer::SelectionIter;
+use crate::LinesIter;
 
 #[cfg(any(feature = "testing", fuzzing, test))]
 pub mod fake_io;
 #[cfg(any(feature = "testing", fuzzing, test))]
 pub mod dummy_io;
-#[cfg(any(feature = "testing", fuzzing, test))]
-pub mod test_helpers;
 
 #[cfg(feature = "local_io")]
 pub mod local_io;
@@ -60,7 +58,7 @@ pub trait IO {
     // Command string from user (with basic substitutions interpreted)
     command: String,
     // Iterator over string slices to send over stdin
-    input: SelectionIter,
+    input: LinesIter,
   ) -> Result<usize>;
 
   /// Run a transform command, taking part of buffer via stdin and returning it
@@ -74,7 +72,7 @@ pub trait IO {
     // Command string from user (with basic substitutions interpreted)
     command: String,
     // Iterator over string slices to send over stdin
-    input: SelectionIter,
+    input: LinesIter,
   ) -> Result<String>;
 
   /// Normal file write
@@ -85,7 +83,7 @@ pub trait IO {
     // If appending
     append: bool,
     // Data to write to file
-    data: SelectionIter,
+    data: LinesIter,
   ) -> Result<usize>;
 
   /// Normal file read

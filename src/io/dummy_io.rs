@@ -1,7 +1,7 @@
 use crate::{
   io::IO,
   ui::UILock,
-  buffer::SelectionIter,
+  buffer::iters::LinesIter,
 };
 
 use super::Result;
@@ -29,21 +29,21 @@ impl IO for DummyIO {
   fn run_write_command(&mut self,
     _ui: &mut UILock,
     _command: String,
-    _input: SelectionIter,
+    _input: LinesIter,
   ) -> Result<usize> {
     unimplemented!()
   }
   fn run_transform_command(&mut self,
     _ui: &mut UILock,
     _command: String,
-    _input: SelectionIter,
+    _input: LinesIter,
   ) -> Result<String> {
     unimplemented!()
   }
   fn write_file(&mut self,
     _path: &str,
     _append: bool,
-    _data: SelectionIter,
+    _data: LinesIter,
   ) -> Result<usize> {
     unimplemented!()
   }

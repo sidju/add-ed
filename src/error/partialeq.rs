@@ -68,7 +68,9 @@ impl std::cmp::PartialEq for EdError {
       },
       (ScrollNotInt(x),ScrollNotInt(y)) => x == y,
       (UndoStepsNotInt(x),UndoStepsNotInt(y)) => x == y,
-      (ReflowNotInt(x),ReflowNotInt(y)) => x == y,
+      (ReflowNotInt{error: a, text: b},ReflowNotInt{error: c, text: d}) => {
+        a == c && b == d
+      },
       (MacroUndefined(x),MacroUndefined(y)) => x == y,
 
       (FlagDuplicate(x),FlagDuplicate(y)) => x == y,

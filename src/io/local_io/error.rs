@@ -45,7 +45,7 @@ impl LocalIOError {
 }
 
 impl std::error::Error for LocalIOError {}
-impl crate::error::IOError for LocalIOError {}
+impl crate::error::IOErrorTrait for LocalIOError {}
 
 impl std::fmt::Display for LocalIOError {
   fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {

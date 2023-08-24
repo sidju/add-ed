@@ -1,10 +1,9 @@
 /// Since default selections vary between commands and access to the
-/// buffer is needed for realisation we parse into an intermediate
+/// history is needed for realisation we parse into an intermediate
 /// struct which is then interpreted using additional data.
 
 use crate::error::*;
-
-use super::Buffer;
+use crate::Ed;
 
 // A struct to formalise all the kinds of indices
 #[derive(PartialEq, Debug)]
@@ -184,7 +183,7 @@ pub fn parse_index(
     } // End of match
   } // End of for-each
 
-  // When we get here we have either gone through the whole buffer or
+  // When we get here we have either gone through the whole history or
   // found a command/separator that marks the end of this index
   // If end is none we reached the end, rather than a denoting character, and should set end to len()
   let end = match end {
@@ -237,7 +236,7 @@ pub fn parse_index(
     },
     // If we get here in a state that isn't terminated (returned to Default) there is an error
     _ => {
-      Err(InternalError::UnreachableCode((file!(),line!(),column!())).into())
+      ed_unreachable!()
     },
   }
 }
@@ -256,7 +255,7 @@ pub fn parse_selection(
       let unwrapped2 = ind2.unwrap_or(Ind::BufferLen);
       Ok((offset2 + 1 + offset, Some(Sel::Pair(unwrapped1, unwrapped2))))
     },
-    // Unwraps nothing in the first index into start of buffer
+    // Unwraps nothing in the first index into start of history
     Some(',') => {
       let (offset2, ind2) = parse_index(&input[offset + 1 ..])?;
       let unwrapped1 = ind.unwrap_or(Ind::Literal(1));
@@ -273,40 +272,42 @@ pub fn parse_selection(
 
 // Interprets index struct into 1-indexed usize.
 // (1-indexed so append operations can append to line 0 to insert before line 1)
-// Should not be able to return a index bigger than buffer.len().
+// Should not be able to return a index bigger than history.len().
 pub fn interpret_index(
+  state: &Ed<'_>,
   index: Ind<'_>,
-  buffer: &Buffer,
   old_selection: usize,
 ) -> Result<usize> {
   let ind = match index {
     Ind::Selection => Ok(old_selection),
     // Since we want 1-indexed len() points at the last valid line or 0 if none
-    Ind::BufferLen => Ok(buffer.len()),
-    // May be invalid, buffer is expected to check
+    Ind::BufferLen => Ok(state.history.current().len()),
+    // May be invalid, history is expected to check
     Ind::Literal(i) => Ok(i),
     // These return values are 0 indexed like the rest of the Buffer API
     // Subtract/add 1 on input/output
-    Ind::Tag(tag) => buffer.get_tag(tag),
+    Ind::Tag(tag) => super::get_tag(state.history.current(), tag),
     Ind::Pattern(pattern) =>
-      buffer.get_matching(
+      super::get_matching(
+        state.history.current(),
         pattern,
         old_selection,
-        false
+        super::Direction::Forwards,
       ),
     Ind::RevPattern(pattern) =>
-      buffer.get_matching(
+      super::get_matching(
+        state.history.current(),
         pattern,
         old_selection,
-        true
+        super::Direction::Backwards
       ),
     // These are relative to the prior, so have no indexing per-se
     Ind::Add(inner, offset) => {
-      let inner = interpret_index(*inner, buffer, old_selection)?;
+      let inner = interpret_index(state, *inner, old_selection)?;
       Ok(inner+offset)
     },
     Ind::Sub(inner, offset) => {
-      let inner = interpret_index(*inner, buffer, old_selection)?;
+      let inner = interpret_index(state, *inner, old_selection)?;
       Ok(inner.saturating_sub(offset))
     },
   }?;
@@ -317,20 +318,20 @@ pub fn interpret_index(
 // 1-indexed just like indices, since 'i'/'a' use selection start/end as index
 // This function tries to make every selection inclusive towards its ending index
 pub fn interpret_selection(
+  state: &Ed<'_>,
   input: Option<Sel<'_>>,
   old_selection: (usize, usize),
-  buffer: &Buffer,
 ) -> Result<(usize, usize)> {
   let selection = input.unwrap_or(Sel::Pair( Ind::Selection, Ind::Selection ));
   let interpreted = match selection {
     Sel::Lone(ind) => {
       // Just interpret the lone index and make it a selection
-      let i = interpret_index(ind, buffer, old_selection.0 )?;
+      let i = interpret_index(state, ind, old_selection.0 )?;
       (i, i)
     },
     Sel::Pair(ind1, ind2) => {
-      let i = interpret_index(ind1, buffer, old_selection.0 )?;
-      let i2 = interpret_index(ind2, buffer, old_selection.1 )?;
+      let i = interpret_index(state, ind1, old_selection.0 )?;
+      let i2 = interpret_index(state, ind2, old_selection.1 )?;
       (i, i2)
     },
   };

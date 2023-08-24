@@ -7,7 +7,7 @@ use std::process::{
   Stdio,
 };
 use crate::IO;
-use crate::buffer::SelectionIter;
+use super::LinesIter;
 use crate::UILock;
 use super::Result;
 
@@ -123,7 +123,7 @@ impl IO for LocalIO {
   fn run_write_command(&mut self,
     _ui: &mut UILock,
     command: String,
-    input: SelectionIter,
+    input: LinesIter,
   ) -> Result<usize> {
     let shell = std::env::var("SHELL").unwrap_or("sh".to_owned());
     // Create child process
@@ -154,7 +154,7 @@ impl IO for LocalIO {
   fn run_transform_command(&mut self,
     _ui: &mut UILock,
     command: String,
-    input: SelectionIter,
+    input: LinesIter,
   ) -> Result<String> {
     let shell = std::env::var("SHELL").unwrap_or("sh".to_owned());
     // Create child process
@@ -187,7 +187,7 @@ impl IO for LocalIO {
   fn write_file(&mut self,
     path: &str,
     append: bool,
-    data: SelectionIter,
+    data: LinesIter,
   ) -> Result<usize> {
     Self::write_internal(path, append, data)
       .map_err(|e| LocalIOError::file_error(path, e).into())
