@@ -1,5 +1,5 @@
 use add_ed::{Ed, Result};
-use add_ed::error::{EdError, UIError};
+use add_ed::error::UIError;
 use add_ed::ui::{UI, UILock};
 /// Error type for a [`ClassicUI`]
 #[derive(Debug)]
@@ -19,7 +19,7 @@ impl std::fmt::Display for ClassicUIError {
   }
 }
 impl std::error::Error for ClassicUIError {}
-impl add_ed::error::UIError for ClassicUIError {}
+impl add_ed::error::UIErrorTrait for ClassicUIError {}
 
 /// A simple UI based on the original ED editor
 struct ClassicUI{}
@@ -38,7 +38,7 @@ impl UI for ClassicUI {
   ) -> Result<String> {
     let mut input = String::new();
     std::io::stdin().read_line(&mut input)
-      .map_err(|_| -> Box<dyn UIError> {ClassicUIError::TerminalError.into()})?;
+      .map_err(|_| -> UIError { ClassicUIError::TerminalError.into() })?;
     Ok(input)
   }
   fn get_input(
@@ -60,7 +60,7 @@ impl UI for ClassicUI {
       let mut buf = String::new();
       let res = stdin.read_line(&mut buf);
       if res.is_err() {
-        return Err(EdError::UI(Box::new(ClassicUIError::TerminalError)))?;
+        return Err(Into::<UIError>::into(ClassicUIError::TerminalError).into());
       }
       if buf == terminator { return Ok(input); }
       else { input.push(buf); }
@@ -73,7 +73,7 @@ impl UI for ClassicUI {
     numbered: bool,
     literal: bool,
   ) -> Result<()> {
-    let selected = ed.buffer.get_selection(selection)?;
+    let selected = ed.history.current().get_lines(selection)?;
     let mut line_nr = selection.0;
     for line in selected {
       if numbered {
@@ -101,16 +101,30 @@ impl UI for ClassicUI {
   fn unlock_ui(&mut self) {}
 }
 
+use clap::Parser;
+#[derive(Parser)]
+#[command(version)]
+struct CliArgs {
+  /// Path to file to open or ! followed by command to read output from
+  #[arg(default_value_t)] // Default to empty string
+  file: String,
+}
 fn main() {
-  // Here is where command line argument parsing should go
-  let path = "".to_string();
+  let cli = CliArgs::parse();
   // Construct state components
   let mut ui = ClassicUI{};
   let mut io = add_ed::io::LocalIO::new();
   // Construct Ed
-  let mut ed = Ed::new(&mut io, path);
+  let mut ed = Ed::new(&mut io);
   // Apply any configurations
-  ed.cmd_prefix = None;
+  // Load in from path if given
+  if ! cli.file.is_empty() {
+    if let Err(e) = ed.run_command(&mut ui, &format!("e{}", cli.file)) {
+      // On failure to open file we print error and quit
+      ui.print_message(&e.to_string()).expect("Failed to print error after failing to open file");
+      return;
+    }
+  }
   // Run
-  ed.run(&mut ui).unwrap();
+  ed.run(&mut ui).expect("Failed to print during execution.");
 }

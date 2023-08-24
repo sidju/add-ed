@@ -80,7 +80,6 @@ fn test_file_io() {
 
 #[test]
 fn test_command_io() {
-  use as_any::Downcast;
   let mut io = LocalIO::new();
   let mut mock_ui = DummyUI{};
   let mut mock_ui_lock = mock_ui.lock_ui();

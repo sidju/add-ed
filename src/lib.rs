@@ -23,10 +23,13 @@
 //!
 //! # fn main() -> Result<(), EdError> {
 //! // Construct all the components
-//! let mut ui = ScriptedUI{ input: vec!["e\n".to_string()].into(), print_ui: None, };
+//! let mut ui = ScriptedUI{
+//!   input: vec![format!("e {}\n", "Cargo.toml")].into(),
+//!   print_ui: None,
+//! };
 //! let mut io = LocalIO::new();
 //! // Construct and run ed
-//! let mut ed = Ed::new(&mut io, "Cargo.toml".to_string());
+//! let mut ed = Ed::new(&mut io);
 //! ed.run(&mut ui)?;
 //! # Ok(()) }
 //! ```
@@ -162,11 +165,8 @@ pub struct Ed <'a> {
 
 impl <'a, > Ed <'a> {
   /// Construct a new instance of Ed
-  ///
-  /// * An empty file string is recommended if no filepath is opened
   pub fn new(
     io: &'a mut dyn IO,
-    file: String,
   ) -> Self {
     let selection = (1,0);
     Self {
@@ -176,6 +176,7 @@ impl <'a, > Ed <'a> {
       prev_s: None,
       prev_shell_command: String::new(),
       // Sane defaults for externally visible variables
+      file: String::new(),
       clipboard: Clipboard::new(),
       error: None,
       print_errors: true,
@@ -186,7 +187,6 @@ impl <'a, > Ed <'a> {
       recursion_limit: 16,
       // And the given values
       io,
-      file,
     }
   }
 

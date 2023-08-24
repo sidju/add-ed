@@ -101,7 +101,6 @@ fn literal_toggle_on() {
   // Construct editor state and run
   let mut ed = Ed::new(
     &mut io,
-    "path".to_owned(),
   );
   ed.run_macro(&mut ui).expect("Error running test");
   assert_eq!(ed.l, true);
@@ -123,7 +122,6 @@ fn literal_toggle_off() {
   // Construct editor state and run
   let mut ed = Ed::new(
     &mut io,
-    "path".to_owned(),
   );
   ed.l = true;
   ed.run_macro(&mut ui).expect("Error running test");

@@ -64,7 +64,6 @@ fn help() {
   // Construct editor state and run
   let mut ed = Ed::new(
     &mut io,
-    "path".to_owned(),
   );
   assert_eq!(ed.run_macro(&mut ui), Err(EdError::IndexTooBig{index:1,buffer_len:0}));
   ed.run_macro(&mut ui).expect("Error running test");
@@ -97,7 +96,6 @@ fn help_toggle() {
   // Construct editor state and run
   let mut ed = Ed::new(
     &mut io,
-    "path".to_owned(),
   );
   assert_eq!(ed.print_errors, true);
   ed.run_macro(&mut ui).expect("Error running test");

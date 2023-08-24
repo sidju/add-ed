@@ -7,9 +7,7 @@ type Result<T> = core::result::Result<T, crate::error::IOError>;
 use crate::UILock;
 use crate::LinesIter;
 
-#[cfg(any(feature = "testing", fuzzing, test))]
 pub mod fake_io;
-#[cfg(any(feature = "testing", fuzzing, test))]
 pub mod dummy_io;
 
 #[cfg(feature = "local_io")]

@@ -101,7 +101,6 @@ fn numbered_toggle_on() {
   // Construct editor state and run
   let mut ed = Ed::new(
     &mut io,
-    "path".to_owned(),
   );
   ed.history.set_saved();
   ed.run_macro(&mut ui).expect("Error running test");
@@ -124,7 +123,6 @@ fn numbered_toggle_off() {
   // Construct editor state and run
   let mut ed = Ed::new(
     &mut io,
-    "path".to_owned(),
   );
   ed.history.set_saved();
   ed.n = true;

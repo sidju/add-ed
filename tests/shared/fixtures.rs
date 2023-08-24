@@ -166,8 +166,8 @@ impl IOTest {
     // Create and init ed state
     let mut ed = Ed::new(
       &mut self.init_io,
-      self.init_filepath.to_owned(),
     );
+    ed.file = self.init_filepath.to_owned();
     let init_clipboard = self.init_clipboard.iter().fold(Clipboard::new(), |mut c, x| {
       c.push(PubLine{
         tag: '\0',

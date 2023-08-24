@@ -32,8 +32,8 @@ pub fn inner_fixture(
   // Create ed state and init ed.buffer
   let mut ed = Ed::new(
     &mut io,
-    init_filepath.to_owned(),
   );
+  ed.file = init_filepath.to_owned();
   let init_clipboard = init_clipboard.iter().fold(Clipboard::new(), |mut c, x| {
     c.push(PubLine{
       tag: '\0',
