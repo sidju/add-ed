@@ -43,7 +43,9 @@ fn inner_reflow(
   }
   // Convert the char vec into lines in the buffer
   for line in chars.split(|c| c == &'\n') {
-    buffer.push(Line::new(line.iter().collect::<String>(), '\0'));
+    let mut text: String = line.iter().collect();
+    text.push('\n');
+    buffer.push(Line::new(text).map_err(InternalError::InvalidLineText)?);
   }
   // Note end of reflowed lines
   let end = buffer.len();

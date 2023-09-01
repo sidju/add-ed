@@ -4,8 +4,10 @@ impl std::fmt::Display for EdError {
   fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
     use EdError::*;
     match self {
-      Internal(_) => write!(f,
-        "Internal error! Save and quit, and please report at `https://github.com/sidju/add-ed/issues`"
+      Internal(e) => write!(f,
+        "Internal error! Save and quit, and please report at {}\n\n debug data: {:?}",
+        "`https://github.com/sidju/add-ed/issues`",
+        e,
       ),
       IO(e) => write!(f,
         "IO error: {}",
@@ -20,7 +22,7 @@ impl std::fmt::Display for EdError {
         "Execution recursion hit recursion limit, no changes made."
       ),
 
-      IndexTooBig{index, buffer_len} => write!(f, 
+      IndexTooBig{index, buffer_len} => write!(f,
         "Given index ({}) overshoots the length of the buffer ({}).",
         index,
         buffer_len,
