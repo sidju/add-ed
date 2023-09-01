@@ -17,7 +17,7 @@ fn inner_join(
     })
   ;
   // Insert it into buffer
-  buffer.push(Line::new(text, '\0'));
+  buffer.push(Line::new(text).map_err(InternalError::InvalidLineText)?);
   // Add back tail data and save old data into clipboard
   buffer.append(&mut tail);
   state.clipboard = data[..].into();

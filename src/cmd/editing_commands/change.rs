@@ -11,7 +11,7 @@ fn inner_change(
   // Note that drain gives full Strings and Line::new will use them as-is,
   // without re-allocating them (but risking leaving them over allocated).
   for line in input.drain(..) {
-    buffer.push(Line::new(line, '\0'));
+    buffer.push(Line::new(line).map_err(InternalError::InvalidLineText)?);
   }
   buffer.append(&mut tail);
   Ok(())

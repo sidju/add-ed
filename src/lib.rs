@@ -66,7 +66,8 @@ pub use history::History;
 pub use buffer::iters::*;
 mod buffer;
 pub use buffer::{
-  Line, // Cannot be directly constructed by lib users, but still relevant
+  LineText,
+  Line,
   Buffer,
   PubLine,
   Clipboard,

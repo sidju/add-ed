@@ -8,7 +8,7 @@ fn inner_input(
   let buffer = state.history.current_mut()?;
   let mut tail = buffer.split_off(index);
   for line in input.drain(..) {
-    buffer.push(Line::new(line, '\0'))
+    buffer.push(Line::new(line).map_err(InternalError::InvalidLineText)?);
   }
   buffer.append(&mut tail);
   Ok(())
@@ -38,12 +38,14 @@ fn inner_inline_input(
       joined_line.pop(); // Remove newline that should terminate all lines
       joined_line.push_str(&indexed_line[0].text[..]);
       for line in input_iter {
-        buffer.push(Line::new(line, '\0'));
+        buffer.push(Line::new(line).map_err(InternalError::InvalidLineText)?);
       }
       // Send in the line itself
       // Arguably we could use the same tag and matched as from the indexed line
       // but we don't since that would be inconsistent with 'c' and 'C' command.
-      buffer.push(Line::new(joined_line, '\0'));
+      buffer.push(Line::new(joined_line)
+        .map_err(InternalError::InvalidLineText)?
+      );
     },
     InlineSide::After => {
       // Insert indexed line joined with first, then lines from data
@@ -52,9 +54,11 @@ fn inner_inline_input(
       joined_line.push_str(&input_iter.next().unwrap());
       // Arguably we could use the same tag and matched as from the indexed line
       // but we don't since that would be inconsistent with 'c' and 'C' command.
-      buffer.push(Line::new(joined_line, '\0'));
+      buffer.push(Line::new(joined_line)
+        .map_err(InternalError::InvalidLineText)?
+      );
       for line in input_iter {
-        buffer.push(Line::new(line, '\0'));
+        buffer.push(Line::new(line).map_err(InternalError::InvalidLineText)?);
       }
     },
   }

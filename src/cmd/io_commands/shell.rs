@@ -11,11 +11,7 @@ fn replace_selection(
   let mut tail = buffer.split_off(selection.1);
   state.clipboard = buffer.split_off(selection.0 - 1)[..].into();
   for line in input.drain(..) {
-    buffer.push(Line{
-      tag: Rc::new(Cell::new('\0')),
-      matched: Rc::new(RefCell::new(Vec::new())),
-      text: Rc::new(line.to_owned()),
-    });
+    buffer.push(Line::new(line).map_err(InternalError::InvalidLineText)?);
   }
   buffer.append(&mut tail);
   Ok(())

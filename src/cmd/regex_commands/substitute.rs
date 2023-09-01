@@ -52,11 +52,10 @@ fn inner_substitute(
   // The lines iterator doesn't care about if there is a last newline,
   // so that handles that edgecase.
   for line in after.lines() {
-    buffer.push(Line{
-      tag: Rc::new(Cell::new('\0')),
-      matched: Rc::new(RefCell::new(Vec::new())),
-      text: format!("{}\n", line).into(),
-    })
+    buffer.push(
+      Line::new( format!("{}\n", line) )
+        .map_err(InternalError::InvalidLineText)?
+    )
   }
 
   // The buffer length at this stage is the new end of the selection

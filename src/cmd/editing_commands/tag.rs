@@ -14,6 +14,6 @@ pub fn tag(
   if tail.chars().count() > 1 {
     return Err(EdError::TagInvalid(tail.to_owned()));
   }
-  buffer[index - 1].tag.set(tail.chars().next().unwrap_or('\0').into());
+  buffer[index - 1].set_tag(tail.chars().next().unwrap_or('\0').into());
   Ok(())
 }

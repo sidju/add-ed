@@ -10,8 +10,8 @@ use add_ed::{
   Ed,
   Clipboard,
   PubLine,
+  LineText,
 };
-use std::rc::Rc;
 
 pub fn inner_fixture(
   init_clipboard: Vec<&str>,
@@ -37,7 +37,7 @@ pub fn inner_fixture(
   let init_clipboard = init_clipboard.iter().fold(Clipboard::new(), |mut c, x| {
     c.push(PubLine{
       tag: '\0',
-      text: Rc::new(format!("{}\n", x)),
+      text: LineText::new(format!("{}\n", x)).unwrap(),
     });
     c
   });
@@ -49,11 +49,11 @@ pub fn inner_fixture(
   let init_buffer = init_buffer.iter().fold(Clipboard::new(), |mut c, x| {
     c.push(PubLine{
       tag: '\0',
-      text: Rc::new(format!("{}\n", x)),
+      text: LineText::new(format!("{}\n", x)).unwrap(),
     });
     c
   });
-  ed.history.current_mut().unwrap().append(&mut (&init_buffer).into());
+  ed.history.current_mut().unwrap().append(&mut (&init_buffer).try_into().unwrap());
   if init_buffer_saved { ed.history.set_saved(); }
   // Create scripted UI (with mock UI, which tracks print invocations)
   let mut inner_ui = MockUI{ prints_history: Vec::new() };

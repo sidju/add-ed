@@ -31,7 +31,7 @@ fn insert<'a>(
   let mut tail = buffer.split_off(index);
   let start = buffer.len();
   for line in data {
-    buffer.push(Line::new(line, '\0'));
+  buffer.push(Line::new(line).map_err(InternalError::InvalidLineText)?);
   }
   let end = buffer.len();
   buffer.append(&mut tail);
@@ -43,7 +43,7 @@ fn replace_buffer<'a>(
 ) -> Result<usize> {
   buffer.clear();
   for line in data {
-    buffer.push(Line::new(line, '\0'));
+  buffer.push(Line::new(line).map_err(InternalError::InvalidLineText)?);
   }
   Ok(buffer.len())
 }

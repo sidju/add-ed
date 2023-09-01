@@ -1,6 +1,22 @@
+# What I'm currently doing:
+- Fixing up usage documentation for Buffer and Clipboard, so that it is clear
+  how to look into and modify them in an ergonomic and safe way. Note the
+  not compiling example code in src/buffer/mod.rs which tries to describe
+  ergonomic usage (and currently mostly shows its absence). To make that build
+  we need to make PubLine and Line be constructable from both &T and T where
+  applicable, so loads of From<...> plumbing.
+
+
 # Todos:
 - Add a way to print the available undo/redo span ('U'?)
+  (We probably want snapshot annotations to indicate what command caused a state
+  to make this meaningful)
   (If so, check over EdError::UndoStepsNotInt which refers to 'U' as redo)
+- Add undo/redo utilities:
+  - Absolute indexing `u*20` goes to the 20:th snapshot
+  - A way to clear the history (to clear memory usage)
+  - Make it so the history deduplication is run in more cases (to save on RAM)?
+    (Could be confusing, probably better to abort more using `EdError::NoOp`)
 - Look over when we save to Ed.prev_shell_command, currently before execution.
   (Could be nice to check that it runs successfully first, but for some
   commands (eg. compilation) that could make it unusable...)
@@ -12,24 +28,37 @@
 - Implement parsing under the trait FromStr instead?
 
 
+# Look over command documentation
+Currently the help text is very outdated, and it is also getting unreasonably
+long. We should probably change out the help text for a minimal summary and
+write up a proper manual over commands.
+
+
 # Look over macros.
 We probably wish to support more languages than a string of ed commands, so
 we should add some way to signify how to run the macro.
 
 Or maybe we double down against that and say that any fancy code should run
 via the shell interaction features, making command lists "completely
-sufficient"...
+sufficient" as long as we add support for macro arguments in command lists.
 
+We should also consider error handling in scripts, as they could reasonably want
+to use `s`, which currently errors if there is no match. The easiest fix is to
+continue execution in the case of NoOp and NoMatch errors in macros, as such
+would generally be non-fatal. This would best be combined with a small Macro
+struct that has some configurations, such as wether or not to abort on errors
+and also if the macro should be able to modify the buffer (if set to no we can
+run the macro and delete the snapshot created for it, so even if it left the
+buffer in an unclean state we are unaffected (also saves a big Eq check)).
+
+Even with some global configurations in scripts we would probably want some way
+to ignore errors in a specific command while reacting to others, and the
+opposite as well. Perhaps something with `H` (Hide) or some braces (to contain
+the error).
 
 
 
 # Documentation fixes:
-- Clipboard and Buffer should have examples for how you should and shouldn't
-  modify them.
-- Line should clearly document that it can be constructed via PubLine
-- PubLine shouldn't refer to positioning in the file, as it may be reordered
-  when the documentation is rendered.
-- PubLine has some bad references in the field documentations
 - Document more in the History struct, as there isn't more details/links on
   github.
 - The Snapshot trait from history.rs should be public, if we wish to make it

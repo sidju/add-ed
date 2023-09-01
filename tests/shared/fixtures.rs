@@ -11,8 +11,8 @@ use add_ed::{
   error::EdError,
   PubLine,
   Clipboard,
+  LineText,
 };
-use std::rc::Rc;
 
 // A basic fixture
 // Sets up state as though reading buffer contents from a file and runs the
@@ -171,7 +171,7 @@ impl IOTest {
     let init_clipboard = self.init_clipboard.iter().fold(Clipboard::new(), |mut c, x| {
       c.push(PubLine{
         tag: '\0',
-        text: Rc::new(format!("{}\n", x)),
+        text: LineText::new(format!("{}\n", x)).unwrap(),
       });
       c
     });
@@ -179,11 +179,11 @@ impl IOTest {
     let init_buffer = self.init_buffer.iter().fold(Clipboard::new(), |mut c, x| {
       c.push(PubLine{
         tag: '\0',
-        text: Rc::new(format!("{}\n", x)),
+        text: LineText::new(format!("{}\n", x)).unwrap(),
       });
       c
     });
-    ed.history.current_mut().unwrap().append(&mut (&init_buffer).into());
+    ed.history.current_mut().unwrap().append(&mut (&init_buffer).try_into().unwrap());
     ed.history.set_saved();
     // Create scripted UI (with mock UI, which tracks print invocations)
     let mut inner_ui = MockUI{ prints_history: Vec::new() };

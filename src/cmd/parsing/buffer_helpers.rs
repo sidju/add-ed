@@ -11,7 +11,7 @@ pub (super) fn get_tag(
   tag: char,
 ) -> Result<usize> {
   match buffer.iter().enumerate() // Enumerate 0-indexes our iteration
-    .filter(|(_, line)| line.tag.get() == tag)
+    .filter(|(_, line)| line.tag() == tag)
     .next()
   {
     Some((i, _)) => Ok(i + 1), // Convert to 1-indexed before returning
