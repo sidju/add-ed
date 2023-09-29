@@ -51,7 +51,6 @@ pub use error::{
   Result,
   EdError,
 };
-use error::InternalError;
 
 mod cmd;
 

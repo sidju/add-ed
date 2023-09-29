@@ -183,7 +183,7 @@ impl IOTest {
       });
       c
     });
-    ed.history.current_mut("initial load".into()).unwrap().append(&mut (&init_buffer).try_into().unwrap());
+    ed.history.current_mut("initial load".into()).append(&mut (&init_buffer).try_into().unwrap());
     ed.history.set_saved();
     // Create scripted UI (with mock UI, which tracks print invocations)
     let mut inner_ui = MockUI{ prints_history: Vec::new() };

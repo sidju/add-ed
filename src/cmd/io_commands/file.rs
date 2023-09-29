@@ -96,8 +96,8 @@ pub fn read_from_file(
     };
     let data = unformated_data.split_inclusive('\n');
     let datalen = match index {
-      Some(i) => insert(state.history.current_mut(full_command.into())?, data, i),
-      None => replace_buffer(state.history.current_mut(full_command.into())?, data),
+      Some(i) => insert(state.history.current_mut(full_command.into()), data, i),
+      None => replace_buffer(state.history.current_mut(full_command.into()), data),
     }?;
     // Handle after-effects
     let index = index.unwrap_or(0) + 1;

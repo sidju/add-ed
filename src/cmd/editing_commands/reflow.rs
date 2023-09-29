@@ -7,7 +7,7 @@ fn inner_reflow(
   width: usize,
 ) -> Result<usize> {
   state.history.current().verify_selection(selection)?;
-  let buffer = state.history.current_mut(full_command.into())?;
+  let buffer = state.history.current_mut(full_command.into());
   // Get the selected data
   let mut tail = buffer.split_off(selection.1);
   let data = buffer.split_off(selection.0 - 1);

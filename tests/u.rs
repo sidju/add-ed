@@ -37,7 +37,7 @@ fn undo() {
     expected_selection: (2,2),
     expected_prints: vec![
       Print{
-        text: vec!["Undid 2 operation(s) to right after initial load\n".to_owned()],
+        text: vec!["Undid 2 operation(s) to right after initial load.".to_owned()],
         n: false,
         l: false,
       },
@@ -58,7 +58,7 @@ fn undo_default() {
     expected_selection: (2,2),
     expected_prints: vec![
       Print{
-        text: vec!["Undid 1 operation(s) to right after 1d\n".to_owned()],
+        text: vec!["Undid 1 operation(s) to right after 1d.".to_owned()],
         n: false,
         l: false,
       },
@@ -90,7 +90,7 @@ fn undo_tag_move() {
         l: false,
       },
       Print{
-        text: vec!["Undid 1 operation(s) to right after initial load\n".to_owned()],
+        text: vec!["Undid 1 operation(s) to right after initial load.".to_owned()],
         n: false,
         l: false,
       },

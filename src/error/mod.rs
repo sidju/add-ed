@@ -103,8 +103,10 @@ pub enum EdError {
   UnsavedChanges,
   /// Selection and arguments were given that makes its command do nothing.
   NoOp,
-  /// Given number of undo steps exceeds existing history.
-  UndoStepsInvalid{undo_steps: isize, undo_range: std::ops::Range<isize>},
+  /// Tried to undo beyond start of history.
+  UndoIndexNegative{relative_undo_limit: usize},
+  /// Tried to redo past end of history.
+  UndoIndexTooBig{index: usize, history_len: usize, relative_redo_limit: usize},
   /// Tried to set a shell escape as default file.
   /// Holds given path string.
   DefaultFileInvalid(String),
