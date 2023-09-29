@@ -1,6 +1,6 @@
 //! Module for history snapshotting and management.
 
-use crate::{EdError, InternalError, Result};
+use crate::{EdError, Result};
 use std::fmt::Debug;
 
 /// A special type of Clone for [`History`]
@@ -18,8 +18,8 @@ pub trait Snapshot{
 
 /// A history abstraction over generic objects used by add-ed.
 ///
-/// Handles snapshotting and undo/redo to move over the history of snapshots.
-/// Currently uses a revert style of undo inspired by
+/// Handles snapshotting and moving over the history of snapshots. Currently
+/// uses a revert style of undo inspired by
 /// [this reasoning.](https://github.com/zaboople/klonk/blob/master/TheGURQ.md)
 ///
 /// Automatically manages snapshot creation upon mutable access to the current
@@ -34,10 +34,15 @@ pub struct History<T> where
   snapshots: Vec<(String, T)>,
   viewed_i: usize,
   saved_i: Option<usize>,
-  /// If true all calls to [`History::snapshot`] are ignored
+  /// If true all calls to [`History::snapshot`] are ignored (including the
+  /// automatic call upon running `.current_mut()`).
   ///
   /// Intended for macro execution, when it would be confusing to create
   /// multiple snapshots for what the user sees as a single action.
+  ///
+  /// (If a point in history is viewed a snapshot reverting to that point in
+  /// history will be created before mutable access no matter if this variable
+  /// is set to true.)
   pub dont_snapshot: bool,
 }
 impl<T> Default for History<T> where
@@ -64,6 +69,7 @@ impl <T> History<T> where
   /// Get if the buffer is saved
   ///
   /// It aims to be true when the viewed buffer matches the data last saved.
+  /// If it is uncertain or difficult to track it will return false.
   pub fn saved(&self) -> bool {
     self.saved_i == Some(self.viewed_i)
   }
@@ -97,44 +103,14 @@ impl <T> History<T> where
   ///   generally be the full command, if not be as clear as possible.)
   /// - If currently viewing history, will create a revert snapshot at end of
   ///   history.
-  /// - Unless self.dont_snapshot, will create a new snapshot.
+  /// - Unless self.dont_snapshot, will create a new snapshot tagged with the
+  ///   given cause for modification.
   /// - Returns mutable access to the snapshot at the end of history.
-  ///
-  /// May return error if snapshot history is becoming too long to be stored in
-  /// an isize. If that occurs saving the file, closing the editor and opening
-  /// it again is the only current way to clear history without data loss.
   pub fn current_mut(&mut self,
     modification_cause: String,
-  ) -> Result<&mut T> {
-    self.snapshot(modification_cause)?;
-    Ok(&mut self.snapshots[self.viewed_i].1)
-  }
-
-  /// Move the given number of steps back into history
-  pub fn undo(&mut self,
-    steps: isize,
-  ) -> Result<&str> {
-    let range = self.undo_range()?;
-    if !range.contains(&steps) {
-      Err(EdError::UndoStepsInvalid{undo_steps: steps, undo_range: range})?
-    }
-    if steps.is_negative() {
-      self.viewed_i += (-steps) as usize;
-    } else {
-      self.viewed_i -= steps as usize;
-    }
-    Ok(&self.snapshots[self.viewed_i].0)
-  }
-  /// Returns how far you can undo/redo
-  pub fn undo_range(&self) -> Result<std::ops::Range<isize>> {
-    // Negative is redo potential, steps between end of history and buffer_i
-    // Positive is undo potential, buffer_i
-    if self.snapshots.len() < isize::MAX as usize && self.viewed_i < self.snapshots.len() {
-      Ok(self.viewed_i as isize - self.snapshots.len() as isize +1 .. self.viewed_i as isize + 1)
-    } else {
-      // When we have too much undo history to handle via the api
-      Err(InternalError::UndoHistoryTooLarge.into())
-    }
+  ) -> &mut T {
+    self.snapshot(modification_cause);
+    &mut self.snapshots[self.viewed_i].1
   }
 
   fn internal_create_snapshot(&mut self, label: String) {
@@ -152,18 +128,9 @@ impl <T> History<T> where
   /// The only case this should be needed is before setting `dont_snapshot` for
   /// a script execution. If `dont_snapshot` isn't set snapshots are created
   /// automatically whenever [`Self.current_mut`] is executed.
-  ///
-  /// May return error if snapshot history is becoming too long to be stored in
-  /// an isize. If that occurs saving the file, closing the editor and opening
-  /// it again is the only current way to clear history without data loss.
   pub fn snapshot(&mut self,
     modification_cause: String,
-  ) -> Result<()> {
-    // Verify that we don't overflow history
-    // Add two, since two snapshots are created for revert + snapshot
-    if self.snapshots.len() + 2 > isize::MAX as usize {
-      Err(InternalError::UndoHistoryTooLarge)?;
-    }
+  ) {
     // If we are in the past, create a revert snapshot
     // This is needed even if snapshots are disabled, to not change history
     if self.viewed_i < self.snapshots.len() - 1 {
@@ -176,8 +143,6 @@ impl <T> History<T> where
     if !self.dont_snapshot {
       self.internal_create_snapshot(modification_cause);
     }
-    // Create snapshot to work on and move into future
-    Ok(())
   }
 
   /// Checks if the last two snapshots in history are identical. If yes deletes
@@ -192,6 +157,52 @@ impl <T> History<T> where
     if last_2_iter.next().map(|x| &x.1) == last_2_iter.next().map(|x| &x.1) {
       self.snapshots.pop();
       self.viewed_i = self.snapshots.len() - 1;
+    }
+  }
+
+  /// Accessor to view the full list of snapshots
+  ///
+  /// - Entries are in order of creation, the first operation is first in the
+  /// list.
+  /// - The string beside the snapshot describes what caused the state in the
+  ///   snapshot (relative to the preceeding snapshot).
+  pub fn snapshots(&self) -> &Vec<(String, T)> {
+    &self.snapshots
+  }
+  /// Shorthand for `.snapshots().len()`
+  pub fn len(&self) -> usize {
+    self.snapshots.len()
+  }
+  /// Getter for what index was last saved
+  ///
+  /// Returns None if no index is believed to be saved.
+  ///
+  /// Intended to be used to enrich when listing snapshots by marking the one
+  /// considered saved.
+  pub fn saved_i(&self) -> Option<usize> {
+    self.saved_i
+  }
+  /// Getter for currently viewed snapshot index
+  pub fn viewed_i(&self) -> usize {
+    self.viewed_i
+  }
+  /// Setter for currently viewed snapshot index
+  ///
+  /// Returns the modification cause for the now viewed index.
+  ///
+  /// Will return error if given index doesn't hold a snapshot (aka. is too
+  /// big).
+  pub fn set_viewed_i(&mut self, new_i: usize) -> Result<&str> {
+    if new_i < self.len() {
+      self.viewed_i = new_i;
+      Ok(&self.snapshots[self.viewed_i].0)
+    }
+    else {
+      Err(EdError::UndoIndexTooBig{
+        index: new_i,
+        history_len: self.len(),
+        relative_redo_limit: self.len() - self.viewed_i - 1,
+      })
     }
   }
 }

@@ -1,6 +1,5 @@
 # Todos:
 - Add undo/redo utilities:
-  - A way to print possible points in history to go to (probably 'U' with args)
   - Absolute indexing `u*20` goes to the 20:th snapshot
   - (Maybe eventually '?' and '/' to search for a command to undo/redo to)
   - A way to clear the history (to clear memory usage)

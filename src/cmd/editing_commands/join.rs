@@ -5,7 +5,7 @@ fn inner_join(
   full_command: &str,
   selection: (usize, usize),
 ) -> Result<()> {
-  let buffer = state.history.current_mut(full_command.into())?;
+  let buffer = state.history.current_mut(full_command.into());
   // Take out lines
   let mut tail = buffer.split_off(selection.1);
   let data = buffer.split_off(selection.0 - 1);

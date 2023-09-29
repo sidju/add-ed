@@ -21,10 +21,10 @@ impl std::cmp::PartialEq for EdError {
       (UnsavedChanges,UnsavedChanges) => true,
       (NoOp,NoOp) => true,
       (
-        UndoStepsInvalid{undo_steps: a, undo_range: b},
-        UndoStepsInvalid{undo_steps: c, undo_range: d},
+        UndoIndexTooBig{index: a, history_len: b, relative_redo_limit: c},
+        UndoIndexTooBig{index: d, history_len: e, relative_redo_limit: f},
       ) => {
-        a == c && b == d
+        a == d && b == e && c == f
       },
       (DefaultFileInvalid(x),DefaultFileInvalid(y)) => x == y,
       (TagInvalid(x),TagInvalid(y)) => x == y,

@@ -6,7 +6,7 @@ fn inner_change(
   mut input: Vec<String>,
   selection: (usize, usize),
 ) -> Result<()> {
-  let buffer = state.history.current_mut(full_command.into())?;
+  let buffer = state.history.current_mut(full_command.into());
   let mut tail = buffer.split_off(selection.1);
   state.clipboard = buffer.split_off(selection.0 - 1)[..].into();
   // Note that drain gives full Strings and Line::new will use them as-is,

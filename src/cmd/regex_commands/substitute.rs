@@ -33,7 +33,7 @@ fn inner_substitute(
 
   // If there was a match we can get a mutable access to the buffer
   // (creating an undo snapshot) and make the actual change.
-  let buffer = history.current_mut(command.into())?;
+  let buffer = history.current_mut(command.into());
   // Cut up the buffer into relevant pieces
   let mut tail = buffer.split_off(selection.1);
   let before = buffer.split_off(selection.0 - 1);

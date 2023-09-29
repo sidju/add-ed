@@ -6,7 +6,7 @@ fn inner_input(
   mut input: Vec<String>,
   index: usize,
 ) -> Result<()> {
-  let buffer = state.history.current_mut(full_command.into())?;
+  let buffer = state.history.current_mut(full_command.into());
   let mut tail = buffer.split_off(index);
   for line in input.drain(..) {
     buffer.push(Line::new(line).map_err(InternalError::InvalidLineText)?);
@@ -25,7 +25,7 @@ fn inner_inline_input(
   line: usize,
   side: InlineSide,
 ) -> Result<()> {
-  let buffer = state.history.current_mut(full_command.into())?;
+  let buffer = state.history.current_mut(full_command.into());
   let mut tail = buffer.split_off(line);
   let indexed_line = buffer.split_off(line - 1);
   // We need to verify this here, so we can unwrap from the iterator later

@@ -23,7 +23,7 @@ fn inner_transfer(
       return Err(EdError::NoOp).into();
     }
   }
-  let buffer = state.history.current_mut(full_command.into())?;
+  let buffer = state.history.current_mut(full_command.into());
   match mode {
     // The simple one, just iterate over selection into a tmp vec, then add it
     // after given index.

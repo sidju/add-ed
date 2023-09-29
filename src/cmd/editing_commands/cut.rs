@@ -3,8 +3,8 @@ use super::*;
 pub fn cut(
   state: &mut Ed<'_>,
   pflags: &mut PrintingFlags,
-  selection: Option<Sel<'_>>,
   full_command: &str,
+  selection: Option<Sel<'_>>,
   tail: &str,
 ) -> Result<()> {
   let sel = interpret_selection(&state, selection, state.selection)?;
@@ -24,7 +24,7 @@ pub fn cut(
       return Err(EdError::PrintAfterWipe);
     }
   }
-  let buffer = state.history.current_mut(full_command.into())?;
+  let buffer = state.history.current_mut(full_command.into());
   let mut tail = buffer.split_off(sel.1);
   let data = buffer.split_off(sel.0 - 1);
   buffer.append(&mut tail);

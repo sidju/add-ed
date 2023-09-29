@@ -8,7 +8,7 @@ fn replace_selection(
   mut input: Vec<&str>,
 ) -> Result<()> {
   // Selection already verified by get_selection call before calling this fn
-  let buffer = state.history.current_mut(full_command.into())?;
+  let buffer = state.history.current_mut(full_command.into());
   let mut tail = buffer.split_off(selection.1);
   state.clipboard = buffer.split_off(selection.0 - 1)[..].into();
   for line in input.drain(..) {

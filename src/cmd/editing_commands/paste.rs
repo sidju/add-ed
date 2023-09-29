@@ -6,7 +6,7 @@ fn inner_paste(
   index: usize,
 ) -> Result<usize> {
   state.history.current().verify_index(index)?;
-  let buffer = state.history.current_mut(full_command.into())?;
+  let buffer = state.history.current_mut(full_command.into());
   let mut tail = buffer.split_off(index);
   buffer.append(&mut (&state.clipboard).into() );
   buffer.append(&mut tail);
