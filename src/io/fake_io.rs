@@ -39,6 +39,8 @@ pub struct FakeIO {
 }
 
 impl IO for FakeIO {
+  /// Returns [`FakeIOError::ChildExitError`] if command is not represented by a
+  /// [`ShellCommand`] with empty input in `fake_shell`.
   fn run_command(&mut self,
     _ui: &mut UILock,
     command: String,
@@ -52,6 +54,8 @@ impl IO for FakeIO {
       Err(FakeIOError::ChildExitError.into())
     }
   }
+  /// Returns [`FakeIOError::ChildExitError`] if command is not represented by a
+  /// [`ShellCommand`] with empty input in `fake_shell`.
   fn run_read_command(&mut self,
     _ui: &mut UILock,
     command: String,
@@ -64,6 +68,8 @@ impl IO for FakeIO {
       None => Err(FakeIOError::ChildExitError.into()),
     }
   }
+  /// Returns [`FakeIOError::ChildExitError`] if command is not represented by a
+  /// [`ShellCommand`] with the given input in `fake_shell`.
   fn run_write_command(&mut self,
     _ui: &mut UILock,
     command: String,
@@ -79,6 +85,8 @@ impl IO for FakeIO {
       None => Err(FakeIOError::ChildExitError.into()),
     }
   }
+  /// Returns [`FakeIOError::ChildExitError`] if command is not represented by a
+  /// [`ShellCommand`] with the given input in `fake_shell`.
   fn run_transform_command(&mut self,
     _ui: &mut UILock,
     command: String,
@@ -111,6 +119,8 @@ impl IO for FakeIO {
     self.fake_fs.insert(path.to_owned(), data);
     Ok(datalen)
   }
+  /// Returns [`FakeIOError::NotFound`] if `fake_fs` doesn't have an entry with
+  /// the given path as key.
   fn read_file(&mut self,
     path: &str,
     must_exist: bool,

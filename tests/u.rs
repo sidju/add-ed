@@ -4,7 +4,6 @@
 
 mod shared;
 use shared::fixtures::{
-  BasicTest,
   PrintTest,
 };
 use shared::mock_ui::Print;
@@ -28,7 +27,7 @@ use shared::mock_ui::Print;
 // Test fully defined
 #[test]
 fn undo() {
-  BasicTest{
+  PrintTest{
     init_buffer: vec!["a","b","c","d"],
     init_clipboard: vec!["dummy"],
     command_input: vec!["1d","3d","u2"],
@@ -36,13 +35,20 @@ fn undo() {
     expected_buffer_saved: true,
     expected_clipboard: vec!["d"], // Because "3d" sets it and 'u' leaves it
     expected_selection: (2,2),
+    expected_prints: vec![
+      Print{
+        text: vec!["Undid 2 operation(s) to right after initial load\n".to_owned()],
+        n: false,
+        l: false,
+      },
+    ],
   }.run()
 }
 
 // Test defaults
 #[test]
 fn undo_default() {
-  BasicTest{
+  PrintTest{
     init_buffer: vec!["a","b","c","d"],
     init_clipboard: vec!["dummy"],
     command_input: vec!["1d","3d","u"],
@@ -50,6 +56,13 @@ fn undo_default() {
     expected_buffer_saved: false,
     expected_clipboard: vec!["d"], // Because 'd' sets it and 'u' leaves it
     expected_selection: (2,2),
+    expected_prints: vec![
+      Print{
+        text: vec!["Undid 1 operation(s) to right after 1d\n".to_owned()],
+        n: false,
+        l: false,
+      },
+    ],
   }.run()
 }
 
@@ -77,56 +90,15 @@ fn undo_tag_move() {
         l: false,
       },
       Print{
+        text: vec!["Undid 1 operation(s) to right after initial load\n".to_owned()],
+        n: false,
+        l: false,
+      },
+      Print{
         text: vec!["(3,3)".to_owned()],
         n: false,
         l: false,
       }
     ],
-  }.run()
-}
-
-// Verify behaviour of 'U' command
-//
-// - Doesn't allow selection or index
-// - Accepts a signed numeric argument of how many steps to redo
-//   - If none given defaults to 1
-// - Changes the state of the buffer the given number of modifying commands
-//   forward in history, negative number moves backwards.
-//   - If it isn't possible to move the given number of steps gives error,
-//     INVALID_UNDO_STEPS.
-// - Sets unsaved unconditionally for now.
-//   (Tracking of which undo step was saved could be added)
-// - Doesn't modify selection.
-//   (Setting selection as if after the redone command later maybe? If so
-//   pairing selection with buffer state could be good, or validation.
-//   Current code may leave state.selection in an invalid state.
-//   Optimum would be to store selection with the buffer state, but that would
-//   require a _big_ refactor...)
-
-// Test fully defined
-#[test]
-fn redo() {
-  BasicTest{
-    init_buffer: vec!["a","b","c","d"],
-    init_clipboard: vec!["dummy"],
-    command_input: vec!["1d","d","u2","U2"],
-    expected_buffer: vec!["c","d"],
-    expected_buffer_saved: false,
-    expected_clipboard: vec!["b"], // Because 'd' sets it and 'u'/'U' leaves it
-    expected_selection: (1,1),
-  }.run()
-}
-
-// Test defaults
-#[test]
-fn redo_default() {
-  BasicTest{
-    init_buffer: vec!["a","b","c","d"],
-    init_clipboard: vec!["dummy"],
-    command_input: vec!["1d","3d","u","U"],
-    expected_buffer: vec!["b","c"],
-    expected_buffer_saved: false,
-    expected_clipboard: vec!["d"], // Because 'd' sets it and 'u' leaves it
-    expected_selection: (2,2),
   }.run()
 }

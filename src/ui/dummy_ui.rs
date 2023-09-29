@@ -6,20 +6,21 @@ use crate::{
 use super::Result;
 
 /// Dummy UI for testing
-/// Panics on any UI interaction but supports no-op locking and unlocking
+/// Returns Ok on any operation (with empty data if required) and supports no-op
+/// locking and unlocking.
 pub struct DummyUI {
 }
 impl UI for DummyUI {
   fn print_message(&mut self,
     _data: &str,
   ) -> Result<()> {
-    unimplemented!()
+    Ok(())
   }
   fn get_command(&mut self,
     _ed: &Ed,
     _prefix: Option<char>,
   ) -> Result<String> {
-    unimplemented!()
+    Ok(String::new())
   }
   fn get_input(&mut self,
     _ed: &Ed,
@@ -27,7 +28,7 @@ impl UI for DummyUI {
     #[cfg(feature = "initial_input_data")]
     _initial_buffer: Option<Vec<String>>,
   ) -> Result<Vec<String>> {
-    unimplemented!()
+    Ok(Vec::new())
   }
   fn print_selection(&mut self,
     _ed: &Ed,
@@ -35,7 +36,7 @@ impl UI for DummyUI {
     _numbered: bool,
     _literal: bool,
   ) -> Result<()> {
-    unimplemented!()
+    Ok(())
   }
   fn lock_ui(&mut self) -> UILock<'_> {
     UILock::new(self)

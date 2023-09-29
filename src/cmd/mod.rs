@@ -19,6 +19,9 @@ use editing_commands::*;
 mod regex_commands;
 use regex_commands::*;
 
+mod undo;
+use undo::*;
+
 // Helps to hand in globally relevant flags as one &mut struct to the command
 // implementations
 // (pub because rusts pub fn is a bit clunky and complains otherwise)
@@ -153,11 +156,11 @@ pub(crate) fn run(
           Ok(false)
         },
         '!' | '|' => {
-          run_command(state, ui, selection, ch, clean)?;
+          run_command(state, ui, command, selection, ch, clean)?;
           Ok(false)
         },
         'e' | 'E' | 'r' => {
-          read_from_file(state, ui, selection, ch, clean)?;
+          read_from_file(state, ui, command, selection, ch, clean)?;
           Ok(false)
         },
         'w' | 'W' => {
@@ -182,15 +185,15 @@ pub(crate) fn run(
         },
         // Basic editing commands
         'a' | 'i' | 'A' | 'I' => {
-          input(state, ui, &mut pflags, selection, ch, clean)?;
+          input(state, ui, &mut pflags, command, selection, ch, clean)?;
           Ok(false)
         },
         'c' | 'C' => {
-          change(state, ui, &mut pflags, selection, ch, clean)?;
+          change(state, ui, &mut pflags, command, selection, ch, clean)?;
           Ok(false)
         },
         'd' => { // Cut
-          cut(state, &mut pflags, selection, clean)?;
+          cut(state, &mut pflags, selection, command, clean)?;
           Ok(false)
         },
         'y' => { // Copy to clipboard
@@ -198,24 +201,16 @@ pub(crate) fn run(
           Ok(false)
         },
         'x' | 'X' => { // Append/prepend (respectively) clipboard contents to selection
-          paste(state, &mut pflags, selection, ch, clean)?;
+          paste(state, &mut pflags, command, selection, ch, clean)?;
           Ok(false)
         },
-        'u' | 'U' => {
-          if selection.is_some() {return Err(EdError::SelectionForbidden); }
-          // A undo steps parsing not unlike index parsing would be good later
-          // ie. relative AND shorthand for start and end of history
-          let steps = if clean.is_empty() { 1 }
-          else { clean.parse::<isize>().map_err(
-            |_|EdError::UndoStepsNotInt(clean.to_owned())
-          )? };
-          if steps == 0 { return Err(EdError::NoOp); }
-          if ch == 'U' {
-            state.history.undo( -steps )?;
-          } else {
-            state.history.undo( steps )?;
-          }
-          Ok(false)
+//        'U' => {
+//          print_history(...)?;
+//          Ok(false)
+//        },
+        'u' => { // Undo/redo (undoing a negative number of steps redoes)
+           undo(state, ui, selection, clean)?;
+           Ok(false)
         },
         // Advanced editing commands
         'k' | 'K' => { // Tag first (k) or last (K) line in selection
@@ -224,25 +219,27 @@ pub(crate) fn run(
         },
         // 'M' and 'T' are supported internally but disabled, see issue #6
         'm' | 't' => {
-          transfer(state, &mut pflags, selection, ch, clean)?;
+          transfer(state, &mut pflags, command, selection, ch, clean)?;
           Ok(false)
         }
         'j' => {
-          join(state, &mut pflags, selection, clean)?;
+          join(state, &mut pflags, command, selection, clean)?;
           Ok(false)
         },
         'J' => {
-          reflow(state, &mut pflags, selection, clean)?;
+          reflow(state, &mut pflags, command, selection, clean)?;
           Ok(false)
         },
         // Pattern commands
         's' => {
-          substitute(state, &mut pflags, selection, tail)?;
+          substitute(state, &mut pflags, command, selection, tail)?;
           Ok(false)
         },
         'g' | 'v' | 'G' | 'V' => {
           // Before disabling snapshotting, create one for this command
-          state.history.snapshot()?;
+          // We try to indicate that we don't handle the following input by
+          // adding "..." after
+          state.history.snapshot(format!("{} ...", command))?;
           // Disable snapshotting during execution, reset it after
           let orig_dont_snapshot = state.history.dont_snapshot;
           state.history.dont_snapshot = true;
@@ -264,7 +261,7 @@ pub(crate) fn run(
           match state.macros.get(clean) {
             Some(m) => {
               // Before disabling snapshotting, create one for this command
-              state.history.snapshot()?;
+              state.history.snapshot(command.into())?;
               // Disable undo snapshotting during macro execution
               let orig_dont_snapshot = state.history.dont_snapshot;
               state.history.dont_snapshot = true;

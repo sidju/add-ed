@@ -7,6 +7,7 @@ use super::*;
 fn inner_substitute(
   history: &mut crate::History<crate::Buffer>,
   clipboard: &mut Clipboard,
+  command: &str, // Only because history needs it
   selection: (usize, usize),
   pattern: &str,
   substitute: &str,
@@ -32,7 +33,7 @@ fn inner_substitute(
 
   // If there was a match we can get a mutable access to the buffer
   // (creating an undo snapshot) and make the actual change.
-  let buffer = history.current_mut()?;
+  let buffer = history.current_mut(command.into())?;
   // Cut up the buffer into relevant pieces
   let mut tail = buffer.split_off(selection.1);
   let before = buffer.split_off(selection.0 - 1);
@@ -68,6 +69,7 @@ fn inner_substitute(
 pub fn substitute(
   state: &mut Ed<'_>,
   pflags: &mut PrintingFlags,
+  command: &str,
   selection: Option<Sel<'_>>,
   tail: &str,
 ) -> Result<()> {
@@ -86,6 +88,7 @@ pub fn substitute(
         let end = inner_substitute(
           &mut state.history,
           &mut state.clipboard,
+          command,
           selection,
           &s.pattern,
           &s.substitute,
@@ -112,6 +115,7 @@ pub fn substitute(
     let end = inner_substitute(
       &mut state.history,
       &mut state.clipboard,
+      command,
       selection,
       &expressions[0],
       &expressions[1],

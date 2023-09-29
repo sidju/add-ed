@@ -3,11 +3,12 @@ use super::*;
 // Basically same as inner_change in editing_commands.rs, for now at least
 fn replace_selection(
   state: &mut Ed<'_>,
-  mut input: Vec<&str>,
+  full_command: &str,
   selection: (usize, usize),
+  mut input: Vec<&str>,
 ) -> Result<()> {
   // Selection already verified by get_selection call before calling this fn
-  let buffer = state.history.current_mut()?;
+  let buffer = state.history.current_mut(full_command.into())?;
   let mut tail = buffer.split_off(selection.1);
   state.clipboard = buffer.split_off(selection.0 - 1)[..].into();
   for line in input.drain(..) {
@@ -19,6 +20,7 @@ fn replace_selection(
 pub fn run_command(
   state: &mut Ed<'_>,
   ui: &mut dyn UI,
+  full_command: &str,
   selection: Option<Sel<'_>>,
   ch: char,
   command: &str,
@@ -60,7 +62,7 @@ pub fn run_command(
       )?;
       let lines: Vec<&str> = transformed.split_inclusive('\n').collect();
       let nr_lines = lines.len();
-      replace_selection(state, lines, s)?;
+      replace_selection(state, full_command, s, lines)?;
       state.selection = if nr_lines != 0 {
         (s.0, s.0 + nr_lines - 1)
       }

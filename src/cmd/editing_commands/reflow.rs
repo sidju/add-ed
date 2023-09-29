@@ -2,11 +2,12 @@ use super::*;
 
 fn inner_reflow(
   state: &mut Ed<'_>,
+  full_command: &str,
   selection: (usize, usize),
   width: usize,
 ) -> Result<usize> {
   state.history.current().verify_selection(selection)?;
-  let buffer = state.history.current_mut()?;
+  let buffer = state.history.current_mut(full_command.into())?;
   // Get the selected data
   let mut tail = buffer.split_off(selection.1);
   let data = buffer.split_off(selection.0 - 1);
@@ -56,6 +57,7 @@ fn inner_reflow(
 pub fn reflow(
   state: &mut Ed<'_>,
   pflags: &mut PrintingFlags,
+  full_command: &str,
   selection: Option<Sel<'_>>,
   tail: &str,
 ) -> Result<()> {
@@ -73,7 +75,7 @@ pub fn reflow(
   pflags.p = flags.remove(&'p').unwrap();
   pflags.n = flags.remove(&'n').unwrap();
   pflags.l = flags.remove(&'l').unwrap();
-  let end = inner_reflow(state, selection, width)?;
+  let end = inner_reflow(state, full_command, selection, width)?;
   // selection.0 has some extra logic to handle that effective deletion may
   // occur when reflowing a selection without any words. See 'd' command logic.
   state.selection = (selection.0.min(end).max(1), end);

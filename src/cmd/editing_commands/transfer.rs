@@ -9,6 +9,7 @@ enum TransferType {
 }
 fn inner_transfer(
   state: &mut Ed<'_>,
+  full_command: &str,
   selection: (usize, usize),
   index: usize,
   mode: TransferType,
@@ -22,7 +23,7 @@ fn inner_transfer(
       return Err(EdError::NoOp).into();
     }
   }
-  let buffer = state.history.current_mut()?;
+  let buffer = state.history.current_mut(full_command.into())?;
   match mode {
     // The simple one, just iterate over selection into a tmp vec, then add it
     // after given index.
@@ -74,6 +75,7 @@ fn inner_transfer(
 pub fn transfer(
   state: &mut Ed<'_>,
   pflags: &mut PrintingFlags,
+  full_command: &str,
   selection: Option<Sel<'_>>,
   command: char,
   tail: &str,
@@ -95,10 +97,10 @@ pub fn transfer(
   pflags.l = flags.remove(&'l').unwrap();
   // Run the command, returning the selection after
   state.selection = match command {
-    'm' => inner_transfer(state, selection, index, TransferType::Move)?,
-    'M' => inner_transfer(state, selection, index.saturating_sub(1), TransferType::Move)?,
-    't' => inner_transfer(state, selection, index, TransferType::Copy)?,
-    'T' => inner_transfer(state, selection, index.saturating_sub(1), TransferType::Copy)?,
+    'm' => inner_transfer(state, full_command, selection, index, TransferType::Move)?,
+    'M' => inner_transfer(state, full_command, selection, index.saturating_sub(1), TransferType::Move)?,
+    't' => inner_transfer(state, full_command, selection, index, TransferType::Copy)?,
+    'T' => inner_transfer(state, full_command, selection, index.saturating_sub(1), TransferType::Copy)?,
     _ => return ed_unreachable!(),
   };
   Ok(())

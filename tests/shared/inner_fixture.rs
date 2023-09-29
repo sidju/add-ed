@@ -53,7 +53,7 @@ pub fn inner_fixture(
     });
     c
   });
-  ed.history.current_mut().unwrap().append(&mut (&init_buffer).try_into().unwrap());
+  ed.history.current_mut("initial load\n".into()).unwrap().append(&mut (&init_buffer).try_into().unwrap());
   if init_buffer_saved { ed.history.set_saved(); }
   // Create scripted UI (with mock UI, which tracks print invocations)
   let mut inner_ui = MockUI{ prints_history: Vec::new() };

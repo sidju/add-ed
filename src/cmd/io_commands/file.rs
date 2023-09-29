@@ -50,6 +50,7 @@ fn replace_buffer<'a>(
 pub fn read_from_file(
   state: &mut Ed<'_>,
   ui: &mut dyn UI,
+  full_command: &str,
   selection: Option<Sel<'_>>,
   command: char,
   path: &str,
@@ -95,8 +96,8 @@ pub fn read_from_file(
     };
     let data = unformated_data.split_inclusive('\n');
     let datalen = match index {
-      Some(i) => insert(state.history.current_mut()?, data, i),
-      None => replace_buffer(state.history.current_mut()?, data),
+      Some(i) => insert(state.history.current_mut(full_command.into())?, data, i),
+      None => replace_buffer(state.history.current_mut(full_command.into())?, data),
     }?;
     // Handle after-effects
     let index = index.unwrap_or(0) + 1;

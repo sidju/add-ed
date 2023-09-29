@@ -19,6 +19,7 @@ pub enum LocalIOError {
   /// The child thread running the shell command failed to begin execution.
   ChildFailedToStart(std::io::Error),
   /// The child thread running a shell command returned a non-zero integer
+  /// (Shells run with `-c` will return this if given command wasn't found)
   ChildReturnedError(i32),
   /// The child thread running a shell command was killed by a signal
   ChildKilledBySignal,
@@ -72,8 +73,9 @@ impl std::fmt::Display for LocalIOError {
         e,
       )},
       Self::ChildReturnedError(ret) => { write!(f,
-        "Shell process returned non-success result: {}",
+        "Shell process returned non-success result: {}\n{}",
         ret,
+        "OBS! This is the result when a shell couldn't find a command."
       )},
       Self::ChildKilledBySignal => { write!(f,
         "Shell process was killed by a signal.",

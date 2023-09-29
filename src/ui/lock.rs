@@ -2,6 +2,9 @@ use super::UI;
 
 /// A simple object that locks UI and calls unlock_ui on it when being dropped
 /// (Since it holds a mutable ref to UI its existence locks UI interaction)
+///
+/// Exists to provide a mutex mechanism for UIs which cannot do anything else
+/// while an [`crate::IO`] is using the process' tty.
 pub struct UILock<'a> {
   inner: &'a mut dyn UI,
 }

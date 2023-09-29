@@ -9,7 +9,12 @@ mod internal;
 pub use internal::*;
 
 // Define structs and traits for UI and IO errors
+/// A trait to mark fulfilling the requirements put upon UI error types.
 pub trait UIErrorTrait: std::error::Error + as_any::AsAny + 'static {}
+/// A wrapping struct for any UI's error type
+///
+/// To use the wrapper implement [`UIErrorTrait`] on the error type to wrap and
+/// use `.into()` to convert it into this UIError wrapper.
 #[derive(Clone, Debug)]
 pub struct UIError {
   pub inner: Rc<dyn UIErrorTrait>,
@@ -24,7 +29,14 @@ impl UIError {
     (&*self.inner).downcast_ref::<T>()
   }
 }
+/// A trait to mark fulfilling the requirements put upon IO error types.
 pub trait IOErrorTrait: std::error::Error + as_any::AsAny + 'static {}
+/// A wrapper type for any IO implementation's error type
+///
+/// To use the wrapper implement [`IOErrorTrait`] on the error type to wrap. The
+/// return types on the [`crate::IO`] trait's methods will give automatic
+/// conversion via the `?` operator in a lot of cases, but in some cases it is
+/// likely still needed to call `.into()` to convert.
 #[derive(Clone, Debug)]
 pub struct IOError {
   pub inner: Rc<dyn IOErrorTrait>,
@@ -55,8 +67,16 @@ pub enum EdError {
   /// Internal error, usually from something OS related.
   Internal(InternalError),
   /// A holder for errors from the IO implementation.
+  ///
+  /// WARNING: internal equality of the held IO error will not be checked. You
+  /// will need to downcast and verify this yourself if relevant. (See helper on
+  /// [`IOError`].)
   IO(IOError),
   /// A holder for errors from the UI implementation.
+  ///
+  /// WARNING: internal equality of the held UI error will not be checked. You
+  /// will need to downcast and verify this yourself if relevant. (See helper on
+  /// [`UIError`].)
   UI(UIError),
 
   /// Execution recursed more times than [`Ed.recursion_limit`], indicating
@@ -67,6 +87,8 @@ pub enum EdError {
 
   // Selection/index interpretation/validation errors
   /// Given index exceeds size of buffer.
+  ///
+  /// (Always given if buffer is empty)
   IndexTooBig{index: usize, buffer_len: usize},
   /// Index 0 isn't a valid line.
   Line0Invalid,

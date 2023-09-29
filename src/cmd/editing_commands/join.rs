@@ -2,9 +2,10 @@ use super::*;
 
 fn inner_join(
   state: &mut Ed<'_>,
+  full_command: &str,
   selection: (usize, usize),
 ) -> Result<()> {
-  let buffer = state.history.current_mut()?;
+  let buffer = state.history.current_mut(full_command.into())?;
   // Take out lines
   let mut tail = buffer.split_off(selection.1);
   let data = buffer.split_off(selection.0 - 1);
@@ -26,6 +27,7 @@ fn inner_join(
 pub fn join(
   state: &mut Ed<'_>,
   pflags: &mut PrintingFlags,
+  full_command: &str,
   selection: Option<Sel<'_>>,
   tail: &str,
 ) -> Result<()> {
@@ -35,7 +37,7 @@ pub fn join(
   pflags.p = flags.remove(&'p').unwrap();
   pflags.n = flags.remove(&'n').unwrap();
   pflags.l = flags.remove(&'l').unwrap();
-  inner_join(state, selection)?;
+  inner_join(state, full_command, selection)?;
   state.selection = (selection.0, selection.0);
   Ok(())
 }
