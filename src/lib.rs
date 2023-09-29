@@ -100,15 +100,16 @@ pub struct Ed <'a> {
   pub history: History<Buffer>,
   /// The current clipboard contents
   ///
-  /// Uses a reduced Line, since some of the internal data in Line could cause
-  /// unexpected behavior if pasted as is.
+  /// Uses a special [`Buffer`] analogue over [`PubLine`], since some of the
+  /// internal data in Line could cause unexpected behavior if pasted as is.
   pub clipboard: Clipboard,
   /// Tracks the currently selected lines in the buffer.
   ///
   /// Inclusive 1-indexed start and end bounds over selected lines. Selected
   /// lines aren't required to exist, but it is recommended for user comfort.
   /// Empty selection should only occur when the buffer is empty, and in that
-  /// case exactly (1,0). Invalid selections cause errors, not crashes.
+  /// case exactly (1,0). Invalid selections cause errors, not crashes (verified
+  /// by fuzzing).
   pub selection: (usize, usize),
   /// Currently used IO implementor
   ///
@@ -152,9 +153,11 @@ pub struct Ed <'a> {
   /// UI errors occuring outside of Ed should also be written to this variable,
   /// so `h` prints the latest error that occured in the whole application.
   pub error: Option<EdError>,
-  /// Configuration field for macros.
+  /// EXPERIMENTAL: Configuration field for macros.
   ///
-  /// A map from macro name to string of newline separated commands.
+  /// A map from macro name to string of newline separated commands. A change of
+  /// format from a string of newline separated commands to a wrapping struct is
+  /// planned.
   pub macros: HashMap<String, String>,
   /// Set how many recursions should be allowed.
   ///
@@ -166,6 +169,17 @@ pub struct Ed <'a> {
 
 impl <'a, > Ed <'a> {
   /// Construct a new instance of Ed
+  ///
+  /// Defaults are as follow:
+  /// - `file`: empty string
+  /// - `clipboard`: empty clipboard
+  /// - `error`: `None`
+  /// - `print_errors`: `true`
+  /// - `n`: `false`,
+  /// - `l`: `false`,
+  /// - `cmd_prefix`: `Some(':')`
+  /// - `macros`: empty hashmap
+  /// - `recursion_limit`: `16`
   pub fn new(
     io: &'a mut dyn IO,
   ) -> Self {
@@ -282,7 +296,7 @@ impl <'a, > Ed <'a> {
   /// Run until quit by command
   ///
   /// Prints ? or error message as errors occur (depending on `print_errors`).
-  /// Returns error if error occurs when printing.
+  /// Returns error only if error occurs when printing an error.
   pub fn run(
     &mut self,
     ui: &mut dyn UI,

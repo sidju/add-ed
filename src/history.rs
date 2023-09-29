@@ -19,7 +19,8 @@ pub trait Snapshot{
 /// A history abstraction over generic objects used by add-ed.
 ///
 /// Handles snapshotting and undo/redo to move over the history of snapshots.
-/// Currently uses a revert style of undo, more details/links on github.
+/// Currently uses a revert style of undo inspired by
+/// [this reasoning.](https://github.com/zaboople/klonk/blob/master/TheGURQ.md)
 ///
 /// Automatically manages snapshot creation upon mutable access to the current
 /// point in history. Further allows pausing snapshot creation via
@@ -30,7 +31,7 @@ pub trait Snapshot{
 pub struct History<T> where
   T: Default + Debug + Snapshot + PartialEq,
 {
-  snapshots: Vec<T>,
+  snapshots: Vec<(String, T)>,
   viewed_i: usize,
   saved_i: Option<usize>,
   /// If true all calls to [`History::snapshot`] are ignored
@@ -53,7 +54,7 @@ impl <T> History<T> where
   /// - Considered saved at initial empty state.
   pub fn new() -> Self {
     Self{
-      snapshots: vec![T::default()],
+      snapshots: vec![("Initial empty buffer".to_owned(), T::default())],
       viewed_i: 0,
       saved_i: Some(0),
       dont_snapshot: false,
@@ -68,8 +69,8 @@ impl <T> History<T> where
   }
   /// Mark the currently viewed buffer state as saved
   ///
-  /// If [`Self.dont_snapshot`] is set this instead behaves as
-  /// [`Self.set_unsaved`], as we cannot be sure a snapshot will exist
+  /// If `dont_snapshot` is set this instead behaves as
+  /// `set_unsaved()`, as we cannot be sure a snapshot will exist
   /// corresponding to the state in which the buffer was saved.
   pub fn set_saved(&mut self) {
     if !self.dont_snapshot {
@@ -88,23 +89,31 @@ impl <T> History<T> where
 
   /// Get an immutable view into the currently viewed point in history
   pub fn current(&self) -> &T {
-    &self.snapshots[self.viewed_i]
+    &self.snapshots[self.viewed_i].1
   }
   /// Get a mutable state to make new changes
   ///
+  /// - Takes a string describing what is causing this new snapshot. (Should
+  ///   generally be the full command, if not be as clear as possible.)
   /// - If currently viewing history, will create a revert snapshot at end of
-  /// history.
+  ///   history.
   /// - Unless self.dont_snapshot, will create a new snapshot.
   /// - Returns mutable access to the snapshot at the end of history.
-  pub fn current_mut(&mut self) -> Result<&mut T> {
-    self.snapshot()?;
-    Ok(&mut self.snapshots[self.viewed_i])
+  ///
+  /// May return error if snapshot history is becoming too long to be stored in
+  /// an isize. If that occurs saving the file, closing the editor and opening
+  /// it again is the only current way to clear history without data loss.
+  pub fn current_mut(&mut self,
+    modification_cause: String,
+  ) -> Result<&mut T> {
+    self.snapshot(modification_cause)?;
+    Ok(&mut self.snapshots[self.viewed_i].1)
   }
 
   /// Move the given number of steps back into history
   pub fn undo(&mut self,
     steps: isize,
-  ) -> Result<()> {
+  ) -> Result<&str> {
     let range = self.undo_range()?;
     if !range.contains(&steps) {
       Err(EdError::UndoStepsInvalid{undo_steps: steps, undo_range: range})?
@@ -114,7 +123,7 @@ impl <T> History<T> where
     } else {
       self.viewed_i -= steps as usize;
     }
-    Ok(())
+    Ok(&self.snapshots[self.viewed_i].0)
   }
   /// Returns how far you can undo/redo
   pub fn undo_range(&self) -> Result<std::ops::Range<isize>> {
@@ -128,19 +137,28 @@ impl <T> History<T> where
     }
   }
 
-  fn internal_create_snapshot(&mut self) {
-    // Push the current index to end of history
+  fn internal_create_snapshot(&mut self, label: String) {
+    // Push the current index to end of history with label
     // (reverts if in history, snapshots if at end of history)
-    self.snapshots.push(self.snapshots[self.viewed_i].create_snapshot());
+    self.snapshots.push((label, self.snapshots[self.viewed_i].1.create_snapshot()));
     // Move to end of history
     self.viewed_i = self.snapshots.len() - 1;
   }
   /// Manually add a snapshot
   ///
+  /// Takes a String as an argument that should describe what causes the
+  /// change seen in the created snapshot relative to the preceding snapshot.
+  ///
   /// The only case this should be needed is before setting `dont_snapshot` for
   /// a script execution. If `dont_snapshot` isn't set snapshots are created
   /// automatically whenever [`Self.current_mut`] is executed.
-  pub fn snapshot(&mut self) -> Result<()> {
+  ///
+  /// May return error if snapshot history is becoming too long to be stored in
+  /// an isize. If that occurs saving the file, closing the editor and opening
+  /// it again is the only current way to clear history without data loss.
+  pub fn snapshot(&mut self,
+    modification_cause: String,
+  ) -> Result<()> {
     // Verify that we don't overflow history
     // Add two, since two snapshots are created for revert + snapshot
     if self.snapshots.len() + 2 > isize::MAX as usize {
@@ -149,11 +167,14 @@ impl <T> History<T> where
     // If we are in the past, create a revert snapshot
     // This is needed even if snapshots are disabled, to not change history
     if self.viewed_i < self.snapshots.len() - 1 {
-      self.internal_create_snapshot();
+      self.internal_create_snapshot(format!(
+        "Reverted the {} actions undone to as one operation.",
+        self.snapshots.len().saturating_sub(self.viewed_i + 1),
+      ));
     }
     // If snapshots aren't disabled, create one
     if !self.dont_snapshot {
-      self.internal_create_snapshot();
+      self.internal_create_snapshot(modification_cause);
     }
     // Create snapshot to work on and move into future
     Ok(())
@@ -168,7 +189,7 @@ impl <T> History<T> where
   /// be deleted if extraneous and left if relevant.
   pub fn dedup_present(&mut self) {
     let mut last_2_iter = self.snapshots.iter().rev().take(2);
-    if last_2_iter.next() == last_2_iter.next() {
+    if last_2_iter.next().map(|x| &x.1) == last_2_iter.next().map(|x| &x.1) {
       self.snapshots.pop();
       self.viewed_i = self.snapshots.len() - 1;
     }

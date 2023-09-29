@@ -2,10 +2,11 @@ use super::*;
 
 fn inner_change(
   state: &mut Ed<'_>,
+  full_command: &str,
   mut input: Vec<String>,
   selection: (usize, usize),
 ) -> Result<()> {
-  let buffer = state.history.current_mut()?;
+  let buffer = state.history.current_mut(full_command.into())?;
   let mut tail = buffer.split_off(selection.1);
   state.clipboard = buffer.split_off(selection.0 - 1)[..].into();
   // Note that drain gives full Strings and Line::new will use them as-is,
@@ -20,6 +21,7 @@ pub fn change(
   state: &mut Ed<'_>,
   ui: &mut dyn UI,
   pflags: &mut PrintingFlags,
+  full_command: &str,
   selection: Option<Sel<'_>>,
   command: char,
   flags: &str,
@@ -61,7 +63,7 @@ pub fn change(
       return Err(EdError::PrintAfterWipe);
     }
   }
-  inner_change(state, input, sel)?;
+  inner_change(state, full_command, input, sel)?;
   // Re-declare to allow the old one to drop for mutable call above and still use one after
   let buffer = state.history.current();
   state.selection = {

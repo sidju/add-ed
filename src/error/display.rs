@@ -22,11 +22,19 @@ impl std::fmt::Display for EdError {
         "Execution recursion hit recursion limit, no changes made."
       ),
 
-      IndexTooBig{index, buffer_len} => write!(f,
-        "Given index ({}) overshoots the length of the buffer ({}).",
-        index,
-        buffer_len,
-      ),
+      IndexTooBig{index, buffer_len} => {
+        if *buffer_len == 0 {
+          write!(f,
+            "Buffer is empty, so no valid selections or lines can exist.",
+          )
+        } else {
+          write!(f,
+            "Given index ({}) overshoots the length of the buffer ({}).",
+            index,
+            buffer_len,
+          )
+        }
+      },
       Line0Invalid => write!(f,
         "Index 0 was given when a line was needed, there is no line at index 0."
       ),

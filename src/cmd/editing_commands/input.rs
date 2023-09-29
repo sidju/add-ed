@@ -2,10 +2,11 @@ use super::*;
 
 fn inner_input(
   state: &mut Ed<'_>,
+  full_command: &str,
   mut input: Vec<String>,
   index: usize,
 ) -> Result<()> {
-  let buffer = state.history.current_mut()?;
+  let buffer = state.history.current_mut(full_command.into())?;
   let mut tail = buffer.split_off(index);
   for line in input.drain(..) {
     buffer.push(Line::new(line).map_err(InternalError::InvalidLineText)?);
@@ -19,11 +20,12 @@ enum InlineSide {
 }
 fn inner_inline_input(
   state: &mut Ed<'_>,
+  full_command: &str,
   mut input: Vec<String>,
   line: usize,
   side: InlineSide,
 ) -> Result<()> {
-  let buffer = state.history.current_mut()?;
+  let buffer = state.history.current_mut(full_command.into())?;
   let mut tail = buffer.split_off(line);
   let indexed_line = buffer.split_off(line - 1);
   // We need to verify this here, so we can unwrap from the iterator later
@@ -42,7 +44,7 @@ fn inner_inline_input(
       }
       // Send in the line itself
       // Arguably we could use the same tag and matched as from the indexed line
-      // but we don't since that would be inconsistent with 'c' and 'C' command.
+      // but we don't since that would be inconsistent with 'c' and 'C' full_command.
       buffer.push(Line::new(joined_line)
         .map_err(InternalError::InvalidLineText)?
       );
@@ -53,7 +55,7 @@ fn inner_inline_input(
       joined_line.pop(); // Remove newline that should terminate all lines
       joined_line.push_str(&input_iter.next().unwrap());
       // Arguably we could use the same tag and matched as from the indexed line
-      // but we don't since that would be inconsistent with 'c' and 'C' command.
+      // but we don't since that would be inconsistent with 'c' and 'C' full_command.
       buffer.push(Line::new(joined_line)
         .map_err(InternalError::InvalidLineText)?
       );
@@ -70,6 +72,7 @@ pub fn input(
   state: &mut Ed<'_>,
   ui: &mut dyn UI,
   pflags: &mut PrintingFlags,
+  full_command: &str,
   selection: Option<Sel<'_>>,
   command: char,
   flags: &str,
@@ -113,16 +116,16 @@ pub fn input(
     // 'A' and 'I' need a join
     match command {
       'A' => {
-        inner_inline_input(state, input, index, InlineSide::After)?;
+        inner_inline_input(state, full_command, input, index, InlineSide::After)?;
         // This offsets start and end of sel by -1
         (start - 1, end - 1)
       },
       'I' => {
-        inner_inline_input(state, input, index, InlineSide::Before)?;
+        inner_inline_input(state, full_command, input, index, InlineSide::Before)?;
         (start - 1,end - 1)
       },
       'a' | 'i' => {
-        inner_input(state, input, index)?;
+        inner_input(state, full_command, input, index)?;
         (start, end)
       },
       _ => { panic!("Unreachable code reached"); }
