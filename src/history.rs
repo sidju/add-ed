@@ -59,7 +59,7 @@ impl <T> History<T> where
   /// - Considered saved at initial empty state.
   pub fn new() -> Self {
     Self{
-      snapshots: vec![("Initial empty buffer".to_owned(), T::default())],
+      snapshots: vec![("Before reading in a file (empty)".to_owned(), T::default())],
       viewed_i: 0,
       saved_i: Some(0),
       dont_snapshot: false,
