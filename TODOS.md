@@ -1,17 +1,19 @@
 # Todos:
-- Add undo/redo utilities:
-  - Absolute indexing `u*20` goes to the 20:th snapshot
-  - (Maybe eventually '?' and '/' to search for a command to undo/redo to)
-  - A way to clear the history (to clear memory usage)
 - Look over when we save to Ed.prev_shell_command, currently before execution.
   (Could be nice to check that it runs successfully first, but for some
   commands (eg. compilation) that could make it unusable...)
-- Consider adding 'R' command, as 'r' but inserts before selection.
 - Inject context environment variables into shell interaction.
   (File, selection_start, selection_end, prev_shell_command, if running script)
 - Improve classic.rs to support all of ed's command line arguments
-- Look over API documentation again, since refactoring has changed the API.
 - Implement parsing under the trait FromStr instead?
+  (using .parse() would look nice, but current way is probably clearer)
+- UI.unlock_ui, possibly see if we can require a private phantom/marker
+  argument to this, preventing it from being called by any code not in the
+  add_ed crate (and thus making it impossible for a library user to
+  incorrectly run it from anywhere but UILock::drop)
+- Possibly add a private empty variable to LocalIO to enforce using the
+  constructor (removing the need to document recommending using the
+  constructor).
 
 
 # Look over command documentation
@@ -27,6 +29,20 @@ markdown should be a reasonable option for somewhat rich text which is OK to
 print without rendering (as long as we keep it under 80 columns).
 
 
+# Look over undo/redo
+- Add absolute indexing to the 'u' command (`u*0` = go to index 0 in history)
+- Possibly eventually add reverse/forward snapshot label search
+  (`u?^e?` would search backwards to the last previous 'e' command (just regex))
+- Possibly a way to clear the history (probably as a subcommand/argument under
+  'U', perhaps better as a distinct command)
+- Improve 'U' command, print relative indices of all snapshots.
+- Some flags to print history in different ways (the 'U' command).
+  - 'a' to print absolute indices for the snapshots
+  - 'A' to print the whole history
+  - integer to give a specific snapshot to print nearby snapshots to
+  - '$' to print snapshots relative to the last existing snapshot
+
+
 # Look over macros.
 Make macros useful by:
 - Adding support for arguments
@@ -39,6 +55,7 @@ Make macros useful by:
 
 
 # Documentation fixes:
+- Look over API documentation again, since refactoring has changed the API.
 - Ed, methods should generally be clearer with what error they will return
   under what circumstance.
   (
@@ -48,10 +65,3 @@ Make macros useful by:
   Those who write an infallible UI should be able to know what methods may
   no longer return errors.
   )
-- UI.unlock_ui, possibly see if we can require a private phantom/marker
-  argument to this, preventing it from being called by any code not in the
-  add_ed crate (and thus making it impossible for a library user to
-  incorrectly run it from anywhere but UILock::drop)
-- Possibly add a private empty variable to LocalIO to enforce using the
-  constructor (removing the need to document recommending using the
-  constructor).
