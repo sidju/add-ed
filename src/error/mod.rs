@@ -1,6 +1,7 @@
 //! Holds Error type for the crate
 
 use std::rc::Rc;
+use std::borrow::Cow;
 
 pub type Result<T> = std::result::Result<T, EdError>;
 
@@ -155,7 +156,7 @@ pub enum EdError {
   /// Holds whole argument list.
   ArgumentListEscapedEnd(String),
   /// Wrong number of argument.
-  ArgumentsWrongNr{expected: &'static str, received: usize},
+  ArgumentsWrongNr{expected: Cow<'static, str>, received: usize},
   /// `z` command received a non numeric number of lines to scroll.
   /// Holds given argument.
   ScrollNotInt(String),
