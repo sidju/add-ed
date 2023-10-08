@@ -36,6 +36,10 @@ impl UI for MockUI {
     Ok(())
   }
 
+  fn print_command_documentation(&mut self) -> Result<()> {
+    self.print_message(crate::messages::COMMAND_DOCUMENTATION)
+  }
+
   fn print_selection(
     &mut self,
     ed: &Ed,

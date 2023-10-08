@@ -24,6 +24,7 @@ fn octothorpe_comment() {
     expected_buffer_saved: true,
     expected_selection: (1,3),
     expected_clipboard: vec![],
+    expected_history_tags: vec![],
   }.run()
 }
 
@@ -38,5 +39,6 @@ fn octothorpe_update_selection() {
     expected_buffer_saved: true,
     expected_selection: (1,2),
     expected_clipboard: vec![],
+    expected_history_tags: vec![],
   }.run()
 }

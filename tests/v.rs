@@ -52,6 +52,7 @@ fn invglobal_grep_defaultcommand() {
         l: false,
       },
     ],
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -88,6 +89,7 @@ fn invglobal_vrep_and_delete() {
         l: false,
       },
     ],
+    expected_history_tags: vec![r",v/\d/p"],
   }.run();
 }
 
@@ -126,6 +128,7 @@ fn invglobal_grep_noselection_commandafter() {
         l: true,
       },
     ],
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -183,6 +186,7 @@ fn invglobal_interactive_defaultcommand_defaultselection() {
         l: true,
       },
     ],
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -223,5 +227,6 @@ fn invglobal_interactive_delete() {
         l: true,
       },
     ],
+    expected_history_tags: vec![r"V/\d/"],
   }.run();
 }

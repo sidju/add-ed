@@ -41,6 +41,7 @@ fn default() {
         l: false,
       }
     ],
+    expected_history_tags: vec![],
   }.run()
 }
 
@@ -64,6 +65,7 @@ fn default_noselection() {
         l: false,
       }
     ],
+    expected_history_tags: vec![],
   }.run()
 }
 

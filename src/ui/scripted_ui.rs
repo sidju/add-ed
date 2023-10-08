@@ -90,6 +90,18 @@ impl <'a> UI for ScriptedUI<'a> {
       None => Ok(()),
     }
   }
+  fn print_commands(&mut self) -> Result<()> {
+    match &mut self.print_ui {
+      Some(ui) => ui.print_commands(),
+      None => Ok(()),
+    }
+  }
+  fn print_command_documentation(&mut self) -> Result<()> {
+    match &mut self.print_ui {
+      Some(ui) => ui.print_command_documentation(),
+      None => Ok(()),
+    }
+  }
   fn print_selection(&mut self,
     ed: &Ed,
     selection: (usize, usize),

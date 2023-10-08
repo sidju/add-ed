@@ -1,3 +1,31 @@
+# 0.11.0
+Nearing a stable release now, so some less clean features are remade in this
+release to be easier to maintain in a stable manner forward.
+
+- New command documentation.
+- Update the README.md and add more in-repo documentation.
+- Add proper macro support under ':', with support for arguments and tests to
+  verify its behaviour. This also changed the macro methods on `Ed` struct.
+- Make '!' forbid selection, instead require using '|' for filtering text
+  through a shell command.
+- Cut down on less meaningful variant commands to make it easier to add more
+  diverse features without breaking the command language in the future.
+  - 'J' has been removed, as it is functionally equivalent or inferior to
+    `<selection>!fmt -w 80`.
+  - 'L' and 'N' have been combined into a 'P' command, which uses the flags
+    themselves to toggle their defaults in a single command. This allows adding
+    more flags with toggle-able defaults in the future without needing more
+    commands.
+  - 'M' and 'T' removed. As you already need to give an index to move/copy to
+    you might as well just give that index - 1 to prepend.
+- Started testing with insight into undo history, so undo snapshot creation is
+  now testable and verified.
+- Made some exported structs impossible to create aside from constructors, to
+  enable maintaining compability by just keeping the same constructors as the
+  member variables change.
+- Limit nesting depth when running commands than run commands. (Mainly to
+  prevent macros from doing infinite recursion.)
+
 # 0.10.0
 - Add a first sketch of undo/redo. Feedback on behaviour is requested in the
   "Undo behaviour" issue (#3) on github

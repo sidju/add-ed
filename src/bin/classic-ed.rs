@@ -24,12 +24,15 @@ impl add_ed::error::UIErrorTrait for ClassicUIError {}
 /// A simple UI based on the original ED editor
 struct ClassicUI{}
 impl UI for ClassicUI {
-    fn print_message(
+  fn print_message(
     &mut self,
     s: &str
   ) -> Result<()> {
     println!("{}", s);
     Ok(())
+  }
+  fn print_command_documentation(&mut self) -> Result<()> {
+    self.print_message(add_ed::messages::COMMAND_DOCUMENTATION)
   }
   fn get_command(
     &mut self,
@@ -114,8 +117,9 @@ fn main() {
   // Construct state components
   let mut ui = ClassicUI{};
   let mut io = add_ed::io::LocalIO::new();
+  let macro_store = std::collections::HashMap::new();
   // Construct Ed
-  let mut ed = Ed::new(&mut io);
+  let mut ed = Ed::new(&mut io, &macro_store);
   // Apply any configurations
   // Load in from path if given
   if ! cli.file.is_empty() {

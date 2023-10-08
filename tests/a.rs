@@ -37,6 +37,7 @@ fn append_noselection_noinput_nobuffer() {
     expected_buffer_saved: true,
     expected_selection: (1,0),
     expected_clipboard: vec![],
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -52,6 +53,7 @@ fn append_noinput_nobuffer() {
     expected_buffer_saved: true,
     expected_selection: (1,0),
     expected_clipboard: vec![],
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -73,6 +75,7 @@ fn append_noselection_nobuffer_print() {
         l: false,
       },
     ],
+    expected_history_tags: vec!["ap"],
   }.run();
 }
 
@@ -88,6 +91,7 @@ fn append_nobuffer() {
     expected_buffer_saved: false,
     expected_selection: (1,2),
     expected_clipboard: vec![],
+    expected_history_tags: vec!["0a"],
   }.run();
 }
 
@@ -110,6 +114,7 @@ fn append_noselection_noinput_numbered() {
         l: false,
       },
     ],
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -125,6 +130,7 @@ fn append_noinput() {
     expected_buffer_saved: true,
     expected_selection: (1,2),
     expected_clipboard: vec![],
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -146,6 +152,7 @@ fn append_noselection() {
         l: true,
       },
     ],
+    expected_history_tags: vec!["al"],
   }.run();
 }
 
@@ -161,6 +168,7 @@ fn append() {
     expected_buffer_saved: false,
     expected_selection: (3,4),
     expected_clipboard: vec![],
+    expected_history_tags: vec!["2a"],
   }.run();
 }
 
@@ -206,6 +214,7 @@ fn inline_append_noselection_noinput() {
         l: false,
       }
     ],
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -228,6 +237,7 @@ fn inline_append_noinput_literal() {
         l: true,
       }
     ],
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -242,6 +252,7 @@ fn inline_append_noselection() {
     expected_buffer_saved: false,
     expected_selection: (2,3),
     expected_clipboard: vec!["b"],
+    expected_history_tags: vec!["A"],
   }.run();
 }
 
@@ -264,5 +275,6 @@ fn inline_append() {
         l: false,
       }
     ],
+    expected_history_tags: vec!["2An"],
   }.run();
 }

@@ -36,6 +36,7 @@ fn mov() {
     expected_buffer_saved: false,
     expected_clipboard: vec![],
     expected_selection: (1,2),
+    expected_history_tags: vec!["3,4m0"],
   }.run()
 }
 
@@ -58,6 +59,7 @@ fn mov_noindex_noselection_print() {
         l: false,
       },
     ],
+    expected_history_tags: vec!["mp"],
   }.run()
 }
 

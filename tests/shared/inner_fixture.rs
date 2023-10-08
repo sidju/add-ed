@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use std::collections::HashMap;
+
 use super::{
   dummy_io::DummyIO,
   mock_ui::{Print, MockUI},
@@ -11,6 +13,7 @@ use add_ed::{
   Clipboard,
   PubLine,
   LineText,
+  macros::Macro,
 };
 
 pub fn inner_fixture(
@@ -18,10 +21,12 @@ pub fn inner_fixture(
   init_buffer: Vec<&str>,
   init_buffer_saved: bool,
   init_filepath: &str,
+  init_macros: Option<HashMap<&str, Macro>>,
   command_input: Vec<&str>,
   expected_result: Result<(),EdError>,
   expected_buffer: Vec<&str>,
   expected_buffer_saved: bool,
+  expected_history_tags: Vec<&str>,
   expected_selection: (usize, usize),
   expected_clipboard: Vec<&str>,
   expected_filepath: &str,
@@ -29,9 +34,12 @@ pub fn inner_fixture(
 ) {
   // Instantiate dummy IO
   let mut io = DummyIO::new();
+  // Apply given or default to no macros
+  let macros = init_macros.unwrap_or(HashMap::new());
   // Create ed state and init ed.buffer
   let mut ed = Ed::new(
     &mut io,
+    &macros,
   );
   ed.file = init_filepath.to_owned();
   let init_clipboard = init_clipboard.iter().fold(Clipboard::new(), |mut c, x| {
@@ -69,8 +77,15 @@ pub fn inner_fixture(
 
   // Set correct default selection and run test
   ed.selection = (1,ed.history.current().len());
+  let res = loop {
+    match ed.get_and_run_command(&mut ui) {
+      Ok(true) => break Ok(()),
+      Ok(false) => (),
+      Err(e) => break Err(e),
+    }
+  };
   assert_eq!(
-    ed.run_macro(&mut ui),
+    res,
     expected_result,
     "Result from running test (left) didn't match expectations (right)."
   );
@@ -88,6 +103,14 @@ pub fn inner_fixture(
     ed.history.saved(),
     expected_buffer_saved,
     "Buffer.saved() after test (left) didn't match expectations (right)."
+  );
+  assert_eq!(
+    ed.history.snapshots()[2..].iter()
+      .map(|(tag, _)| &tag[..])
+      .collect::<Vec<&str>>()
+    ,
+    expected_history_tags,
+    "The snapshot tags after test (left) didn't match expectations (right)."
   );
   assert_eq!(
     ed.selection,

@@ -42,6 +42,7 @@ fn undo() {
         l: false,
       },
     ],
+    expected_history_tags: vec!["1d","3d"],
   }.run()
 }
 
@@ -63,6 +64,29 @@ fn undo_default() {
         l: false,
       },
     ],
+    expected_history_tags: vec!["1d","3d"],
+  }.run()
+}
+
+// Test defaults
+#[test]
+fn modification_after_undo() {
+  PrintTest{
+    init_buffer: vec!["a","b","c","d"],
+    init_clipboard: vec!["dummy"],
+    command_input: vec!["1d","u","3d"],
+    expected_buffer: vec!["a","b","d"],
+    expected_buffer_saved: false,
+    expected_clipboard: vec!["c"], // Due to "3d"
+    expected_selection: (3,3),
+    expected_prints: vec![
+      Print{
+        text: vec!["Undid 1 operation(s) to right after initial load.".to_owned()],
+        n: false,
+        l: false,
+      },
+    ],
+    expected_history_tags: vec!["1d","u1","3d"],
   }.run()
 }
 
@@ -100,5 +124,6 @@ fn undo_tag_move() {
         l: false,
       }
     ],
+    expected_history_tags: vec!["2m"],
   }.run()
 }

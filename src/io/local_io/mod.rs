@@ -34,6 +34,7 @@ fn spawn_transfer<'a, I, O>(
 }
 
 /// Filesystem and process tree local [`IO`] implementation.
+#[non_exhaustive]
 pub struct LocalIO {
 }
 impl LocalIO {

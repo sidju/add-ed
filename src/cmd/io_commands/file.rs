@@ -14,7 +14,7 @@ pub fn filename(
     }
     Some(x) => { // Set new filename
       match x {
-        Path::Command(_) => return Err(EdError::DefaultFileInvalid(path.into())),
+        Path::Command(_) => return Err(EdError::CommandEscapeForbidden(path.into())),
         Path::File(file) => { state.file = file.to_owned(); },
       }
     }
@@ -136,7 +136,7 @@ pub fn write_to_file(
   ui: &mut dyn UI,
   selection: Option<Sel<'_>>,
   command: char,
-  path: &str,
+  in_path: &str,
 ) -> Result<bool> {
   // Since 'w' and 'W' should default to the whole buffer rather than previous selection
   // they get some custom code here
@@ -156,8 +156,8 @@ pub fn write_to_file(
   };
 
   // If not wq, parse path
-  let (q, path) = if path != "q" {
-    (false, parse_path(path).unwrap_or(Path::File(&state.file)))
+  let (q, path) = if in_path != "q" {
+    (false, parse_path(in_path).unwrap_or(Path::File(&state.file)))
   }
   // If wq, use current file path
   else {
@@ -194,6 +194,10 @@ pub fn write_to_file(
       }
     },
     Path::Command(cmd) => {
+      // 'W' with a command is probably a misstake, error instead
+      if command == 'W' {
+        return Err(EdError::CommandEscapeForbidden(in_path.to_owned()));
+      }
       let (changed, substituted) = command_substitutions(
         cmd,
         &state.file,

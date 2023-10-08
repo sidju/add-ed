@@ -19,10 +19,25 @@ pub mod dummy_ui;
 
 /// The UI trait used to abstract all common UI operations
 pub trait UI {
-  /// A basic print for output of commands
+  /// A basic print for errors and other information messages
   fn print_message(&mut self,
     data: &str,
   ) -> Result<()>;
+
+  /// Print a listing of the commands with short descriptions
+  ///
+  /// Default implementation uses `self.print_message()` to print the const
+  /// string exported at `add_ed::messages::COMMANDS_LISTING`.
+  fn print_commands(&mut self) -> Result<()> {
+    self.print_message(crate::messages::COMMAND_LIST)
+  }
+
+  /// Print commands documentation
+  ///
+  /// Print usage documentation for the commands. You can use the std::concat
+  /// macro to add your own documentation to the commands documentation string
+  /// at `add_ed::messages::COMMANDS_DOCUMENTATION`.
+  fn print_command_documentation(&mut self) -> Result<()>;
 
   /// Get a command for parsing and execution
   ///

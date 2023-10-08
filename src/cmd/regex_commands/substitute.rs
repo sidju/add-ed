@@ -105,7 +105,7 @@ pub fn substitute(
   else {
     let expressions = parse_expressions(tail)?;
     if expressions.len() != 3 {
-      return Err( EdError::ArgumentsWrongNr{expected: "none or 3", received: expressions.len()} );
+      return Err( EdError::ArgumentsWrongNr{expected: "none or 3".into(), received: expressions.len()} );
     }
     let mut flags = parse_flags(&(expressions[2]), "gpnl")?;
     let g = flags.remove(&'g').unwrap();

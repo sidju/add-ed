@@ -26,6 +26,7 @@ fn copy() {
     expected_buffer_saved: true,
     expected_clipboard: vec!["b"],
     expected_selection: (2,2),
+    expected_history_tags: vec![],
   }.run()
 }
 
@@ -48,5 +49,6 @@ fn copy_noselection_print() {
         l: false,
       },
     ],
+    expected_history_tags: vec![],
   }.run()
 }

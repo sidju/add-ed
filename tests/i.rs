@@ -37,6 +37,7 @@ fn insert_noselection_noinput_nobuffer() {
     expected_buffer_saved: true,
     expected_selection: (1,0),
     expected_clipboard: vec![],
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -52,6 +53,7 @@ fn insert_noinput_nobuffer() {
     expected_buffer_saved: true,
     expected_selection: (1,0),
     expected_clipboard: vec![],
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -73,6 +75,7 @@ fn insert_noselection_nobuffer_print() {
         l: false,
       },
     ],
+    expected_history_tags: vec!["ip"],
   }.run();
 }
 
@@ -88,6 +91,7 @@ fn insert_nobuffer() {
     expected_buffer_saved: false,
     expected_selection: (1,2),
     expected_clipboard: vec![],
+    expected_history_tags: vec!["1i"],
   }.run();
 }
 
@@ -110,6 +114,7 @@ fn insert_noselection_noinput_numbered() {
         l: false,
       },
     ],
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -125,6 +130,7 @@ fn insert_noinput() {
     expected_buffer_saved: true,
     expected_selection: (1,2),
     expected_clipboard: vec![],
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -146,6 +152,7 @@ fn insert_noselection() {
         l: true,
       },
     ],
+    expected_history_tags: vec!["il"],
   }.run();
 }
 
@@ -161,6 +168,7 @@ fn insert() {
     expected_buffer_saved: false,
     expected_selection: (1,2),
     expected_clipboard: vec![],
+    expected_history_tags: vec!["1i"],
   }.run();
 }
 
@@ -206,6 +214,7 @@ fn inline_insert_noselection_noinput() {
         l: false,
       }
     ],
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -228,6 +237,7 @@ fn inline_insert_noinput_literal() {
         l: true,
       }
     ],
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -242,6 +252,7 @@ fn inline_insert_noselection() {
     expected_buffer_saved: false,
     expected_selection: (1,2),
     expected_clipboard: vec!["a"],
+    expected_history_tags: vec!["I"],
   }.run();
 }
 
@@ -264,5 +275,6 @@ fn inline_insert() {
         l: false,
       }
     ],
+    expected_history_tags: vec!["1In"],
   }.run();
 }

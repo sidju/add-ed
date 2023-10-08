@@ -33,6 +33,7 @@ fn transfer() {
     expected_buffer_saved: false,
     expected_clipboard: vec![],
     expected_selection: (1,2),
+    expected_history_tags: vec!["3,4t0"],
   }.run()
 }
 
@@ -55,6 +56,7 @@ fn transfer_noindex_noselection_print() {
         l: false,
       },
     ],
+    expected_history_tags: vec!["tp"],
   }.run()
 }
 

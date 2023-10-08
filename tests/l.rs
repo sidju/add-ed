@@ -7,11 +7,6 @@ use shared::fixtures::{
   PrintTest,
 };
 use shared::mock_ui::Print;
-use shared::dummy_io::DummyIO;
-use add_ed::{
-  ui::ScriptedUI,
-  Ed,
-};
 
 // Verify behaviour of 'l' command
 //
@@ -48,6 +43,7 @@ fn literal() {
         l: true,
       }
     ],
+    expected_history_tags: vec![],
   }.run()
 }
 
@@ -74,6 +70,7 @@ fn literal_numbered_noselection() {
         l: true,
       }
     ],
+    expected_history_tags: vec![],
   }.run()
 }
 
@@ -84,47 +81,3 @@ fn literal_numbered_noselection() {
 // - Does not modify saved
 // - Toggles the state.l bool, which sets if to print literal by default
 
-// Verify toggling of literal by knowing state before and verifying after
-#[test]
-fn literal_toggle_on() {
-  let mut io = DummyIO::new();
-  let mut ui = ScriptedUI{
-    print_ui: None,
-    input: vec![
-      "L",
-    ].iter().map(|x|{
-      let mut s = x.to_string();
-      s.push('\n');
-      s
-    }).collect(),
-  };
-  // Construct editor state and run
-  let mut ed = Ed::new(
-    &mut io,
-  );
-  ed.run_macro(&mut ui).expect("Error running test");
-  assert_eq!(ed.l, true);
-  assert!(ed.history.current().is_empty());
-}
-#[test]
-fn literal_toggle_off() {
-  let mut io = DummyIO::new();
-  let mut ui = ScriptedUI{
-    print_ui: None,
-    input: vec![
-      "L",
-    ].iter().map(|x|{
-      let mut s = x.to_string();
-      s.push('\n');
-      s
-    }).collect(),
-  };
-  // Construct editor state and run
-  let mut ed = Ed::new(
-    &mut io,
-  );
-  ed.l = true;
-  ed.run_macro(&mut ui).expect("Error running test");
-  assert_eq!(ed.l, false);
-  assert!(ed.history.current().is_empty());
-}

@@ -34,6 +34,7 @@ fn equals_noselection() {
         l: false,
       }
     ],
+    expected_history_tags: vec![],
   }.run()
 }
 
@@ -57,5 +58,6 @@ fn equals() {
         l: false,
       }
     ],
+    expected_history_tags: vec![],
   }.run()
 }

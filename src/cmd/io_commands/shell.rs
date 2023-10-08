@@ -25,10 +25,12 @@ pub fn run_command(
   ch: char,
   command: &str,
 ) -> Result<()> {
-  // If ! we default to no selection, if | we default to prior selection
-  let sel = if ch == '!' && selection.is_none() {
+  // '!' doesn't allow a selection
+  let sel = if ch == '!' {
+    if selection.is_some() { return Err(EdError::SelectionForbidden); }
     None
   }
+  // '|' parses selection normally
   else {
     let sel = interpret_selection(&state, selection, state.selection)?;
     state.history.current().verify_selection(sel)?;
@@ -45,11 +47,13 @@ pub fn run_command(
   match sel {
     // When there is no selection we just run the command, no buffer interaction
     None => {
-      state.io.run_command(
+      let res = state.io.run_command(
         &mut ui.lock_ui(),
         substituted,
-      )?;
+      );
+      // Signify end of command output before reacting to potential error
       ui.print_message(&ch.to_string())?;
+      res?;
     },
     // When there is a selection we pipe that selection through the command and
     // replace it with the output

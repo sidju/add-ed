@@ -35,6 +35,7 @@ fn mark() {
     expected_buffer_saved: true,
     expected_selection: (1,3),
     expected_clipboard: vec![],
+    expected_history_tags: vec![],
   }.run()
 }
 
@@ -59,6 +60,7 @@ fn mark_print_adress() {
         l: false,
       },
     ],
+    expected_history_tags: vec![],
   }.run()
 }
 
@@ -79,6 +81,7 @@ fn mark_last() {
     expected_buffer_saved: true,
     expected_selection: (1,3),
     expected_clipboard: vec![],
+    expected_history_tags: vec![],
   }.run()
 }
 
@@ -103,5 +106,6 @@ fn mark_last_print_adress() {
         l: false,
       },
     ],
+    expected_history_tags: vec![],
   }.run()
 }

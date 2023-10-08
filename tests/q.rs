@@ -21,10 +21,12 @@ use add_ed::{
 #[test]
 fn quit() {
   let mut io = DummyIO::new();
+  let macros = std::collections::HashMap::new();
   let mut ui = DummyUI{};
   // Construct editor state and run
   let mut ed = Ed::new(
     &mut io,
+    &macros,
   );
   ed.history.set_saved();
   assert!(ed.run_command(&mut ui, "q\n").expect("Error running test"));
@@ -44,10 +46,12 @@ fn quit_unsaved() {
 #[test]
 fn force_quit_unsaved() {
   let mut io = DummyIO::new();
+  let macros = std::collections::HashMap::new();
   let mut ui = DummyUI{};
   // Construct editor state and run
   let mut ed = Ed::new(
     &mut io,
+    &macros,
   );
   ed.history.set_unsaved();
   assert!(ed.run_command(&mut ui, "Q\n").expect("Error running test"));

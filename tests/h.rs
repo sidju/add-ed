@@ -9,7 +9,7 @@ use shared::dummy_io::DummyIO;
 use add_ed::ui::ScriptedUI;
 use add_ed::Ed;
 use add_ed::error::EdError;
-use add_ed::messages::HELP_TEXT;
+use add_ed::messages::{COMMAND_LIST,COMMAND_DOCUMENTATION};
 
 // We have some tests without fixtures in here, as we shouldn't panic on error
 // and care about state.print_errors unlike all other fixtures.
@@ -42,6 +42,7 @@ fn help_noerror() {
         l: false,
       }
     ],
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -49,6 +50,7 @@ fn help_noerror() {
 #[test]
 fn help() {
   let mut io = DummyIO::new();
+  let macros = std::collections::HashMap::new();
   let mut inner_ui = MockUI{ prints_history: Vec::new() };
   let mut ui = ScriptedUI{
     print_ui: Some(&mut inner_ui),
@@ -64,9 +66,12 @@ fn help() {
   // Construct editor state and run
   let mut ed = Ed::new(
     &mut io,
+    &macros,
   );
-  assert_eq!(ed.run_macro(&mut ui), Err(EdError::IndexTooBig{index:1,buffer_len:0}));
-  ed.run_macro(&mut ui).expect("Error running test");
+  assert_eq!(ed.get_and_run_command(&mut ui), Err(EdError::IndexTooBig{index:1,buffer_len:0}));
+  loop {
+    if ed.get_and_run_command(&mut ui).expect("Error running test") { break; }
+  }
   assert!(ed.history.current().is_empty());
   assert_eq!(
     vec![
@@ -83,6 +88,7 @@ fn help() {
 #[test]
 fn help_toggle() {
   let mut io = DummyIO::new();
+  let macros = std::collections::HashMap::new();
   let mut ui = ScriptedUI{
     print_ui: None,
     input: vec![
@@ -96,15 +102,18 @@ fn help_toggle() {
   // Construct editor state and run
   let mut ed = Ed::new(
     &mut io,
+    &macros,
   );
   assert_eq!(ed.print_errors, true);
-  ed.run_macro(&mut ui).expect("Error running test");
+  loop {
+    if ed.get_and_run_command(&mut ui).expect("Error running test") { break; }
+  }
   assert_eq!(ed.print_errors, false);
   assert!(ed.history.current().is_empty());
 }
 
 #[test]
-fn help_text() {
+fn help_commands() {
   PrintTest{
     init_buffer: vec![],
     init_clipboard: vec![],
@@ -115,10 +124,32 @@ fn help_text() {
     expected_clipboard: vec![],
     expected_prints: vec![
       Print{
-        text: [HELP_TEXT].iter().map(|s| s.to_string()).collect(),
+        text: [COMMAND_LIST].iter().map(|s| s.to_string()).collect(),
         n: false,
         l: false,
       }
     ],
+    expected_history_tags: vec![],
+  }.run();
+}
+
+#[test]
+fn help_documentation() {
+  PrintTest{
+    init_buffer: vec![],
+    init_clipboard: vec![],
+    command_input: vec!["Help"],
+    expected_buffer: vec![],
+    expected_buffer_saved: true,
+    expected_selection: (1,0),
+    expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: [COMMAND_DOCUMENTATION].iter().map(|s| s.to_string()).collect(),
+        n: false,
+        l: false,
+      }
+    ],
+    expected_history_tags: vec![],
   }.run();
 }
