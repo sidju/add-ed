@@ -27,9 +27,10 @@
 //!   input: vec![format!("e {}\n", "Cargo.toml")].into(),
 //!   print_ui: None,
 //! };
+//! let macro_store = std::collections::HashMap::new();
 //! let mut io = LocalIO::new();
 //! // Construct and run ed
-//! let mut ed = Ed::new(&mut io);
+//! let mut ed = Ed::new(&mut io, &macro_store);
 //! ed.run(&mut ui)?;
 //! # Ok(()) }
 //! ```
@@ -41,7 +42,6 @@
 //! [readme]: https://github.com/sidju/add-ed/blob/main/README.md
 //! [release notes]: https://github.com/sidju/add-ed/blob/main/RELEASE_NOTES.md
 
-use std::collections::HashMap;
 
 pub mod messages;
 
@@ -62,7 +62,7 @@ use io::IO;
 mod history;
 pub use history::History;
 pub mod macros;
-use macros::Macro;
+use macros::{Macro, MacroGetter};
 
 pub use buffer::iters::*;
 mod buffer;
@@ -154,12 +154,8 @@ pub struct Ed <'a> {
   /// UI errors occuring outside of Ed should also be written to this variable,
   /// so `h` prints the latest error that occured in the whole application.
   pub error: Option<EdError>,
-  /// EXPERIMENTAL: Configuration field for macros.
-  ///
-  /// A map from macro name to [`Macro`]. Note that the specific members of
-  /// [`Macro`] are likely to change, but the exposed constructors should still
-  /// produce instances with the same behaviour through these changes.
-  pub macros: HashMap<String, Macro>,
+  /// EXPERIMENTAL: Reference to accessor for macros.
+  pub macro_getter: &'a dyn MacroGetter,
   /// Set how many recursions should be allowed.
   ///
   /// One recursion is counted as one macro or 'g'/'v'/'G'/'V' invocation. Under
@@ -179,10 +175,10 @@ impl <'a, > Ed <'a> {
   /// - `n`: `false`,
   /// - `l`: `false`,
   /// - `cmd_prefix`: `Some(':')`
-  /// - `macros`: empty hashmap
   /// - `recursion_limit`: `16`
   pub fn new(
     io: &'a mut dyn IO,
+    macro_getter: &'a dyn MacroGetter,
   ) -> Self {
     let selection = (1,0);
     Self {
@@ -199,10 +195,10 @@ impl <'a, > Ed <'a> {
       n: false,
       l: false,
       cmd_prefix: Some(':'),
-      macros: HashMap::new(),
       recursion_limit: 16,
       // And the given values
       io,
+      macro_getter,
     }
   }
 
@@ -275,28 +271,32 @@ impl <'a, > Ed <'a> {
   /// Will immediately return error if the macro was given wrong nr of arguments
   ///
   /// Returns Ok(()) when quit by command (or end of macro input)
-  pub fn run_macro(
+  pub fn run_macro<
+    S: std::ops::Deref<Target = str>,
+  >(
     &mut self,
     ui: &mut dyn UI,
-    mac: Macro,
-    arguments: &[&str],
+    mac: &Macro,
+    arguments: &[S],
   ) -> Result<()> {
     self.private_run_macro(ui, mac, arguments, 0)
   }
   // Exists to handle nesting depth, for nested 'g' invocations, without
   // exposing that argument to the public interface (since it will always be 0
   // when called from the public API).
-  fn private_run_macro(
+  fn private_run_macro<
+    S: std::ops::Deref<Target = str>,
+  >(
     &mut self,
     ui: &mut dyn UI,
-    mac: Macro,
-    arguments: &[&str],
+    mac: &Macro,
+    arguments: &[S],
     recursion_depth: usize,
   ) -> Result<()> {
     // Apply the arguments via templating
     let to_run = macros::apply_arguments(mac, arguments)?;
     // Construct a dummy UI with the given input
-    let script_ui = ScriptedUI{
+    let mut script_ui = ScriptedUI{
       input: to_run.lines().map(|x| format!("{}\n",x)).collect(),
       print_ui: Some(ui),
     };

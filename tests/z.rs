@@ -39,6 +39,7 @@ fn scroll() {
         l: false,
       }
     ],
+    expected_history_tags: vec![],
   }.run()
 }
 
@@ -62,6 +63,7 @@ fn scroll_literal_numbered_noselection_endofbuffer() {
         l: true,
       }
     ],
+    expected_history_tags: vec![],
   }.run()
 }
 // Verify behaviour of 'Z' command
@@ -95,6 +97,7 @@ fn scroll_backwards() {
         l: false,
       }
     ],
+    expected_history_tags: vec![],
   }.run()
 }
 
@@ -118,5 +121,6 @@ fn scroll_backwards_literal_numbered_noselection_startofbuffer() {
         l: true,
       }
     ],
+    expected_history_tags: vec![],
   }.run()
 }

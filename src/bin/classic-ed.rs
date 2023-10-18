@@ -114,8 +114,9 @@ fn main() {
   // Construct state components
   let mut ui = ClassicUI{};
   let mut io = add_ed::io::LocalIO::new();
+  let macro_store = std::collections::HashMap::new();
   // Construct Ed
-  let mut ed = Ed::new(&mut io);
+  let mut ed = Ed::new(&mut io, &macro_store);
   // Apply any configurations
   // Load in from path if given
   if ! cli.file.is_empty() {

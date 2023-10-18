@@ -43,6 +43,7 @@ fn delete_noselection() {
     expected_buffer_saved: false,
     expected_selection: (1,0),
     expected_clipboard: vec!["a","b","c"],
+    expected_history_tags: vec!["d"],
   }.run();
 }
 
@@ -82,6 +83,7 @@ fn delete_noselection_middleofbuffer_numbered_literal() {
         l: true,
       },
     ],
+    expected_history_tags: vec!["dnl"],
   }.run();
 }
 
@@ -103,6 +105,7 @@ fn delete_startofbuffer_print() {
         l: false,
       },
     ],
+    expected_history_tags: vec!["1,2dp"],
   }.run();
 }
 
@@ -117,5 +120,6 @@ fn delete_endofbuffer() {
     expected_buffer_saved: false,
     expected_selection: (1,1),
     expected_clipboard: vec!["b","c"],
+    expected_history_tags: vec!["2,3d"],
   }.run();
 }

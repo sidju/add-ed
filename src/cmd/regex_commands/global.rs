@@ -83,7 +83,7 @@ pub fn global(
   // Since this command takes input we need to check inputs early
   let mut expressions = parse_expressions(tail)?;
   if expressions.len() < 2 {
-    return Err( EdError::ArgumentsWrongNr{expected: "2 or more", received: expressions.len()} );
+    return Err( EdError::ArgumentsWrongNr{expected: "2 or more".into(), received: expressions.len()} );
   }
   // We first try to mark all matching lines, to tell if there is any issue
   mark_matching(state, selection, &expressions[0], command == 'v', recursion_depth + 1)?;
@@ -119,7 +119,11 @@ pub fn global(
       print_ui: Some(ui),
     };
     state.selection = (index, index);
-    state.private_run_macro(&mut scripted, recursion_depth + 1)?;
+    loop {
+      if state.private_get_and_run_command(&mut scripted, recursion_depth + 1)? {
+        break;
+      }
+    }
   }
   Ok(())
 }
@@ -136,7 +140,7 @@ pub fn global_interactive(
   // Since this command takes input we need to check inputs early
   let expressions = parse_expressions(tail)?;
   if expressions.len() != 2 {
-    return Err( EdError::ArgumentsWrongNr{expected: "2", received: expressions.len()} );
+    return Err( EdError::ArgumentsWrongNr{expected: "2".into(), received: expressions.len()} );
   }
   if !expressions[1].is_empty() && expressions[1] != "\n" {
     return Err(EdError::FlagUndefined(expressions[1].chars().next().unwrap()));
@@ -161,7 +165,11 @@ pub fn global_interactive(
       print_ui: Some(ui),
     };
     state.selection = (index, index);
-    state.private_run_macro(&mut scripted, recursion_depth + 1)?;
+    loop {
+      if state.private_get_and_run_command(&mut scripted, recursion_depth + 1)? {
+        break;
+      }
+    }
   }
   Ok(())
 }

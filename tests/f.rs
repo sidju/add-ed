@@ -34,6 +34,7 @@ fn filename_default() {
         l: false,
       },
     ],
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -44,6 +45,7 @@ fn filename() {
     init_filepath: "old",
     command_input: vec!["f new"],
     expected_filepath: "new",
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -54,5 +56,6 @@ fn filename_without_space() {
     init_filepath: "old",
     command_input: vec!["fnew"],
     expected_filepath: "new",
+    expected_history_tags: vec![],
   }.run();
 }

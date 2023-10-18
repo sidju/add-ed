@@ -89,7 +89,8 @@ pub(crate) fn run(
         while ! command.is_char_boundary(cmd_i + x) { x += 1; }
         &command[cmd_i + x ..]
       };
-      let clean = tail.trim();
+      // Don't trim spaces, to allow using them as separator in expressions
+      let clean = tail.trim_end_matches('\n');
       // The full command without the newline, to give as label to `history.current_mut()`
       let clean_command = command.trim_end_matches('\n');
       match ch {
@@ -241,7 +242,7 @@ pub(crate) fn run(
           // Before disabling snapshotting, create one for this command
           // We try to indicate that we don't handle the following input by
           // adding "..." after
-          state.history.snapshot(format!("{} ...", command));
+          state.history.snapshot(clean_command.to_string());
           // Disable snapshotting during execution, reset it after
           let orig_dont_snapshot = state.history.dont_snapshot;
           state.history.dont_snapshot = true;
@@ -258,21 +259,29 @@ pub(crate) fn run(
           Ok(false)
         },
         ':' => {
-          let selection = interpret_selection(&state, selection, state.selection)?;
-          state.history.current().verify_selection(selection)?;
-          match state.macros.get(clean) {
+          let given_selection = if selection.is_some() {
+            let s = interpret_selection(&state, selection, state.selection)?;
+            state.history.current().verify_selection(s)?;
+            Some(s)
+          }
+          else {
+            None
+          };
+          // Sloppy argument parsing into list
+          let mut args = clean.split(' ');
+          let macro_name = args.next().unwrap_or("");
+          let args: Vec<&str> = args.collect();
+          match state.macro_getter.get_macro(macro_name)? {
             Some(m) => {
               // Before disabling snapshotting, create one for this command
-              state.history.snapshot(command.into());
+              state.history.snapshot(clean_command.into());
               // Disable undo snapshotting during macro execution
               let orig_dont_snapshot = state.history.dont_snapshot;
               state.history.dont_snapshot = true;
-              let mut scripted = ScriptedUI{
-                input: m.lines().map(|x| format!("{}\n",x)).collect(),
-                print_ui: Some(ui),
-              };
-              state.selection = selection;
-              let res = state.run_macro(&mut scripted);
+              if let Some(selection) = given_selection {
+                state.selection = selection;
+              }
+              let res = state.run_macro(ui, m, &args);
               // Re-enable snapshotting after
               state.history.dont_snapshot = orig_dont_snapshot;
               // If snapshotting was originally enabled we should handle if no
@@ -280,7 +289,7 @@ pub(crate) fn run(
               if !orig_dont_snapshot { state.history.dedup_present(); }
               res
             },
-            None => Err(EdError::MacroUndefined(clean.to_owned())),
+            None => Err(EdError::MacroUndefined(macro_name.to_owned())),
           }?;
           Ok(false)
         },

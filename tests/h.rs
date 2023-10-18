@@ -42,6 +42,7 @@ fn help_noerror() {
         l: false,
       }
     ],
+    expected_history_tags: vec![],
   }.run();
 }
 
@@ -49,6 +50,7 @@ fn help_noerror() {
 #[test]
 fn help() {
   let mut io = DummyIO::new();
+  let macros = std::collections::HashMap::new();
   let mut inner_ui = MockUI{ prints_history: Vec::new() };
   let mut ui = ScriptedUI{
     print_ui: Some(&mut inner_ui),
@@ -64,9 +66,12 @@ fn help() {
   // Construct editor state and run
   let mut ed = Ed::new(
     &mut io,
+    &macros,
   );
-  assert_eq!(ed.run_macro(&mut ui), Err(EdError::IndexTooBig{index:1,buffer_len:0}));
-  ed.run_macro(&mut ui).expect("Error running test");
+  assert_eq!(ed.get_and_run_command(&mut ui), Err(EdError::IndexTooBig{index:1,buffer_len:0}));
+  loop {
+    if ed.get_and_run_command(&mut ui).expect("Error running test") { break; }
+  }
   assert!(ed.history.current().is_empty());
   assert_eq!(
     vec![
@@ -83,6 +88,7 @@ fn help() {
 #[test]
 fn help_toggle() {
   let mut io = DummyIO::new();
+  let macros = std::collections::HashMap::new();
   let mut ui = ScriptedUI{
     print_ui: None,
     input: vec![
@@ -96,9 +102,12 @@ fn help_toggle() {
   // Construct editor state and run
   let mut ed = Ed::new(
     &mut io,
+    &macros,
   );
   assert_eq!(ed.print_errors, true);
-  ed.run_macro(&mut ui).expect("Error running test");
+  loop {
+    if ed.get_and_run_command(&mut ui).expect("Error running test") { break; }
+  }
   assert_eq!(ed.print_errors, false);
   assert!(ed.history.current().is_empty());
 }
@@ -120,5 +129,6 @@ fn help_text() {
         l: false,
       }
     ],
+    expected_history_tags: vec![],
   }.run();
 }

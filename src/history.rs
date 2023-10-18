@@ -135,7 +135,7 @@ impl <T> History<T> where
     // This is needed even if snapshots are disabled, to not change history
     if self.viewed_i < self.snapshots.len() - 1 {
       self.internal_create_snapshot(format!(
-        "Reverted the {} actions undone to as one operation.",
+        "u{}",
         self.snapshots.len().saturating_sub(self.viewed_i + 1),
       ));
     }

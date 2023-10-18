@@ -31,6 +31,7 @@ fn substitute() {
     expected_buffer_saved: false,
     expected_selection: (1,3),
     expected_clipboard: vec!["a","b","c"],
+    expected_history_tags: vec!["1,3s_b_p_"],
   }.run()
 }
 
@@ -45,6 +46,7 @@ fn substitute_defaults() {
     expected_buffer_saved: false,
     expected_selection: (2,2),
     expected_clipboard: vec!["b"],
+    expected_history_tags: vec![r"s_\w_letter_", "2s"],
   }.run()
 }
 
@@ -59,6 +61,7 @@ fn substitute_global_deleteline() {
     expected_buffer_saved: false,
     expected_selection: (1,0),
     expected_clipboard: vec!["a","b","c"],
+    expected_history_tags: vec![r",s-\w\n--g"],
   }.run()
 }
 
@@ -73,6 +76,7 @@ fn substitute_multiline() {
     expected_buffer_saved: false,
     expected_selection: (1,2),
     expected_clipboard: vec!["a","b","c"],
+    expected_history_tags: vec![",s_a\nb_hello_"],
   }.run()
 }
 
@@ -87,5 +91,6 @@ fn substitute_removenewline() {
     expected_buffer_saved: false,
     expected_selection: (1,1),
     expected_clipboard: vec!["a","b"],
+    expected_history_tags: vec![",2s_\n__g"],
   }.run()
 }

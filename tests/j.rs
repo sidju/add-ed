@@ -27,6 +27,7 @@ fn join() {
     expected_buffer_saved: false,
     expected_clipboard: vec!["b","c"],
     expected_selection: (2,2),
+    expected_history_tags: vec!["2,3j"],
   }.run()
 }
 
@@ -41,6 +42,7 @@ fn join_noselection() {
     expected_buffer_saved: false,
     expected_clipboard: vec!["a","b","c","d"],
     expected_selection: (1,1),
+    expected_history_tags: vec!["j"],
   }.run()
 }
 
@@ -98,6 +100,7 @@ fn reflow_noselection_nowidth() {
     expected_buffer_saved: false,
     expected_clipboard: lorem(),
     expected_selection: (1,23),
+    expected_history_tags: vec!["J"],
   }.run()
 }
 
@@ -132,5 +135,6 @@ fn reflow() {
     expected_buffer_saved: false,
     expected_clipboard: expected_clipboard,
     expected_selection: (1,16),
+    expected_history_tags: vec!["1J70"],
   }.run()
 }

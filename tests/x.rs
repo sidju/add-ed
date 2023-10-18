@@ -29,6 +29,7 @@ fn paste() {
     expected_buffer_saved: false,
     expected_clipboard: vec!["c"],
     expected_selection: (3,3),
+    expected_history_tags: vec!["2x"],
   }.run()
 }
 
@@ -51,6 +52,7 @@ fn paste_noselection_print() {
         l: false,
       },
     ],
+    expected_history_tags: vec!["xp"],
   }.run()
 }
 
@@ -74,6 +76,7 @@ fn paste_before() {
     expected_buffer_saved: false,
     expected_clipboard: vec!["c"],
     expected_selection: (3,3),
+    expected_history_tags: vec!["3X"],
   }.run()
 }
 
@@ -96,5 +99,6 @@ fn paste_before_noselection_print() {
         l: false,
       },
     ],
+    expected_history_tags: vec!["Xp"],
   }.run()
 }

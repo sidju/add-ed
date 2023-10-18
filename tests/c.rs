@@ -55,6 +55,7 @@ fn change_noinput_endofbuffer_print() {
         l: false,
       },
     ],
+    expected_history_tags: vec!["3cp"],
   }.run();
 }
 
@@ -76,6 +77,7 @@ fn change_noinput_startofbuffer_numbered() {
         l: false,
       },
     ],
+    expected_history_tags: vec!["1cn"],
   }.run();
 }
 
@@ -97,6 +99,7 @@ fn change_noinput_middleofbuffer_literal() {
         l: true,
       },
     ],
+    expected_history_tags: vec!["2cl"],
   }.run();
 }
 
@@ -111,6 +114,7 @@ fn change_noinput_allofbuffer() {
     expected_buffer_saved: false,
     expected_selection: (1,0),
     expected_clipboard: vec!["a","b","c"],
+    expected_history_tags: vec![",c"],
   }.run();
 }
 
@@ -125,5 +129,6 @@ fn change() {
     expected_buffer_saved: false,
     expected_selection: (2,3),
     expected_clipboard: vec!["b"],
+    expected_history_tags: vec!["2c"],
   }.run();
 }

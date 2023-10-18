@@ -40,6 +40,7 @@ fn print() {
         l: false,
       }
     ],
+    expected_history_tags: vec![],
   }.run()
 }
 
@@ -66,5 +67,6 @@ fn print_literal_numbered_noselection() {
         l: true,
       }
     ],
+    expected_history_tags: vec![],
   }.run()
 }
