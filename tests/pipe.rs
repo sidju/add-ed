@@ -10,12 +10,16 @@ use shared::fake_io::{
   ShellCommand,
 };
 
-// Verify behaviour of '!' command
+// Verify behaviour of '|' command
 //
-// - Takes no selection
-// - Just runs the shell command given as argument
-//   (stdin, stdout, stderr passed in)
-// - Selection after is unmodified
+// - Takes optional selection
+//   - If none given uses default selection
+// - Pipes selection through the shell command
+//   (stdin -> command -> stdout, stderr prints directly)
+// - Takes shell command as only argument
+// - Sets unsaved
+// - Selection after is set to the piped lines if selection
+//   given
 // - Doesn't modify state.path
 
 // Function to set up the "filesystem" for these tests
@@ -44,25 +48,21 @@ fn test_io() -> FakeIO {
   }
 }
 
-// No selection, just run command
+// To be moved into pipe.rs
 #[test]
-fn shell_escape() {
+fn shell_pipe() {
   let test_io = test_io();
   IOTest{
-    init_buffer: vec!["text"],
+    init_buffer: vec!["4","5","2","1"],
     init_io: test_io.clone(),
     init_clipboard: vec!["dummy"],
-    init_filepath: "text",
-    command_input: vec![
-      "!echo hi",
-    ],
-    expected_buffer: vec![
-      "text",
-    ],
-    expected_buffer_saved: true,
-    expected_selection: (1,1),
-    expected_file_changes: vec![], // No changes to the fs
-    expected_clipboard: vec!["dummy"],
-    expected_filepath: "text",
+    init_filepath: "numbers",
+    command_input: vec![",|sort -n"],
+    expected_buffer: vec!["1","2","4","5"],
+    expected_buffer_saved: false,
+    expected_selection: (1,4),
+    expected_file_changes: vec![],
+    expected_clipboard: vec!["4","5","2","1"],
+    expected_filepath: "numbers",
   }.run();
 }

@@ -106,11 +106,10 @@ files and using shell commands.
 Note that most of these commands accept a shell command (prefixed by `!`). If
 such is given it will be run as a child process and read from (stdout)/written
 to (stdin) in place of the file path otherwise accepted. The last shell command
-run is saved (no matter its success or failure) and can be re-run with just `!`
-in place of `!<shell command>`.
+run is saved (no matter its success or failure) and can be re-run if no command
+is given. (For commands taking a path or a command you still need to give a `!`
+to indicate to run a command.)
 
-- `f(<path>)` If no path given prints the default path, otherwise sets the given
-  path as default path.
 - `e(<path>|!<shell command>)` Replace buffer contents with data read from
   given path/command. If no path/command given uses the default path. Sets the
   default path to given path if path given, leaves default path unchanged
@@ -131,16 +130,18 @@ in place of `!<shell command>`.
 - `(.,.)W(<path>)` Append the selected lines to the given path. If no path
   given appends to default path. If no selection given appends whole buffer.
   Selects the appended lines after running.
-- `(.,.)!(<shell command>)` Run the given shell command. If no selection is
-  given the command runs interactively. If a selection is given those lines are
-  piped through the shell command, replacing them with the transformed output.
-  The original line data is placed in the clipboard and the new lines are
-  selected.
+- `(.,.)|(<shell command>)` Transform selection via given shell command. If no
+  selection is given the default selection is used. The original line data is
+  placed in the clipboard and the new lines are selected.
+- `!(<shell command>)` Run the given shell command interactively.
 
 
 # Batch editing commands
 More advanced commands to apply the same or similar changes many times.
 
 
-# Information commands
-For printing information about current editor state.
+# Status commands
+For printing information about and changing editor state.
+
+- `f(<path>)` If no path given prints the default path, otherwise sets the given
+  path as default path.

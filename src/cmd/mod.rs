@@ -139,16 +139,16 @@ pub(crate) fn run(
           Ok(false)
         },
         // Toggles printing with/without numbering/literal by default
-        'N' => {
+        'P' => {
           if selection.is_some() { return Err(EdError::SelectionForbidden); }
-          parse_flags(clean, "")?;
-          state.n = !state.n;
-          Ok(false)
-        },
-        'L' => {
-          if selection.is_some() { return Err(EdError::SelectionForbidden); }
-          parse_flags(clean, "")?;
-          state.l = !state.l;
+          let mut flags = parse_flags(clean, "nl")?;
+          // Toggle default state of the flags defined
+          if flags.remove(&'l').unwrap() {
+            state.l = !state.l;
+          }
+          if flags.remove(&'n').unwrap() {
+            state.n = !state.n;
+          }
           Ok(false)
         },
         // File/shell commands
@@ -220,17 +220,12 @@ pub(crate) fn run(
           tag(state, selection, ch, clean)?;
           Ok(false)
         },
-        // 'M' and 'T' are supported internally but disabled, see issue #6
         'm' | 't' => {
           transfer(state, &mut pflags, clean_command, selection, ch, clean)?;
           Ok(false)
         }
         'j' => {
           join(state, &mut pflags, clean_command, selection, clean)?;
-          Ok(false)
-        },
-        'J' => {
-          reflow(state, &mut pflags, clean_command, selection, clean)?;
           Ok(false)
         },
         // Pattern commands

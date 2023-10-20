@@ -7,11 +7,6 @@ use shared::fixtures::{
   PrintTest,
 };
 use shared::mock_ui::Print;
-use shared::dummy_io::DummyIO;
-use add_ed::{
-  ui::ScriptedUI,
-  Ed,
-};
 
 // Verify behaviour of 'n' command
 //
@@ -86,57 +81,3 @@ fn numbered_literal_noselection() {
 // - Does not modify saved
 // - Toggles the state.n bool, which sets if to print numbered by default
 
-// Verify toggling of numbered by knowing initial state and verifying after
-#[test]
-fn numbered_toggle_on() {
-  let mut io = DummyIO::new();
-  let macros = std::collections::HashMap::new();
-  let mut ui = ScriptedUI{
-    print_ui: None,
-    input: vec![
-      "N",
-    ].iter().map(|x|{
-      let mut s = x.to_string();
-      s.push('\n');
-      s
-    }).collect(),
-  };
-  // Construct editor state and run
-  let mut ed = Ed::new(
-    &mut io,
-    &macros,
-  );
-  ed.history.set_saved();
-  loop {
-   if ed.get_and_run_command(&mut ui).expect("Error running test") { break; }
-  }
-  assert_eq!(ed.n, true);
-  assert!(ed.history.current().is_empty());
-}
-#[test]
-fn numbered_toggle_off() {
-  let mut io = DummyIO::new();
-  let macros = std::collections::HashMap::new();
-  let mut ui = ScriptedUI{
-    print_ui: None,
-    input: vec![
-      "N",
-    ].iter().map(|x|{
-      let mut s = x.to_string();
-      s.push('\n');
-      s
-    }).collect(),
-  };
-  // Construct editor state and run
-  let mut ed = Ed::new(
-    &mut io,
-    &macros,
-  );
-  ed.history.set_saved();
-  ed.n = true;
-  loop {
-   if ed.get_and_run_command(&mut ui).expect("Error running test") { break; }
-  }
-  assert_eq!(ed.n, false);
-  assert!(ed.history.current().is_empty());
-}

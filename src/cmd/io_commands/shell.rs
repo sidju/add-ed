@@ -25,10 +25,12 @@ pub fn run_command(
   ch: char,
   command: &str,
 ) -> Result<()> {
-  // If ! we default to no selection, if | we default to prior selection
-  let sel = if ch == '!' && selection.is_none() {
+  // '!' doesn't allow a selection
+  let sel = if ch == '!' {
+    if selection.is_some() { return Err(EdError::SelectionForbidden); }
     None
   }
+  // '|' parses selection normally
   else {
     let sel = interpret_selection(&state, selection, state.selection)?;
     state.history.current().verify_selection(sel)?;
