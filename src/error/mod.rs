@@ -108,9 +108,9 @@ pub enum EdError {
   UndoIndexNegative{relative_undo_limit: usize},
   /// Tried to redo past end of history.
   UndoIndexTooBig{index: usize, history_len: usize, relative_redo_limit: usize},
-  /// Tried to set a shell escape as default file.
+  /// Tried to given shell escape where a file path is required.
   /// Holds given path string.
-  DefaultFileInvalid(String),
+  CommandEscapeForbidden(String),
   /// `k` or `K` command received an invalid character to tag with.
   /// Holds given argument string.
   TagInvalid(String),

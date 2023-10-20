@@ -4,7 +4,8 @@ Short representations to keep this documentation concise.
 (Note that the descriptions of what a shorthand should be replaced by will use
 the previously presented shorthands.)
 
-- `(x)` An optional `x`
+- `(x)` An optional `x`.
+- `x|y` `x` or `y`, and not both.
 - `[abc]` Any combination of `a`, `b` or `c`, but no duplicates.
 - `.` An index. Can be any of
   - `.` Interpreted as the start of the currently viewed selection in most cases
@@ -17,9 +18,10 @@ the previously presented shorthands.)
   - `/<pattern>/` Interpreted as index of nearest following
     line matching the given regex pattern.
   - `?<pattern>?` same as above but nearest preceeding.
-  - `(<any other index>)+<positive integer>` Interpreted as the other index plus
-    the positive integer. If no other index given treated as `.`.
-  - `<any other index>-<positive integer>` Same as above but minus.
+  - `(<any index>)+(<positive integer>`) Interpreted as the other index plus
+    the positive integer. If no other index given treated as `.`. If no integer
+    given treated as `1`.
+  - `(<any index>)-(<positive integer>)` Same as above but minus.
   - `<nothing>` Is generally equivalent to `.` if an index is accepted.
     (Exceptions exist, as noted by the commands below.)
 - `.,.` A selection. Can be any of
@@ -100,6 +102,40 @@ Commands that kind of combine two basic editing commands.
 # File and shell commands
 Commands to read and write to the surrounding system, both directly to/from
 files and using shell commands.
+
+Note that most of these commands accept a shell command (prefixed by `!`). If
+such is given it will be run as a child process and read from (stdout)/written
+to (stdin) in place of the file path otherwise accepted. The last shell command
+run is saved (no matter its success or failure) and can be re-run with just `!`
+in place of `!<shell command>`.
+
+- `f(<path>)` If no path given prints the default path, otherwise sets the given
+  path as default path.
+- `e(<path>|!<shell command>)` Replace buffer contents with data read from
+  given path/command. If no path/command given uses the default path. Sets the
+  default path to given path if path given, leaves default path unchanged
+  otherwise. Selects all lines in the buffer after reading in.
+  If the buffer contains unsaved edits aborts with error, capitalize `e` to `E`
+  to override the warning.
+- `(.)r(<path>|!<shell command>)` Read in data from give path/command and
+  insert it after the given index. If no index given defaults to inserting after
+  current selection. If no path or shell command given uses default path.
+  Selects the added lines after running.
+- `wq` Save the whole buffer to the default path and quit the editor. Errors if
+  it is given a selection other that the whole buffer.
+- `(.,.)w(<path>|!<shell command>)` Write selected lines to given
+  path/command. If no selection given writes the whole buffer. If no path given
+  writes to default path. If selection was explicitly given selects that,
+  otherwise leaves selection unchanged. If selection was not given and a path
+  was given that path is set as default path.
+- `(.,.)W(<path>)` Append the selected lines to the given path. If no path
+  given appends to default path. If no selection given appends whole buffer.
+  Selects the appended lines after running.
+- `(.,.)!(<shell command>)` Run the given shell command. If no selection is
+  given the command runs interactively. If a selection is given those lines are
+  piped through the shell command, replacing them with the transformed output.
+  The original line data is placed in the clipboard and the new lines are
+  selected.
 
 
 # Batch editing commands

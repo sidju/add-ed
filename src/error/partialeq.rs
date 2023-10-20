@@ -28,7 +28,7 @@ impl std::cmp::PartialEq for EdError {
       ) => {
         a == d && b == e && c == f
       },
-      (DefaultFileInvalid(x),DefaultFileInvalid(y)) => x == y,
+      (CommandEscapeForbidden(x),CommandEscapeForbidden(y)) => x == y,
       (TagInvalid(x),TagInvalid(y)) => x == y,
       (TagNoMatch(x),TagNoMatch(y)) => x == y,
       (
