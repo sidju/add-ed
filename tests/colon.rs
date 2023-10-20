@@ -27,6 +27,7 @@ fn create_macro_store() -> std::collections::HashMap<&'static str, Macro> {
   store.insert("double", Macro::new("t.", 0));
   store.insert("append_word", Macro::new(",a\n$1\n.",1));
   store.insert("append_words", Macro::without_arg_validation(",a\n$0\n."));
+  store.insert("recursion", Macro::new(":recursion", 0));
   store
 }
 
@@ -90,5 +91,17 @@ fn macro_allarguments() {
     expected_selection: (1,1),
     expected_clipboard: vec![],
     expected_history_tags: vec![":append_words words to append in"],
+  }.run();
+}
+
+#[test]
+fn macro_recursion() {
+  MacroErrorTest{
+    init_buffer: vec![],
+    // We use a standard macro store
+    macro_store: create_macro_store(),
+    // and specify which macro to test in each test
+    macro_invocation: ":recursion",
+    expected_error: EdError::InfiniteRecursion,
   }.run();
 }

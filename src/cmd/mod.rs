@@ -240,8 +240,6 @@ pub(crate) fn run(
         },
         'g' | 'v' | 'G' | 'V' => {
           // Before disabling snapshotting, create one for this command
-          // We try to indicate that we don't handle the following input by
-          // adding "..." after
           state.history.snapshot(clean_command.to_string());
           // Disable snapshotting during execution, reset it after
           let orig_dont_snapshot = state.history.dont_snapshot;
@@ -281,7 +279,7 @@ pub(crate) fn run(
               if let Some(selection) = given_selection {
                 state.selection = selection;
               }
-              let res = state.run_macro(ui, m, &args);
+              let res = state.private_run_macro(ui, m, &args, recursion_depth+1);
               // Re-enable snapshotting after
               state.history.dont_snapshot = orig_dont_snapshot;
               // If snapshotting was originally enabled we should handle if no

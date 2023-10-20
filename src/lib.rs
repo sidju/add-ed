@@ -242,7 +242,7 @@ impl <'a, > Ed <'a> {
   ) -> Result<bool> {
     self.private_get_and_run_command(ui, 0)
   }
-  // Exists to handle nesting depth, for nested 'g' invocations, without
+  // Exists to handle nesting depth, for nested 'g' or ':' invocations, without
   // exposing that argument to the public interface (since it will always be 0
   // when called from the public API).
   fn private_get_and_run_command(
@@ -281,7 +281,7 @@ impl <'a, > Ed <'a> {
   ) -> Result<()> {
     self.private_run_macro(ui, mac, arguments, 0)
   }
-  // Exists to handle nesting depth, for nested 'g' invocations, without
+  // Exists to handle nesting depth, for nested ':' invocations, without
   // exposing that argument to the public interface (since it will always be 0
   // when called from the public API).
   fn private_run_macro<

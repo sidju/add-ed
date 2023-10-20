@@ -8,6 +8,8 @@ impl std::cmp::PartialEq for EdError {
       (IO(_),IO(_)) => true,
       (UI(_),UI(_)) => true,
 
+      (InfiniteRecursion, InfiniteRecursion) => true,
+
       (
         IndexTooBig{index: a, buffer_len: b},
         IndexTooBig{index: c, buffer_len: d},

@@ -25,10 +25,6 @@ use crate::{Result, EdError};
 /// produce instances with the same behaviour through any change.
 #[non_exhaustive]
 pub struct Macro {
-//  /// Description / Help text for the macro
-//  ///
-//  /// Should describe what it does and any arguments it accepts or requires.
-//  help_text: Cow<'static, str>,
   /// Input to simulate
   ///
   /// Should be a string of newline separated commands. Execution is equivalent
@@ -76,10 +72,12 @@ impl Macro {
 /// Trait over different ways to get macros by name
 ///
 /// The intent is to allow for different methods of storing macros without
-/// requiring loading them in at editor startup.
+/// requiring loading them in at editor startup. For example reading macros from
+/// filepaths based on their names, or perhaps from environment variables.
 ///
 /// A ready implementation exists for HashMap, if you prefer to load in at
-/// startup for infallible macro getting during execution.
+/// startup for infallible macro getting during execution. A very good option if
+/// if you embedd your macro declarations in your editor's main config file.
 pub trait MacroGetter {
   fn get_macro(&self, name: &str) -> Result<Option<&Macro>>;
 }
