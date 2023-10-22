@@ -166,7 +166,8 @@ More advanced commands to apply the same or similar changes many times.
 # Status commands
 For printing information about and changing editor state.
 
-- `help` Print this help section.
+- `help` Print a short list of commands.
+- `Help` Print this documentation.
 - `q` Quits the editor. If the buffer contains unsaved edits aborts with error.
   Capitalize 'q' to 'Q' to override and quit anyways.
 - `h` Print last previous error.

@@ -16,6 +16,9 @@ impl UI for DummyUI {
   ) -> Result<()> {
     Ok(())
   }
+  fn print_command_documentation(&mut self) -> Result<()> {
+    Ok(())
+  }
   fn get_command(&mut self,
     _ed: &Ed,
     _prefix: Option<char>,

@@ -9,7 +9,7 @@ use shared::dummy_io::DummyIO;
 use add_ed::ui::ScriptedUI;
 use add_ed::Ed;
 use add_ed::error::EdError;
-use add_ed::messages::HELP_TEXT;
+use add_ed::messages::{COMMAND_LIST,COMMAND_DOCUMENTATION};
 
 // We have some tests without fixtures in here, as we shouldn't panic on error
 // and care about state.print_errors unlike all other fixtures.
@@ -113,7 +113,7 @@ fn help_toggle() {
 }
 
 #[test]
-fn help_text() {
+fn help_commands() {
   PrintTest{
     init_buffer: vec![],
     init_clipboard: vec![],
@@ -124,7 +124,28 @@ fn help_text() {
     expected_clipboard: vec![],
     expected_prints: vec![
       Print{
-        text: [HELP_TEXT].iter().map(|s| s.to_string()).collect(),
+        text: [COMMAND_LIST].iter().map(|s| s.to_string()).collect(),
+        n: false,
+        l: false,
+      }
+    ],
+    expected_history_tags: vec![],
+  }.run();
+}
+
+#[test]
+fn help_documentation() {
+  PrintTest{
+    init_buffer: vec![],
+    init_clipboard: vec![],
+    command_input: vec!["Help"],
+    expected_buffer: vec![],
+    expected_buffer_saved: true,
+    expected_selection: (1,0),
+    expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: [COMMAND_DOCUMENTATION].iter().map(|s| s.to_string()).collect(),
         n: false,
         l: false,
       }

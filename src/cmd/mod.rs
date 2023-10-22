@@ -109,7 +109,7 @@ pub(crate) fn run(
         'h' => {
           if selection.is_some() { return Err(EdError::SelectionForbidden); }
           // If 'help' was entered, print help
-          if clean == "elp" {ui.print_message(HELP_TEXT)?;}
+          if clean == "elp" { ui.print_commands()?; }
           // Else no flags accepted and print last error
           else {
             parse_flags(clean, "")?;
@@ -125,8 +125,11 @@ pub(crate) fn run(
         },
         'H' => {
           if selection.is_some() { return Err(EdError::SelectionForbidden); }
-          parse_flags(clean, "")?;
-          state.print_errors = !state.print_errors; // Toggle the setting
+          if clean == "elp" { ui.print_command_documentation()?; }
+          else {
+            parse_flags(clean, "")?;
+            state.print_errors = !state.print_errors; // Toggle the setting
+          }
           Ok(false)
         }
         // Non-editing commands
