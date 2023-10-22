@@ -36,6 +36,8 @@ the previously presented shorthands.)
     (Empty indices are interpreted as index `1` and `.` respectively.)
   - `<nothing>` Interpreted as the currently viewed selection. Use the `=`
     command to print the currently viewed selection.
+- `/` A separator. Can be any character (except newline), but for each command
+  invocation you must use the same separator. Traditionally `/` or `_`.
 
 
 # Printing flags:
@@ -139,9 +141,39 @@ to indicate to run a command.)
 # Batch editing commands
 More advanced commands to apply the same or similar changes many times.
 
+- `(.,.)s(/<regex>/<substitution>/[gpnl])` Replaces text within selection that
+  matches the regex with the substitution. If the `g` flag is given replaces all
+  occurences of the regex, if not only the first is replaced. Selects the
+  selection, whatever size it ends up being after replacing.
+- `(.,.)g/<regex>/<command>(/)` Runs commands on all lines matching the regex.
+  If the last separator is given the commands are run immediately, if not it
+  enters input mode terminated by the separator. The matching line is selected
+  (using default selection, the commands will run them on the matched line) and
+  run in the order given. Doesn't set selection, but the commands run through
+  it do.
+- `(.,.)v/<regex>/<command>(/)` Inverse of `g`. Runs given commands on lines
+  that **don't** match the given regex.
+- `(.,.)G/<regex>/` Interactive version of `g`. For each matching line prints it
+   and enters input mode terminated by the separator. The given commands are run
+   on that line, same as `g`.
+- `(.,.)V/<regex>/` Inverse of `G`. Does the same for lines that don't match the
+   given regex.
+- `(.,.):<macro-name>(<space separated arguments>)` Set selection to given
+  selection (if any) and run given macro. Same as `g` it doesn't set selection,
+  but the commands in the macro will probably do so.
+
 
 # Status commands
 For printing information about and changing editor state.
 
+- `help` Print this help section.
+- `q` Quits the editor. If the buffer contains unsaved edits aborts with error.
+  Capitalize 'q' to 'Q' to override and quit anyways.
+- `h` Print last previous error.
+- `H` Toggle between printing the error or only `?` when an error occurs.
+- `(.,.)=` Prints selection. If none given prints the current selection.
+- `(.,.)#(<anything>)` If no selection is given it does nothing, to enable
+  inlining comments in scripts. If a selection is given that selection is set
+  without printing (this is the only way to do this, as even no command prints).
 - `f(<path>)` If no path given prints the default path, otherwise sets the given
   path as default path.
