@@ -14,6 +14,8 @@ include = [
   "assets/*",
   "**/*.rs",
   "Cargo.toml",
+  "COMMANDS.md",
+  "COMMANDS_SHORT.md"
 ]
 
 [features]
