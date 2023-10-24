@@ -2,10 +2,11 @@
 - Inject context environment variables into shell interaction.
   (File, selection_start, selection_end, prev_shell_command, if running script)
 - Improve classic.rs to support all of ed's command line arguments
-- UI.unlock_ui, possibly see if we can require a private phantom/marker
-  argument to this, preventing it from being called by any code not in the
-  add_ed crate (and thus making it impossible for a library user to
-  incorrectly run it from anywhere but UILock::drop)
+- Implement missing features from GNU Ed.
+  - List more missing features in [README.md](README.md) (look into GNU Ed
+    manual and compare to add-ed).
+  - Implement missing features and remove them from listing in README.md.
+    - 'g' command should accept an argument for case insensitive matching.
 
 
 # Look over undo/redo
@@ -28,7 +29,6 @@ Make macros more useful by:
   - Modifies buffer or not (if not we auto undo to before execution and delete
     its potential future, ie. make modifications not have an impact)
   - Snapshot for each command or for the whole macro
-
 
 
 # Documentation fixes:

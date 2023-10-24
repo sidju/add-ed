@@ -12,18 +12,8 @@ from GNU Ed. This strives to be a list of these changes.
 - 'g' and related commands take command list in input mode (with the regex
   separator as terminator instead of '.').
   (Also, the 'I' suffix for case insensitive matching isn't implemented)
-- '!' accepts a selection and will pipe those lines through the given shell
-  command, replacing them with the output. Without a selection it acts as in GNU
-  Ed.
 - '#' accepts a selection and will set state.selection to it without printing
   anything. This is added to be able to set selection without printing.
-
-## Early APIs
-Currently it is based on both my experiences with hired and the hired repo specifically (a manual fork, so it has the whole history).
-This may well mean the API is ill suited for your use. If that is the case I'd be happy to make some changes to make it more general.
-
-In line with this, the help text is often a bit outdated. I'll get to that, and
-improve on the error type, before the first stable release.
 
 ## Core concepts
 ### The selection:
@@ -42,12 +32,10 @@ or a GUI frontend implementing the UI trait.
   Perfect for commenting out a single line or adding a forgotten ;.
 - 'C' command, acts as 'c' but hands out previous value to the Ui's input method.
   This enables you to edit the selection instead of replacing it (depends on UI).
-- 'N' and 'L' commands, toggle the default print conf. Line numbers and escapes respectively.
+- 'P' command, toggle the default print flags.
 - ':' command, runs the macro with the name given as argument (whitespace trimmed).
   Macro execution behaves like 'g' execution. 'q' or error returns early.
-- 'J' command, joins all lines in selection and then splits them so they all are
-  shorter than the number of columns given after 'J'. Splits on word boundaries.
-  It doesn't understand indentation, but improvement PRs are very welcome.
+- '|' command, pipes selection through given shell command.
 
 ## Feature flags:
 ### local_io:
@@ -58,3 +46,15 @@ Add 'C' command. This modifies the UI trait.
 
 ## Attributions:
 This project is essentially built upon the regex crate, as regex is the heart of Ed.
+
+## Contributing:
+There are two main contributions welcomed as of now.
+
+1. Adding tests. Though core uses for command are tested, more behaviours should
+   be validated. If you have the time, add test cases that validate that:
+   - Commands behave as [COMMANDS.md](COMMANDS.md) states.
+   - Commands behave same as in GNU Ed, unless otherwise documented in the
+     *Differences from GNU Ed* section above.
+2. Checking off ToDo:s. Look into the [TODOS.md](TODOS.md) file, pick a task to
+   do and go wild. You can add a PR to prevent others from working on the same
+   task (mark it as WIP until relevant to review).
