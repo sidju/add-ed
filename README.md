@@ -58,3 +58,7 @@ There are two main contributions welcomed as of now.
 2. Checking off ToDo:s. Look into the [TODOS.md](TODOS.md) file, pick a task to
    do and go wild. You can add a PR to prevent others from working on the same
    task (mark it as WIP until relevant to review).
+3. Create issues for undocumented or unexpected behaviour.
+4. Request support for your use-cases. Create a feature request issue for what
+   you need. (Look into [POTENTIAL_FEATURES.md](POTENTIAL_FEATURES.md) to see if
+   a similar feature is prepared and if so note it in the feature request.)

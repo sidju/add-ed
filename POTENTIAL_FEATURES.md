@@ -32,3 +32,14 @@ implement. Further it might be better to keep non-`add-ed` commands more
 clearly separate. If you want to use this feature please provide an example
 implementation and settle in for some discussion, so the feature is implemented
 in a clean way that fits your use-case.
+
+# More variant commands:
+There are loads of potential variations on existing commands. I (sidju) have
+decided to be restrictive on what I add initially, so that any further built-in
+commands can be decided upon through discussion with users later.
+
+Though some variants were added and have implementations ready in the codebase
+none of them are enabled, as they were found to not be that useful. Any further
+commands will need to be significant distincts (not just prepend to an index
+instead of appending, but using start of selection instead of end of selection
+is sufficiently distinct if relevant).
