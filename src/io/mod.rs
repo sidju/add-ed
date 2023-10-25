@@ -37,6 +37,9 @@ pub trait IO {
   /// Run a read command, collecting stdout to add into buffer
   ///
   /// Stdin and Stderr should be passed through to UI
+  ///
+  /// The returned string will be split into lines and added into the buffer.
+  /// All line endings are converted into '\n' when adding into the buffer.
   fn run_read_command(&mut self,
     // UI handle. Created by setting up the UI for passing through
     // std-in/-err to child process.
@@ -49,6 +52,10 @@ pub trait IO {
   ///
   /// Stdout and Stderr should be passed through to UI
   /// Returns number of bytes written
+  ///
+  /// The LinesIter contains string slices over '\n' terminated lines. If you
+  /// with to use "\r\n" line endings in the command input this should be
+  /// handled in the IO implementation.
   fn run_write_command(&mut self,
     // UI handle. Created by setting up the UI for passing through std-in/-err
     // to child process.
@@ -63,6 +70,13 @@ pub trait IO {
   /// via stdout.
   ///
   /// Stderr should be passed through to UI
+  ///
+  /// The LinesIter contains string slices over '\n' terminated lines. If you
+  /// with to use "\r\n" line endings in the command input this should be
+  /// handled in the IO implementation.
+  ///
+  /// The returned string will be split into lines and added into the buffer.
+  /// All line endings are converted into '\n' when adding into the buffer.
   fn run_transform_command(&mut self,
     // UI handle. Created by setting up the UI for passing through
     // std-in/-out/-err to child process.
@@ -74,7 +88,12 @@ pub trait IO {
   ) -> Result<String>;
 
   /// Normal file write
+  ///
   /// Returns number of bytes written
+  ///
+  /// The LinesIter contains string slices over '\n' terminated lines. If you
+  /// with to write "\r\n" line endings into the file this should be handled in
+  /// the IO implementation.
   fn write_file(&mut self,
     // Path to file as give by user. Not checked beyond shell escape parsing
     path: &str,
@@ -85,6 +104,9 @@ pub trait IO {
   ) -> Result<usize>;
 
   /// Normal file read
+  ///
+  /// The returned string will be split into lines and added into the buffer.
+  /// All line endings are converted into '\n' when adding into the buffer.
   fn read_file(&mut self,
     // Path to file as given by user. Not checked beyond shell escape parsing
     path: &str,

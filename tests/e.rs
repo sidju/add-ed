@@ -28,6 +28,7 @@ fn test_io() -> FakeIO {
     fake_fs: HashMap::from([
       ("text".to_owned(), "file\ndata\nin\nfile\n".to_owned()),
       ("numbers".to_owned(), "4\n5\n2\n1\n".to_owned()),
+      ("not_terminated".to_owned(), "test\ndata".to_owned()),
     ]),
     fake_shell: HashMap::from([
       (
@@ -99,6 +100,31 @@ fn edit_path() {
     expected_file_changes: vec![], // No changes to the fs
     expected_clipboard: vec!["dummy"],
     expected_filepath: "numbers",
+  }.run();
+}
+
+// Open file that isn't newline terminated
+// (Should add a newline to the last line automatically)
+#[test]
+fn edit_non_terminated() {
+  let test_io = test_io();
+  IOTest{
+    init_buffer: vec!["text"],
+    init_io: test_io.clone(),
+    init_clipboard: vec!["dummy"],
+    init_filepath: "text",
+    command_input: vec![
+      "e not_terminated",
+    ],
+    expected_buffer: vec![
+      "test",
+      "data",
+    ],
+    expected_buffer_saved: true,
+    expected_selection: (1,2),
+    expected_file_changes: vec![], // No changes to the fs
+    expected_clipboard: vec!["dummy"],
+    expected_filepath: "not_terminated",
   }.run();
 }
 
