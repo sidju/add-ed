@@ -31,7 +31,9 @@ fn insert<'a>(
   let mut tail = buffer.split_off(index);
   let start = buffer.len();
   for line in data {
-  buffer.push(Line::new(line).map_err(InternalError::InvalidLineText)?);
+    buffer.push(
+      Line::new(format!("{}\n", line)).map_err(InternalError::InvalidLineText)?
+    );
   }
   let end = buffer.len();
   buffer.append(&mut tail);
@@ -43,7 +45,9 @@ fn replace_buffer<'a>(
 ) -> Result<usize> {
   buffer.clear();
   for line in data {
-  buffer.push(Line::new(line).map_err(InternalError::InvalidLineText)?);
+    buffer.push(
+      Line::new(format!("{}\n", line)).map_err(InternalError::InvalidLineText)?
+    );
   }
   Ok(buffer.len())
 }
@@ -94,7 +98,7 @@ pub fn read_from_file(
         state.io.read_file(file, command == 'E')?
       },
     };
-    let data = unformated_data.split_inclusive('\n');
+    let data = unformated_data.lines();
     let datalen = match index {
       Some(i) => insert(state.history.current_mut(full_command.into()), data, i),
       None => replace_buffer(state.history.current_mut(full_command.into()), data),
