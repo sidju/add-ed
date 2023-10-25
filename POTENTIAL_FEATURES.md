@@ -1,3 +1,10 @@
+# Support "\r\n" line termination in local_io
+Add public flags that configure wether or not to write in a '\r' before every
+'\n' when writing to files or commands, respectively.
+
+Not yet implemented since I don't use windows. Tell me if you need it and give
+me two weeks.
+
 # Plugin support, `@`:
 Using a specific Macro trait and a `HashMap<&str, &mut dyn Macro>`.
 
