@@ -110,7 +110,7 @@ impl std::fmt::Display for EdError {
         text,
       ),
       IndicesUnrelated{prior_index, unrelated_index} => write!(f,
-        "Received index `{}` immediately after index `{}`.",
+        "Received non-chainable index `{}` immediately after index `{}`.",
         unrelated_index,
         prior_index,
       ),
