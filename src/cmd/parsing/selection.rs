@@ -54,14 +54,11 @@ pub fn parse_index(
               // then an offset. Not caught earlier so we can give a more
               // detailed error. Same error logic as post loop State::Default
               if let Some(_) = current_ind {return Err(
+                // Note that this reports getting digits after another index.
+                // We catch it here to get all the digits before erroring.
                 EdError::IndicesUnrelated{
-                  prior_index: input[start..i].to_owned(),
-                  // Find the end of the current index
-                  unrelated_index: input[i..]
-                      .find(|c: char| !c.is_ascii_digit())
-                      .map(|end| &input[i..end] )
-                      .unwrap_or(&input[i..])
-                      .to_owned(),
+                  prior_index: input[..start].to_owned(),
+                  unrelated_index: input[start..i].to_owned(),
                 }
               )}
               // If there is numeric input before, handle that
@@ -121,8 +118,17 @@ pub fn parse_index(
       State::Tag => {
         if let Some(_) = current_ind { return Err(
           EdError::IndicesUnrelated{
+            // Safe, as the -1 is to exclude the ' (which is 1 byte long)
             prior_index: input[..i-1].to_owned(),
-            unrelated_index: input[i-1..i+1].to_owned(),
+            // As the start -1 includes the ' the start is safe, but we can't
+            // assume the given tag is 1 byte long.
+            unrelated_index: {
+              let mut index = String::new();
+              for ch in input[i-1..].chars().take(2) {
+                index.push(ch);
+              }
+              index
+            },
           }
         )}
         current_ind = Some(Ind::Tag(ch));
@@ -304,7 +310,7 @@ pub fn interpret_index(
     // These are relative to the prior, so have no indexing per-se
     Ind::Add(inner, offset) => {
       let inner = interpret_index(state, *inner, old_selection)?;
-      Ok(inner+offset)
+      Ok(inner.saturating_add(offset))
     },
     Ind::Sub(inner, offset) => {
       let inner = interpret_index(state, *inner, old_selection)?;

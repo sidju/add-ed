@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use super::{
-  dummy_io::DummyIO,
+  fake_io::FakeIO,
   mock_ui::{Print, MockUI},
 };
 use add_ed::{
@@ -33,7 +33,10 @@ pub fn inner_fixture(
   expected_prints: Vec<Print>,
 ) {
   // Instantiate dummy IO
-  let mut io = DummyIO::new();
+  let mut io = FakeIO{
+    fake_fs: HashMap::new(),
+    fake_shell: HashMap::new(),
+  };
   // Apply given or default to no macros
   let macros = init_macros.unwrap_or(HashMap::new());
   // Create ed state and init ed.buffer
