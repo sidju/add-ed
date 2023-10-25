@@ -1,3 +1,15 @@
+# 0.11.2
+Handle some panics found by fuzzing. Ironically the ones found were from
+string slicing when constructing errors for invalid indices.
+(Should have been part of 0.11.1, but I got a bit trigger happy and released
+before thinking.)
+
+# 0.11.1
+Improve newline handling. Now a non-newline-terminated file will still open
+and work correctly. This will also make all files write to disk with  "\n"
+(aka. "unix style") line endings, unless the IO implementation used converts
+the line endings.
+
 # 0.11.0
 Nearing a stable release now, so some less clean features are remade in this
 release to be easier to maintain in a stable manner forward.
