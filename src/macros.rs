@@ -33,7 +33,8 @@ pub struct Macro {
   /// The number of arguments the macro accepts
   ///
   /// None means there is no specific number, disabling validation of correct nr
-  /// of given arguments before execution.
+  /// of given arguments before execution. Some(0) means the macro expects no
+  /// arguments, as such no argument substitution will be performed.
   pub arguments: Option<usize>,
   // TODO, enable this later
   // /// How the macro execution interacts with undo/redo snapshotting
@@ -43,7 +44,8 @@ impl Macro {
   /// Construct a macro
   ///
   /// Creates a macro with the given text as command input and the given nr of
-  /// allowed arguments
+  /// allowed arguments. If 0 arguments expected no argument substitution will
+  /// be performed for the macro.
   pub fn new<T: Into<Cow<'static, str>>>(
     input: T,
     arguments: usize,
@@ -105,6 +107,8 @@ pub fn apply_arguments<
       expected: format!("{}", x).into(),
       received: args.len(),
     }); }
+    // If 0 arguments we skip the argument substitution below
+    if x == 0 { return Ok(mac.input.to_string()); }
   }
   // Iterate over every character in the macro to find "$<char>", replace with the
   // matching argument (or $ in the case of $$)
@@ -258,6 +262,19 @@ mod test {
       &output,
       "hi alice, bob, carol",
       "$0 should be replaced with all arguments (space separated)."
+    );
+  }
+
+  // Verify that no substitution is done if 0 arguments required
+  #[test]
+  fn no_arguments() {
+    let mac = Macro::new("test $$ test", 0);
+    let args: &[&str] = &[];
+    let output = apply_arguments(&mac, &args).unwrap();
+    assert_eq!(
+      &output,
+      "test $$ test",
+      "When no arguments are allowed no substitution should be done."
     );
   }
 }
