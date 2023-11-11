@@ -169,6 +169,11 @@ More advanced commands to apply the same or similar changes many times.
   selection (if any) and run given macro. Same as `g` it doesn't set selection,
   but the commands in the macro will probably do so.
 
+  If the macro has specified number of arguments any other number will cause an
+  error. If and only if the allowed number of arguments is specified to 0 the
+  substitution routine won't be run, which means that '$' characters don't need
+  to be escaped (by adding another '$').
+
 
 # Status commands
 
