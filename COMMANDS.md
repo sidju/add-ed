@@ -1,4 +1,5 @@
 # Command notation
+
 Short representations to keep this documentation concise.
 
 (Note that the descriptions of what a shorthand should be replaced by will use
@@ -41,6 +42,7 @@ the previously presented shorthands.)
 
 
 # Printing flags:
+
 All the printing commands and most other commands accept *printing flags*. These
 are `[pnl]`.
 - `p` prints the selection after the command.
@@ -51,6 +53,7 @@ are `[pnl]`.
 
 
 # Printing commands
+
 Commands to print buffer contents.
 
 - `<nothing>` Prints as many lines after the currently selected as you have
@@ -64,6 +67,7 @@ Commands to print buffer contents.
 
 
 # Basic editing commands
+
 Simple commands to edit the text in the editing buffer.
 
 - `(.)a[pnl]` Append text after given line. Enters input mode terminated by '.'.
@@ -83,12 +87,13 @@ Simple commands to edit the text in the editing buffer.
 
 
 # Combined editing commands
+
 Commands that kind of combine two basic editing commands.
 
 - `(.,.)c[pnl]` Change out the selected lines. Enters input mode terminated by
   '.'. Equivalent to `.,.d` followed by `i`. Selects the inserted text if any
   given, if none given behaves like `d`.
-- `(.,.)C[pnl]` ONLY IF *initial_input_data* FEATURE IS ENABLED!!!
+- `(.,.)C[pnl]` *ONLY IF `initial_input_data` FEATURE IS ENABLED!!!*
   Behaves just like `c` except the selected lines are put into the input field,
   allowing you to edit them directly.
 - `(.,.)m(.)[pnl]` Move selected lines directly to given index. If no index
@@ -102,6 +107,7 @@ Commands that kind of combine two basic editing commands.
 
 
 # File and shell commands
+
 Commands to read and write to the surrounding system, both directly to/from
 files and using shell commands.
 
@@ -139,6 +145,7 @@ to indicate to run a command.)
 
 
 # Batch editing commands
+
 More advanced commands to apply the same or similar changes many times.
 
 - `(.,.)s(/<regex>/<substitution>/[gpnl])` Replaces text within selection that
@@ -164,6 +171,7 @@ More advanced commands to apply the same or similar changes many times.
 
 
 # Status commands
+
 For printing information about and changing editor state.
 
 - `help` Print a short list of commands.

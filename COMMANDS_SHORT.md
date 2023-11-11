@@ -1,4 +1,5 @@
 # Basic editing commands:
+
 - `a/i` Insert lines after/before index.
 - `d` Cut lines into clipboard.
 - `y` Copy lines into clipboard.
@@ -6,6 +7,7 @@
 - `j` Join selection into one line.
 
 # Combined editing commands:
+
 - `A/I` As `a`/`i` but join first/last line with indexed line.
 - `c` Replace selection with input. Like `d` and `i`.
 - `C` As `c` but with selection as initial input.
@@ -13,6 +15,7 @@
 - `t` Copy selection to index. Like `y` and `x`.
 
 # File and shell commands:
+
 - `e` Open given file.
 - `r` Read from given file to given index.
 - `w` Write to given file.
@@ -21,12 +24,14 @@
 - `!` Run given shell command.
 
 # Batch editing commands:
+
 - `s` Search and replace
 - `g/v` Run commands on matching/not-matching lines.
 - `G/V` Interactively run commands on matching/not-matching lines.
 - `:` Run macro.
 
 # Status commands:
+
 - `help` Print this help section.
 - `Help` Print commands documentation.
 - `q` Quit the editor, warns on unsaved changes.
