@@ -22,7 +22,17 @@ use crate::{Result, EdError};
 /// A struct representing a runnable macro
 ///
 /// It is intended to add more/change the variables, but the constructors should
-/// produce instances with the same behaviour through any change.
+/// produce instances with the same behaviour through any changes.
+///
+/// If the `serde` feature is enabled, serialization will produce the most
+/// backwards compatible representation while still ensuring the same behaviour.
+/// Deserialization should produce identically behaving macros when valid for
+/// the version of `add-ed` being used, if newer features are used in the macro
+/// than the deserializing version of `add-ed` has access to an unknown field
+/// error will be raised.
+#[derive(Debug)]
+#[cfg_attr(feature="serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature="serde", serde(deny_unknown_fields))]
 #[non_exhaustive]
 pub struct Macro {
   /// Input to simulate
@@ -35,6 +45,7 @@ pub struct Macro {
   /// None means there is no specific number, disabling validation of correct nr
   /// of given arguments before execution. Some(0) means the macro expects no
   /// arguments, as such no argument substitution will be performed.
+  #[cfg_attr(feature="serde", serde(skip_serializing_if = "Option::is_none"))]
   pub arguments: Option<usize>,
   // TODO, enable this later
   // /// How the macro execution interacts with undo/redo snapshotting
