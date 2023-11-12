@@ -22,7 +22,17 @@ use crate::{Result, EdError};
 /// A struct representing a runnable macro
 ///
 /// It is intended to add more/change the variables, but the constructors should
-/// produce instances with the same behaviour through any change.
+/// produce instances with the same behaviour through any changes.
+///
+/// If the `serde` feature is enabled, serialization will produce the most
+/// backwards compatible representation while still ensuring the same behaviour.
+/// Deserialization should produce identically behaving macros when valid for
+/// the version of `add-ed` being used, if newer features are used in the macro
+/// than the deserializing version of `add-ed` has access to an unknown field
+/// error will be raised.
+#[derive(Debug)]
+#[cfg_attr(feature="serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature="serde", serde(deny_unknown_fields))]
 #[non_exhaustive]
 pub struct Macro {
   /// Input to simulate
@@ -33,7 +43,9 @@ pub struct Macro {
   /// The number of arguments the macro accepts
   ///
   /// None means there is no specific number, disabling validation of correct nr
-  /// of given arguments before execution.
+  /// of given arguments before execution. Some(0) means the macro expects no
+  /// arguments, as such no argument substitution will be performed.
+  #[cfg_attr(feature="serde", serde(skip_serializing_if = "Option::is_none"))]
   pub arguments: Option<usize>,
   // TODO, enable this later
   // /// How the macro execution interacts with undo/redo snapshotting
@@ -43,7 +55,8 @@ impl Macro {
   /// Construct a macro
   ///
   /// Creates a macro with the given text as command input and the given nr of
-  /// allowed arguments
+  /// allowed arguments. If 0 arguments expected no argument substitution will
+  /// be performed for the macro.
   pub fn new<T: Into<Cow<'static, str>>>(
     input: T,
     arguments: usize,
@@ -105,6 +118,8 @@ pub fn apply_arguments<
       expected: format!("{}", x).into(),
       received: args.len(),
     }); }
+    // If 0 arguments we skip the argument substitution below
+    if x == 0 { return Ok(mac.input.to_string()); }
   }
   // Iterate over every character in the macro to find "$<char>", replace with the
   // matching argument (or $ in the case of $$)
@@ -258,6 +273,19 @@ mod test {
       &output,
       "hi alice, bob, carol",
       "$0 should be replaced with all arguments (space separated)."
+    );
+  }
+
+  // Verify that no substitution is done if 0 arguments required
+  #[test]
+  fn no_arguments() {
+    let mac = Macro::new("test $$ test", 0);
+    let args: &[&str] = &[];
+    let output = apply_arguments(&mac, &args).unwrap();
+    assert_eq!(
+      &output,
+      "test $$ test",
+      "When no arguments are allowed no substitution should be done."
     );
   }
 }

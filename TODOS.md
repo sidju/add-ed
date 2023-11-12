@@ -1,4 +1,5 @@
 # Todos:
+
 - Inject context environment variables into shell interaction.
   (File, selection_start, selection_end, prev_shell_command, if running script)
 - Improve classic.rs to support all of ed's command line arguments
@@ -10,6 +11,7 @@
 
 
 # Look over undo/redo
+
 - Add absolute indexing to the 'u' command (`u*0` = go to index 0 in history)
 - Possibly eventually add reverse/forward snapshot label search
   (`u?^e?` would search backwards to the last previous 'e' command (just regex))
@@ -23,6 +25,7 @@
 
 
 # Look over macros.
+
 Make macros more useful by:
 - Adding some per-macro configurations, such as:
   - Abort on error, abort on error except NoMatch and NoOp, or ignore errors
@@ -32,4 +35,5 @@ Make macros more useful by:
 
 
 # Documentation fixes:
+
 - Look over API documentation again, since refactoring has changed the API.

@@ -1,16 +1,31 @@
+# 0.12.0
+
+- Make markdown files conform to best practices (empty lines after headings).
+- Add a special case that if a macro specifically takes 0 arguments the
+  argument substitution routine won't run at all, so that macros without
+  arguments don't need to escape their '$' by writing two.
+- Elaborate a bit in the macro documentation regarding behaviour with macro
+  arguments specified and not. (both in COMMANDS.md and doc comments)
+- Add a serde feature which derives Serialize and Deserialize on the Macro
+  struct, to allow library users to easily embed macros in their configs.
+- Remove the BEHAVIOUR.md file, as it is more confusing than clarifying.
+
 # 0.11.2
+
 Handle some panics found by fuzzing. Ironically the ones found were from
 string slicing when constructing errors for invalid indices.
 (Should have been part of 0.11.1, but I got a bit trigger happy and released
 before thinking.)
 
 # 0.11.1
+
 Improve newline handling. Now a non-newline-terminated file will still open
 and work correctly. This will also make all files write to disk with  "\n"
 (aka. "unix style") line endings, unless the IO implementation used converts
 the line endings.
 
 # 0.11.0
+
 Nearing a stable release now, so some less clean features are remade in this
 release to be easier to maintain in a stable manner forward.
 
@@ -39,6 +54,7 @@ release to be easier to maintain in a stable manner forward.
   prevent macros from doing infinite recursion.)
 
 # 0.10.0
+
 - Add a first sketch of undo/redo. Feedback on behaviour is requested in the
   "Undo behaviour" issue (#3) on github
 - Rework basically all tests, resulting in many small fixes
@@ -55,6 +71,7 @@ release to be easier to maintain in a stable manner forward.
   set selection without any output (no command prints the given selection)
 
 # 0.9.0
+
 - Improve substitute, especially escapes.
 - Make ':' default prefix for command input (if handled by UI).
 - Classic ui now ignores prefix, since it doesn't handle it correctly.
@@ -84,15 +101,18 @@ release to be easier to maintain in a stable manner forward.
   Both via Ed constructor and via 'L' and 'N' commands.
 
 # 0.8.1
+
 - Add proper help text for 'A', 'I' and 'C'.
 
 # 0.8.0
+
 - Add commands 'A' and 'I', which work as their 'a' and 'i' counterparts but
   join with the preceding/following line.
 - Add command 'C' behind "initial_input_data" feature flag. Moves selection
   into input buffer, allowing per-character editing of selection.
 
 # 0.7.1 -> 0.7.7
+
 As it looks there will be many updates the coming month with minor fixes as I
 gradually clear up bugs using the editor itself. All these updates will be
 grouped in under this note.
@@ -113,6 +133,7 @@ grouped in under this note.
 - Fix off-by-one bug in 'a', 'i' and 'c' handler.
 
 # 0.7.0
+
 Since this is a bit more public now it seems to be time to start with release
 notes, so that is the first change for this release. Beyond that there are
 some adjustments based on UIs I am trying to write, which cascade into quite
