@@ -1,3 +1,11 @@
+# 0.13.0
+
+- Change macro arg specification to an enum, for better: flexibility,
+  forward compability, clarity and serialization.
+- Also changed macro construction to a minimal constructor with builder
+  pattern modifiers, to make it easier to add more fields in a consistent
+  manner.
+
 # 0.12.0
 
 - Make markdown files conform to best practices (empty lines after headings).

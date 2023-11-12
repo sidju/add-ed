@@ -67,8 +67,8 @@ Add 'C' command. This modifies the UI trait.
 
 `#[derive(serde::Serialize, serde::Deserialize)]` on `Macro` struct.
 
-Other structs can get derived on upon request, but `Macro` was the only one
-that seemed relevant.
+Other structs can get derived on upon request, but `Macro` (and its members) was
+the only one that seemed relevant.
 
 ## Attributions:
 

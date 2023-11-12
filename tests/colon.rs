@@ -8,7 +8,10 @@ use shared::fixtures::{
 
 use add_ed::{
   EdError,
-  macros::Macro,
+  macros::{
+    Macro,
+    NrArguments,
+  },
 };
 
 // Verify behaviour of ':' command
@@ -24,10 +27,10 @@ use add_ed::{
 
 fn create_macro_store() -> std::collections::HashMap<&'static str, Macro> {
   let mut store = std::collections::HashMap::new();
-  store.insert("double", Macro::new("t.", 0));
-  store.insert("append_word", Macro::new(",a\n$1\n.",1));
-  store.insert("append_words", Macro::without_arg_validation(",a\n$0\n."));
-  store.insert("recursion", Macro::new(":recursion", 0));
+  store.insert("double", Macro::new("t.").nr_arguments(NrArguments::Exactly(0)));
+  store.insert("append_word", Macro::new(",a\n$1\n.").nr_arguments(NrArguments::Exactly(1)));
+  store.insert("append_words", Macro::new(",a\n$0\n."));
+  store.insert("recursion", Macro::new(":recursion").nr_arguments(NrArguments::Exactly(0)));
   store
 }
 

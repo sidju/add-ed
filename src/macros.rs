@@ -19,10 +19,24 @@ use crate::{Result, EdError};
 //  ExposeModifications,
 //}
 
+/// Small enum describing argument nr constraints
+///
+/// (We use serde's default, externally tagged)
+#[derive(Debug)]
+#[cfg_attr(feature="serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature="serde", serde(rename_all="lowercase"))]
+pub enum NrArguments {
+  Any,
+  None,
+  Exactly(usize),
+  Between{incl_min: usize, incl_max: usize},
+}
+
 /// A struct representing a runnable macro
 ///
-/// It is intended to add more/change the variables, but the constructors should
-/// produce instances with the same behaviour through any changes.
+/// It is intended to add more/change the variables, but the constructor and any
+/// thereafter applied modification should produces instances with the same
+/// behaviour through any changes.
 ///
 /// If the `serde` feature is enabled, serialization will produce the most
 /// backwards compatible representation while still ensuring the same behaviour.
@@ -42,11 +56,10 @@ pub struct Macro {
   pub input: Cow<'static, str>,
   /// The number of arguments the macro accepts
   ///
-  /// None means there is no specific number, disabling validation of correct nr
-  /// of given arguments before execution. Some(0) means the macro expects no
-  /// arguments, as such no argument substitution will be performed.
-  #[cfg_attr(feature="serde", serde(skip_serializing_if = "Option::is_none"))]
-  pub arguments: Option<usize>,
+  /// `Any` performs no validation, `Exactly` verifies that it is exactly that
+  /// nr of arguments given, and if `None` is set no argument substitution is 
+  /// run on the macro (which means '$'s don't need to be doubled in the macro).
+  pub nr_arguments: NrArguments,
   // TODO, enable this later
   // /// How the macro execution interacts with undo/redo snapshotting
   // snapshotting_mode: MacroSnapshottingMode,
@@ -54,31 +67,21 @@ pub struct Macro {
 impl Macro {
   /// Construct a macro
   ///
-  /// Creates a macro with the given text as command input and the given nr of
-  /// allowed arguments. If 0 arguments expected no argument substitution will
-  /// be performed for the macro.
+  /// Creates a macro with the given text as command input and all other options
+  /// default. Use the builder pattern operators below or modify the public
+  /// member variables to configure the rest.
   pub fn new<T: Into<Cow<'static, str>>>(
     input: T,
-    arguments: usize,
   ) -> Self {
     Self{
       input: input.into(),
-      arguments: Some(arguments),
+      nr_arguments: NrArguments::Any,
     }
   }
-  /// Construct a macro that takes any number of commands
-  ///
-  /// Creates a macro with the given text as command input and disables
-  /// validation of nr of arguments to the macro. This is intended for macros
-  /// using the "all arguments" substitutor instead of numbered argument
-  /// substitutors.
-  pub fn without_arg_validation<T: Into<Cow<'static, str>>>(
-    input: T,
-  ) -> Self {
-    Self{
-      input: input.into(),
-      arguments: None,
-    }
+  /// Configure required nr of arguments for the macro
+  pub fn nr_arguments(mut self, nr: NrArguments) -> Self {
+    self.nr_arguments = nr;
+    self
   }
 }
 
@@ -113,13 +116,31 @@ pub fn apply_arguments<
   args: &[S],
 ) -> Result<String> {
   // Verify arguments
-  if let Some(x) = mac.arguments {
-    if args.len() != x { return Err(EdError::ArgumentsWrongNr{
-      expected: format!("{}", x).into(),
-      received: args.len(),
-    }); }
-    // If 0 arguments we skip the argument substitution below
-    if x == 0 { return Ok(mac.input.to_string()); }
+  use NrArguments as NA;
+  match mac.nr_arguments {
+    NA::None => {
+      if !args.is_empty() { return Err(EdError::ArgumentsWrongNr{
+        expected: "absolutely no".into(),
+        received: args.len(),
+      }); }
+      // For this case we skip arguments substitution completely
+      return Ok(mac.input.to_string());
+    },
+    NA::Exactly(x) => {
+      if args.len() != x { return Err(EdError::ArgumentsWrongNr{
+        expected: format!("{}",x).into(),
+        received: args.len(),
+      }); }
+    },
+    NA::Between{incl_min, incl_max} => {
+      if args.len() > incl_max || args.len() < incl_min {
+        return Err(EdError::ArgumentsWrongNr{
+          expected: format!("between {} and {}", incl_min, incl_max).into(),
+          received: args.len(),
+        });
+      }
+    },
+    NA::Any => {},
   }
   // Iterate over every character in the macro to find "$<char>", replace with the
   // matching argument (or $ in the case of $$)
@@ -230,7 +251,9 @@ mod test {
 
   #[test]
   fn argument_substitution() {
-    let mac = Macro::new("$1 world. Test$2", 2);
+    let mac = Macro::new("$1 world. Test$2")
+      .nr_arguments(NrArguments::Exactly(2))
+    ;
     let args = ["Hello", "ing"];
     let output = apply_arguments(&mac, &args).unwrap();
     assert_eq!(
@@ -242,7 +265,7 @@ mod test {
 
   #[test]
   fn dollar_escaping() {
-    let mac = Macro::new("$$1 and $1.", 1);
+    let mac = Macro::new("$$1 and $1.");
     let args = ["one dollar"];
     let output = apply_arguments(&mac, &args).unwrap();
     assert_eq!(
@@ -254,7 +277,7 @@ mod test {
 
   #[test]
   fn ignore_bad_escape() {
-    let mac = Macro::new("$a $", 1);
+    let mac = Macro::new("$a $");
     let args = ["shouldn't appear"];
     let output = apply_arguments(&mac, &args).unwrap();
     assert_eq!(
@@ -266,7 +289,7 @@ mod test {
 
   #[test]
   fn all_arguments() {
-    let mac = Macro::without_arg_validation("hi $0");
+    let mac = Macro::new("hi $0");
     let args = ["alice,","bob,","carol"];
     let output = apply_arguments(&mac, &args).unwrap();
     assert_eq!(
@@ -276,10 +299,12 @@ mod test {
     );
   }
 
-  // Verify that no substitution is done if 0 arguments required
+  // Verify that no substitution is done if arguments none specified
   #[test]
   fn no_arguments() {
-    let mac = Macro::new("test $$ test", 0);
+    let mac = Macro::new("test $$ test")
+      .nr_arguments(NrArguments::None)
+    ;
     let args: &[&str] = &[];
     let output = apply_arguments(&mac, &args).unwrap();
     assert_eq!(
