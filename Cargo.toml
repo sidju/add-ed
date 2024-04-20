@@ -15,7 +15,8 @@ include = [
   "**/*.rs",
   "Cargo.toml",
   "COMMANDS.md",
-  "COMMANDS_SHORT.md"
+  "COMMANDS_SHORT.md",
+  "LICENSE.txt"
 ]
 
 [features]
