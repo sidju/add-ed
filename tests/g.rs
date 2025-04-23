@@ -97,6 +97,50 @@ fn global_grep_and_delete() {
   }.run();
 }
 
+// And one where g feeds a command line-input in the same line
+#[test]
+fn global_grep_and_change() {
+  PrintTest{
+    init_buffer: vec![
+      "hello",
+      "1",
+      "4",
+      "there",
+      "9",
+    ],
+    init_clipboard: vec![],
+    command_input: vec![r",g/\d/p/c/number/"],
+    expected_buffer: vec![
+      "hello",
+      "number",
+      "number",
+      "there",
+      "number",
+    ],
+    expected_buffer_saved: false,
+    expected_selection: (5,5),
+    expected_clipboard: vec!["9"],
+    expected_prints: vec![
+      Print{
+        text: vec!["1\n".to_string(),],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec!["4\n".to_string(),],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec!["9\n".to_string(),],
+        n: false,
+        l: false,
+      },
+    ],
+    expected_history_tags: vec![r",g/\d/p/c/number/"],
+  }.run();
+}
+
 // The most normal test case, g/re/p/, but with default selection
 // Also run a command after, to verify that 'g' doesn't incorrectly take input
 #[test]
