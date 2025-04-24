@@ -59,11 +59,12 @@ pub fn run_command(
     // replace it with the output
     Some(s) => {
       let data = state.history.current().get_lines(s)?;
-      let transformed = state.io.run_transform_command(
+      let mut transformed = state.io.run_transform_command(
         &mut ui.lock_ui(),
         substituted,
         data,
       )?;
+      if !transformed.ends_with('\n') { transformed.push('\n'); }
       let lines: Vec<&str> = transformed.split_inclusive('\n').collect();
       let nr_lines = lines.len();
       replace_selection(state, full_command, s, lines)?;
