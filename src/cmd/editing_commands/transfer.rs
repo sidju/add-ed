@@ -83,14 +83,21 @@ pub fn transfer(
   let selection = interpret_selection(&state, selection, state.selection)?;
   // Parse the target index, then the flags if any
   let (ind_end, ind) = parse_index(tail)?;
-  let index = interpret_index(
-    &state,
-    ind.unwrap_or_else(||{
-      if command == 'M' || command == 'T' { Ind::Literal(1) }
-      else { Ind::BufferLen }
-    }),
-    state.selection.1,
-  )?;
+  let index = if command == 'm' || command == 't' {
+    interpret_index(
+      &state,
+      ind.unwrap_or_else(|| Ind::BufferLen),
+      state.selection.1,
+    )?
+  }
+  // We still keep the handling for 'T' and 'M', we may re-enable it later
+  else {
+    interpret_index(
+      &state,
+      ind.unwrap_or_else(|| Ind::Literal(1)),
+      state.selection.0,
+    )?
+  };
   let mut flags = parse_flags(&tail[ind_end..], "pnl")?;
   pflags.p = flags.remove(&'p').unwrap();
   pflags.n = flags.remove(&'n').unwrap();

@@ -1,3 +1,20 @@
+# 0.14.0
+
+Mainly fixes longstanding bugs, but due to these changing some index behaviours
+I'll call it a minor version.
+
+- Improve index handling, especially for commands that use the end of the
+  selection by default.
+- Catch empty filepath before we ask the filesystem, and better error message.
+- Fix that line input from an inline macro (/command/input/) would create
+  invalid lines (without a terminating newline).
+- Fix that `/` reached an unhandled codepath, by rewriting index parsing.
+  Maybe this time I got it right?
+- Fix a possible error where a transforming command printing its last line
+  without a newline would cause an invalid line and an error.
+- Improve fuzzing to panic on internal errors, to better avoid those occuring in
+  the wild.
+
 # 0.13.0
 
 - Change macro arg specification to an enum, for better: flexibility,

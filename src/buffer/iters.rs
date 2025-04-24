@@ -24,7 +24,7 @@ pub struct LinesIter<'a> {
 // Wrapped by struct, so we can hide the internal state
 enum LinesIterInner<'a> {
   Real(Inner<'a>),
-  #[cfg(any(feature = "testing", fuzzing, test))]
+  #[cfg(any(fuzzing, test))]
   Test(Box<dyn Iterator<Item = &'a str>>),
 }
 
@@ -34,7 +34,7 @@ impl<'a> Iterator for LinesIter<'a> {
   fn next(&mut self) -> Option<Self::Item> {
     match &mut self.inner {
       LinesIterInner::Real(x) => x.next(),
-      #[cfg(any(feature = "testing", fuzzing, test))]
+      #[cfg(any(fuzzing, test))]
       LinesIterInner::Test(x) => x.next(),
     }
   }
@@ -46,7 +46,7 @@ impl<'a> From<Inner<'a>> for LinesIter<'a> {
   }
 }
 
-#[cfg(any(feature = "testing", fuzzing, test))]
+#[cfg(any(fuzzing, test))]
 impl<'a, I: Iterator<Item=&'a str> + 'static> From<Box<I>> for LinesIter<'a> {
   fn from(i: Box<I>) -> Self {
     Self{ inner: LinesIterInner::Test(i) }

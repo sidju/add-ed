@@ -76,6 +76,34 @@ fn read_defaults() {
   }.run();
 }
 
+// Test that a relative index resolves relative to end of selection
+#[test]
+fn read_relative() {
+  let test_io = test_io();
+  IOTest{
+    init_buffer: vec!["text","data","in","buffer"],
+    init_io: test_io.clone(),
+    init_clipboard: vec!["dummy"],
+    init_filepath: "text",
+    command_input: vec!["1,2#","+r",],
+    expected_buffer: vec![
+      "text",
+      "data",
+      "in",
+      "file",
+      "data",
+      "in",
+      "file",
+      "buffer",
+    ],
+    expected_buffer_saved: false,
+    expected_selection: (4,7),
+    expected_file_changes: vec![], // No changes to the fs
+    expected_clipboard: vec!["dummy"],
+    expected_filepath: "text",
+  }.run();
+}
+
 // Fully specified prepend
 #[test]
 fn read_prepend() {

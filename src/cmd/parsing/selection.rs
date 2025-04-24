@@ -35,20 +35,31 @@ pub fn parse_index(
   input: &str,
 ) -> Result<(usize, Option<Ind<'_>>)> {
   // Set up state variables for one-pass parse
-  let mut end = None;
+  let mut i;
+  let mut ch;
   let mut state = State::Default(0);
   let mut current_ind = None;
   // Loop over chars and parse
-  let iter = input.char_indices();
-  for (i, ch) in iter {
+  let input = input.trim_end_matches('\n');
+  let mut iter = input.char_indices();
+  // This loop is only exited by the Default and Offset state handlers, which
+  // handle finalizing and returning.
+  // If the other states don't switch to one of them it will loop indefinitely.
+  loop {
+    // Get next character, if none give None but set i to len of input
+    (i, ch) = iter.next()
+      .map(|(i, ch)| (i, Some(ch)))
+      .unwrap_or((input.len(), None))
+    ;
     // Handle based on state
     match state {
       // If a state change is coming, populate current ind and make the change
       State::Default(start) => {
+        // While we are receiving data we check for state changes
         match ch {
-          // Offset is always valid
+          // Offset is valid even if current_ind is set
           // We need to see if there is a literal before it, before entering state
-          '+' | '-' => {
+          Some('+') | Some('-') => {
             if start != i {
               // Catches that we had a special index, then some random numbers,
               // then an offset. Not caught earlier so we can give a more
@@ -66,17 +77,18 @@ pub fn parse_index(
                 .map_err(|_|EdError::IndexNotInt(input[start..i].to_owned()))?;
               current_ind = Some(Ind::Literal(literal));
             }
-            state = State::Offset(i + 1, ch == '-');
+            state = State::Offset(i + 1, ch == Some('-'));
           },
           // Invalid if current_ind is some, but we catch that in their handlers
           // to be able to give a clearer error
-          '/' | '\'' | '?' | '.' | '$' => {
+          Some('/') | Some('\'') | Some('?') | Some('.') | Some('$') => {
+            let c = ch.unwrap();
             // These are only valid at the start of an index
             if start != i { return Err(EdError::IndexSpecialAfterStart{
               prior_index: input[start..i].to_owned(),
-              special_index: ch,
+              special_index: c,
             }); }
-            match ch {
+            match c {
               '\'' => {
                 state = State::Tag;
               },
@@ -87,6 +99,8 @@ pub fn parse_index(
                 state = State::RevPattern(i + 1); // Since we know the length of these chars to be one byte
               },
               '.' | '$' => {
+                // The other special indices handle this error upon termination,
+                // but since these are only one character we do it here.
                 if let Some(_) = current_ind { return Err(
                   EdError::IndicesUnrelated{
                     prior_index: input[..i].to_owned(),
@@ -94,28 +108,50 @@ pub fn parse_index(
                   }
                 )}
                 current_ind = Some(
-                  if ch == '.' { Ind::Selection } else { Ind::BufferLen }
+                  if c == '.' { Ind::Selection } else { Ind::BufferLen }
                 );
                 state = State::Default(i + 1); // reset start after moving into current_ind
               },
-              _ => panic!("Unreachable"),
+              _ => ed_unreachable!()?,
             }
           }
-          // Numeric input isn't always valid, but we catch that after breaking
-          // so we can have a more detailed report in the error message
+          // This input may not be valid, but we catch it later to get better
+          // errors
           _ => {
-            // If not numeric (base 10) it must be the end of the index
-            // Break the loop and handle the last outside
-            if ! ch.is_ascii_digit() {
-              // Mark current character as the end of the index
-              end = Some(i);
-              break;
+            // If this is valid base 10 input, keep on looping until it ends
+            if ch.is_some_and(|x| x.is_ascii_digit()) {
+            }
+            // Otherwise we are out of index input, parse up and return
+            else {
+              // If there is input since last finalized state
+              return if start < i {
+                // And a current ind it is error
+                // Occurs if a special index receives a non-offset number after
+                // (Caught here to find end of index for better error message)
+                if let Some(_) = current_ind { Err(
+                  EdError::IndicesUnrelated{
+                    prior_index: input[..start].to_owned(),
+                    unrelated_index: input[start..i].to_owned(),
+                  }
+                )}
+                // Else we parse the literal and return it
+                else {
+                  let literal = input[start..i].parse::<usize>()
+                    .map_err(|_|EdError::IndexNotInt(input[start..i].to_owned()))?;
+                  Ok((i, Some(Ind::Literal(literal))))
+                }
+              }
+              // If there is no literal we return current_ind as-is, since None is the correct return if nothing was parsed
+              else {
+                Ok((i, current_ind))
+              }
             }
           },
         }
       },
       // If the tag state was entered, save the next char as tag and return to default
       State::Tag => {
+        // This error creation is correct no matter if input ran out or not
         if let Some(_) = current_ind { return Err(
           EdError::IndicesUnrelated{
             // Safe, as the -1 is to exclude the ' (which is 1 byte long)
@@ -131,32 +167,41 @@ pub fn parse_index(
             },
           }
         )}
-        current_ind = Some(Ind::Tag(ch));
-        state = State::Default( i + ch.len_utf8() );
+        // However, if input ran out for the normal case that is another error
+        if let Some(c) = ch {
+          current_ind = Some(Ind::Tag(c));
+          state = State::Default( i + c.len_utf8() );
+        }
+        else {
+          return Err(EdError::IndexUnfinished("\'".to_string()));
+        }
       },
       // If the pattern state was entered, save as pattern until end char is given and return to default
       State::Pattern(start) => {
-        if ch == '/' {
+        // terminator or end of input, either way we are done
+        if ch.is_none_or(|x| x == '/') {
           if let Some(_) = current_ind { return Err(
             EdError::IndicesUnrelated{
               prior_index: input[..start-1].to_owned(),
-              unrelated_index: input[start-1..i+1].to_owned(),
+              unrelated_index: input[start-1..input.len().min(i+1)].to_owned(),
             }
           )}
           current_ind = Some(Ind::Pattern(&input[start .. i]));
+          // Moving to state default means that state handles return as needed
           state = State::Default( i + 1 );
         }
       },
       // Same as pattern with different end char
       State::RevPattern(start) => {
-        if ch == '?' {
+        if ch.is_none_or(|x| x == '?') {
           if let Some(_) = current_ind { return Err(
             EdError::IndicesUnrelated{
               prior_index: input[..start-1].to_owned(),
-              unrelated_index: input[start-1..i+1].to_owned(),
+              unrelated_index: input[start-1..input.len().min(i+1)].to_owned(),
             }
           )}
           current_ind = Some(Ind::RevPattern(&input[start .. i]));
+          // Moving to state default means that state handles return as needed
           state = State::Default( i + 1 );
         }
       },
@@ -166,7 +211,7 @@ pub fn parse_index(
         // Check if a known state change. If so, handle it
         match ch {
           // If we are recursing we parse current offset, put it in current_ind and change state accordingly
-          '+' | '-' => {
+          Some('+') | Some('-') => {
             let offset = if start != i {
               input[start .. i].parse::<usize>()
                 .map_err(|_|EdError::OffsetNotInt(input[start..i].to_owned()))?
@@ -176,75 +221,29 @@ pub fn parse_index(
             } else {
               Ind::Add(Box::new(current_ind.unwrap_or(Ind::Selection)), offset)
             });
-            state = State::Offset( i + ch.len_utf8(), ch == '-' );
+            state = State::Offset( i + ch.unwrap().len_utf8(), ch == Some('-') );
           },
-          x if x.is_ascii_digit() => {}, // Ignore until we find the end
+          x if x.is_some_and(|x| x.is_ascii_digit()) => {}, // Ignore until we find the end
           _ => { // Means this is the end
-            // The parsing logic outside the loop does what we need, so save index as end and break
-            end = Some(i);
-            break;
+            // Handle that if the index ends on a + there's nothing to parse
+            let offset = if start < i {
+              input[start .. i].parse::<usize>()
+               .map_err(|_|EdError::OffsetNotInt(input[start .. i].to_owned()))?
+            } else {
+              1
+            };
+            return Ok((i, Some(
+              if negative {
+                Ind::Sub(Box::new(current_ind.unwrap_or(Ind::Selection)), offset)
+              } else {
+                Ind::Add(Box::new(current_ind.unwrap_or(Ind::Selection)), offset)
+              }
+            )))
           },
         } 
       },
     } // End of match
-  } // End of for-each
-
-  // When we get here we have either gone through the whole history or
-  // found a command/separator that marks the end of this index
-  // If end is none we reached the end, rather than a denoting character, and should set end to len()
-  let end = match end {
-    Some(i) => i,
-    None => input.len(),
-  };
-
-  // Check the state
-  match state {
-    // If the string ends in Default mode its contents should be sane 
-    State::Default(start) => {
-      if start < end {
-        // If there is both a current ind and a numeral literal it is error
-        // Occurs if a special index receives a non-offset number after
-        // (Caught here to find end of index for better error message)
-        if let Some(_) = current_ind { Err(
-          EdError::IndicesUnrelated{
-            prior_index: input[..start].to_owned(),
-            unrelated_index: input[start..end].to_owned(),
-          }
-        )}
-        // Else we parse the literal and return it
-        else {
-          let literal = input[start .. end].parse::<usize>()
-            .map_err(|_|EdError::IndexNotInt(input[start..end].to_owned()))?;
-          Ok((end, Some(Ind::Literal(literal))))
-        }
-      }
-      // If there is no literal we return current_ind as-is, since None is the correct return if nothing was parsed
-      else {
-        Ok((end, current_ind))
-      }
-    },
-    // If the string ended abruptly in offset mode the contents may be usable
-    State::Offset(start, negative) => {
-      // If the string ends on a + we will have an incorrect i
-      let offset = if start < end {
-        input[start .. end].parse::<usize>()
-          .map_err(|_|EdError::OffsetNotInt(input[start .. end].to_owned()))?
-      } else {
-        1
-      };
-      Ok((end, Some(
-        if negative {
-          Ind::Sub(Box::new(current_ind.unwrap_or(Ind::Selection)), offset)
-        } else {
-          Ind::Add(Box::new(current_ind.unwrap_or(Ind::Selection)), offset)
-        }
-      )))
-    },
-    // If we get here in a state that isn't terminated (returned to Default) there is an error
-    _ => {
-      ed_unreachable!()
-    },
-  }
+  } // End of loop
 }
 
 pub fn parse_selection(
@@ -342,4 +341,31 @@ pub fn interpret_selection(
     },
   };
   Ok(interpreted)
+}
+
+// Basically behaves like interpret selection and taking only the index you want
+// but also handles Lone indices better by giving them the correct default
+pub fn interpret_index_from_selection(
+  state: &Ed<'_>,
+  selection: Option<Sel<'_>>,
+  // When selection is None this is interpreted as a lone selection instead
+  // If this isn't given it is defaulted to Ind::Selection
+//  default_index: Option<Ind<'_>>,
+  old_selection: (usize, usize),
+  appends: bool,
+) -> Result<usize> {
+  let selection = selection.unwrap_or(Sel::Lone(
+//    default_index.unwrap_or(Ind::Selection)
+    Ind::Selection
+  ));
+  let default = if appends { old_selection.1 } else { old_selection.0 };
+  Ok(match selection {
+    Sel::Lone(ind) => {
+      interpret_index(state, ind, default)?
+    },
+    Sel::Pair(ind1, ind2) => {
+      let ind = if appends { ind2 } else { ind1 };
+      interpret_index(state, ind, default)?
+    },
+  })
 }
