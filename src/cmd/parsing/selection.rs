@@ -342,3 +342,30 @@ pub fn interpret_selection(
   };
   Ok(interpreted)
 }
+
+// Basically behaves like interpret selection and taking only the index you want
+// but also handles Lone indices better by giving them the correct default
+pub fn interpret_index_from_selection(
+  state: &Ed<'_>,
+  selection: Option<Sel<'_>>,
+  // When selection is None this is interpreted as a lone selection instead
+  // If this isn't given it is defaulted to Ind::Selection
+//  default_index: Option<Ind<'_>>,
+  old_selection: (usize, usize),
+  appends: bool,
+) -> Result<usize> {
+  let selection = selection.unwrap_or(Sel::Lone(
+//    default_index.unwrap_or(Ind::Selection)
+    Ind::Selection
+  ));
+  let default = if appends { old_selection.1 } else { old_selection.0 };
+  Ok(match selection {
+    Sel::Lone(ind) => {
+      interpret_index(state, ind, default)?
+    },
+    Sel::Pair(ind1, ind2) => {
+      let ind = if appends { ind2 } else { ind1 };
+      interpret_index(state, ind, default)?
+    },
+  })
+}

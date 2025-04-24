@@ -172,6 +172,22 @@ fn append() {
   }.run();
 }
 
+
+// Append a few lines after selection
+#[test]
+fn append_relative() {
+  BasicTest{
+    init_buffer: vec!["a","b","c","e"],
+    init_clipboard: vec![],
+    command_input: vec!["1,2#","+a","d","."],
+    expected_buffer: vec!["a","b","c","d","e"],
+    expected_buffer_saved: false,
+    expected_selection: (4,4),
+    expected_clipboard: vec![],
+    expected_history_tags: vec!["+a"],
+  }.run();
+}
+
 // Verify behaviour of 'A' command
 //
 // - Takes optional index

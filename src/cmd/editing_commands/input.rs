@@ -77,21 +77,31 @@ pub fn input(
   command: char,
   flags: &str,
 ) -> Result<()> {
-  let sel = interpret_selection(&state, selection, state.selection)?;
   let mut flags = parse_flags(flags, "pnl")?;
   pflags.p = flags.remove(&'p').unwrap();
   pflags.n = flags.remove(&'n').unwrap();
   pflags.l = flags.remove(&'l').unwrap();
+
   let buffer = state.history.current();
-  match command {
-    'a' => buffer.verify_index(sel.1)?,
+  let index = match command {
+    'a' | 'A' => {
+      let i = interpret_index_from_selection(&state, selection, state.selection, true)?;
+      if command == 'a' { buffer.verify_index(i)? } else { buffer.verify_line(i)? }
+      i
+    },
     // Note that saturating_sub really is needed, since inserting at index 0
     // should be valid and equivalent to inserting at index 1.
-    'i' => buffer.verify_index(sel.0.saturating_sub(1))?,
-    'A' => buffer.verify_line(sel.1)?,
-    'I' => buffer.verify_line(sel.0)?,
-    _ => { panic!("Unreachable code reached"); }
-  }
+    'i' | 'I' => {
+      let mut i = interpret_index_from_selection(&state, selection, state.selection, false)?;
+      if command == 'i' {
+        i = i.saturating_sub(1);
+        buffer.verify_index(i)?;
+      }
+      else { buffer.verify_line(i)? }
+      i
+    },
+    _ => ed_unreachable!()?,
+  };
   // Now that we have checked that the command is valid, get input
   // This is done so we don't drop text input, which would be annoying
   let input = ui.get_input(
@@ -104,12 +114,6 @@ pub fn input(
   // TODO: replace this post-execution selection prediction with returns from
   // the inner functions.
   state.selection = if !input.is_empty() {
-    let index = match command {
-      'a' | 'A' => sel.1,
-      'i' => sel.0.saturating_sub(1),
-      'I' => sel.0,
-      _ => unreachable!(),
-    };
     let start = index + 1; // since buffer.insert puts input after index
     let end = start + input.len() - 1; // Subtract for inclusive select
     // In the case of 'a', 'i' that is all
@@ -128,7 +132,7 @@ pub fn input(
         inner_input(state, full_command, input, index)?;
         (start, end)
       },
-      _ => { panic!("Unreachable code reached"); }
+      _ => ed_unreachable!()?,
     }
   }
   // If no input is given, keep old selection

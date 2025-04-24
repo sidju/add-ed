@@ -61,7 +61,7 @@ pub fn read_from_file(
 ) -> Result<()> {
   let index =
     if command == 'r' {
-      let i = interpret_selection(&state, selection, state.selection)?.1;
+      let i = interpret_index_from_selection(&state, selection, state.selection, true)?;
       state.history.current().verify_index(i)?;
       Ok(Some(i))
     }

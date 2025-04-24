@@ -33,6 +33,21 @@ fn paste() {
   }.run()
 }
 
+// Test fully defined command
+#[test]
+fn paste_relative() {
+  BasicTest{
+    init_buffer: vec!["a","b","d"],
+    init_clipboard: vec!["c"],
+    command_input: vec!["1,2#","+-x"],
+    expected_buffer: vec!["a","b","c","d"],
+    expected_buffer_saved: false,
+    expected_clipboard: vec!["c"],
+    expected_selection: (3,3),
+    expected_history_tags: vec!["+-x"],
+  }.run()
+}
+
 // Test with default selection
 // (Uses '#' to set selection without any print)
 #[test]

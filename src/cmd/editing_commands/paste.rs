@@ -20,22 +20,16 @@ pub fn paste(
   command: char,
   tail: &str,
 ) -> Result<()> {
-  let sel = interpret_selection(&state, selection, state.selection)?;
   let mut flags = parse_flags(tail, "pnl")?;
   pflags.p = flags.remove(&'p').unwrap();
   pflags.n = flags.remove(&'n').unwrap();
   pflags.l = flags.remove(&'l').unwrap();
   // Append or prepend based on command
-  let index = 
-    if command == 'X' { sel.0.saturating_sub(1) }
-    else { sel.1 }
-  ;
+  let mut index = interpret_index_from_selection(&state, selection, state.selection, command == 'x')?;
+  if command == 'X' { index = index.saturating_sub(1); }
   let length = inner_paste(state, full_command, index)?;
-  state.selection =
-    if length != 0 {
-      (index + 1, index + length)
-    }
-    else { sel }
-  ;
+  if length != 0 {
+    state.selection = (index + 1, index + length);
+  }
   Ok(())
 }
