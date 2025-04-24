@@ -190,6 +190,7 @@ impl IO for LocalIO {
     append: bool,
     data: LinesIter,
   ) -> Result<usize> {
+    if path.len() == 0 { return Err(LocalIOError::NoPath.into()); }
     Self::write_internal(path, append, data)
       .map_err(|e| LocalIOError::file_error(path, e).into())
   }
@@ -197,6 +198,7 @@ impl IO for LocalIO {
     path: &str,
     must_exist: bool,
   ) -> Result<String> {
+    if path.len() == 0 { return Err(LocalIOError::NoPath.into()); }
     match std::fs::read_to_string(path)
       .map_err(|e| LocalIOError::file_error(path, e))
     {

@@ -3,6 +3,8 @@ use std::io::ErrorKind;
 /// Error type for [`LocalIO`]
 #[derive(Debug)]
 pub enum LocalIOError {
+  /// Empty path given, which is invalid
+  NoPath,
   /// Permission denied when performing current operation on path.
   #[allow(missing_docs)]
   FilePermissionDenied{path: String},
@@ -51,6 +53,9 @@ impl crate::error::IOErrorTrait for LocalIOError {}
 impl std::fmt::Display for LocalIOError {
   fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
     match self {
+      Self::NoPath => { write!(f,
+        "Path must not be empty when performing file interactions."
+      )},
       Self::FilePermissionDenied{path} => { write!(f,
         "Permission denied, could not open file `{}`",
         path,

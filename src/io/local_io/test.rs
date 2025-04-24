@@ -30,6 +30,16 @@ fn test_file_io() {
     data,
     "After creating file with write_file it didn't have the expected contents."
   );
+  // File path must not be empty for writing
+  let ret = io.write_file(
+    "",
+    false,
+    Box::new("data\n".split_inclusive('\n')).into(),
+  );
+  assert!(
+    ret.is_err(),
+    "Write file should return empty path error when given an empty path.",
+  );
   // Overwrite the file
   io.write_file(
     path,
@@ -67,6 +77,12 @@ fn test_file_io() {
     read,
     double_data,
     "After appending with write_file file didn't have the expected contents."
+  );
+  // Reading from an empty path should return an error
+  let res = io.read_file("", true);
+  assert!(
+    res.is_err(),
+    "Read file should return empty path error when given an empty path."
   );
   // Cleanup
   std::fs::remove_file(path).unwrap();
