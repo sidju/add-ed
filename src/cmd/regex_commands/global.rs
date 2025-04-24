@@ -89,7 +89,7 @@ pub fn global(
   mark_matching(state, selection, &expressions[0], command == 'v', recursion_depth + 1)?;
   // Then we get the script to run against them, if not already given
   // First grab commands given on command line
-  let mut commands: Vec<String> = expressions.split_off(1).iter().map(|s| s.to_string()).collect();
+  let mut commands: Vec<String> = expressions.split_off(1).iter().map(|s| format!("{}\n", s)).collect();
   // If the last command in that list is not empty it means the list was not terminated,
   // so we take more from input
   if commands.last().map(|s| s.trim()) != Some("") {

@@ -71,11 +71,7 @@ pub fn inner_fixture(
   let mut ui = ScriptedUI{
     print_ui: Some(&mut inner_ui),
     // For each element convert to String & add newline, collect into VecDeque
-    input: command_input.iter().map(|x|{
-      let mut s = x.to_string();
-      s.push('\n');
-      s
-    }).collect(),
+    input: command_input.iter().map(|x| format!("{}\n", x)).collect(),
   };
 
   // Set correct default selection and run test

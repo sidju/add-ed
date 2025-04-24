@@ -1,4 +1,5 @@
 // A pub module with all the mocks, dummies and assorted helpers for testing
+#![allow(unused)]
 
 // A mock UI to verify that printing commands send the right data to UI
 pub use add_ed::ui::mock_ui;

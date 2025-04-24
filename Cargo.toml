@@ -40,3 +40,6 @@ serde = { version = "1", features = ["derive"], optional = true }
 [[bin]]
 name = "classic-ed"
 required-features = ["bin_deps"]
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(fuzzing)'] }
