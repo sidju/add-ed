@@ -20,7 +20,7 @@ fn test_file_io() {
   // Create new file
   io.write_file(
     path,
-    false, // don't append
+    WriteType::Create,
     Box::new("1\n2\n".split_inclusive('\n')).into(),
   ).unwrap();
   let read = std::fs::read_to_string(path).unwrap();
@@ -33,7 +33,7 @@ fn test_file_io() {
   // File path must not be empty for writing
   let ret = io.write_file(
     "",
-    false,
+    WriteType::Create,
     Box::new("data\n".split_inclusive('\n')).into(),
   );
   assert!(
@@ -43,7 +43,7 @@ fn test_file_io() {
   // Overwrite the file
   io.write_file(
     path,
-    false, // don't append
+    WriteType::Overwrite,
     Box::new("1\n2\n".split_inclusive('\n')).into(),
   ).unwrap();
   let read = std::fs::read_to_string(path).unwrap();
@@ -56,7 +56,7 @@ fn test_file_io() {
   // Append to the file
   io.write_file(
     path,
-    true, // Append
+    WriteType::Append,
     Box::new("1\n2\n".split_inclusive('\n')).into(),
   ).unwrap();
   let read = std::fs::read_to_string(path).unwrap();

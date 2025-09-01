@@ -180,11 +180,18 @@ pub fn write_to_file(
   // Write into command or file, print nr of bytes written
   match path {
     Path::File(file) => {
-      let append = command == 'W';
+      let wtype = if command == 'W' {
+        WriteType::Append
+      } else {
+        if overwrite {
+          WriteType::Overwrite
+        } else {
+          WriteType::Create
+        }
+      };
       let written = state.io.write_file(
         file,
-        append,
-        overwrite,
+        wtype,
         data,
       )?;
       ui.print_message(&format!(

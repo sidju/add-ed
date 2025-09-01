@@ -6,7 +6,7 @@ use std::process::{
   Command,
   Stdio,
 };
-use crate::IO;
+use crate::{IO, WriteType};
 use super::LinesIter;
 use crate::UILock;
 use super::Result;
@@ -48,19 +48,23 @@ impl LocalIO {
   }
   fn write_internal<'a>(
     path: &str,
-    append: bool,
-    overwrite: bool,
+    wtype: WriteType,
     data: impl Iterator<Item = &'a str>,
   ) -> std::io::Result<usize> {
     use std::io::Write;
-    let mut file = std::fs::OpenOptions::new()
-      .write(true)
-      .append(append)
-      .truncate(!append)
-      .create(true)
-      .create_new(!(overwrite || append))
-      .open(path)
-    ?;
+    let mut options = std::fs::OpenOptions::new();
+    match wtype {
+      WriteType::Create => options
+        .write(true)
+        .create_new(true),
+      WriteType::Append => options
+        .append(true),
+      WriteType::Overwrite => options
+        .create(true) // May, but is not required to, create new file
+        .write(true)
+        .truncate(true),
+    };
+    let mut file = options.open(path)?;
     let mut written = 0;
     for line in data {
       written += line.len();
@@ -189,12 +193,11 @@ impl IO for LocalIO {
 
   fn write_file(&mut self,
     path: &str,
-    append: bool,
-    overwrite: bool,
+    wtype: WriteType,
     data: LinesIter,
   ) -> Result<usize> {
     if path.len() == 0 { return Err(LocalIOError::NoPath.into()); }
-    Self::write_internal(path, append, overwrite, data)
+    Self::write_internal(path, wtype, data)
       .map_err(|e| LocalIOError::file_error(path, e).into())
   }
   fn read_file(&mut self,

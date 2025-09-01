@@ -1,4 +1,4 @@
-use crate::{Ed, Substitution, Line, Clipboard, Buffer};
+use crate::{Ed, Substitution, Line, Clipboard, Buffer, WriteType};
 use crate::ui::{UI, ScriptedUI};
 use crate::error::*;
 use crate::messages::*;

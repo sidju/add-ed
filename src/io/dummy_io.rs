@@ -1,5 +1,8 @@
 use crate::{
-  io::IO,
+  io::{
+    IO,
+    WriteType,
+  },
   ui::UILock,
   buffer::iters::LinesIter,
 };
@@ -42,8 +45,7 @@ impl IO for DummyIO {
   }
   fn write_file(&mut self,
     _path: &str,
-    _append: bool,
-    _overwrite: bool,
+    _type: WriteType,
     _data: LinesIter,
   ) -> Result<usize> {
     unimplemented!()

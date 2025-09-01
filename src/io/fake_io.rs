@@ -1,5 +1,8 @@
 use crate::{
-  io::IO,
+  io::{
+    IO,
+    WriteType,
+  },
   ui::UILock,
   buffer::iters::LinesIter,
 };
@@ -105,13 +108,12 @@ impl IO for FakeIO {
   }
   fn write_file(&mut self,
     path: &str,
-    append: bool,
-    overwrite: bool,
+    wtype: WriteType,
     data: LinesIter,
   ) -> Result<usize> {
     let base_data = match self.fake_fs.get(path) {
-      Some(_) if overwrite => { return Err(FakeIOError::Overwrite.into()); },
-      Some(x) if append => x.clone(),
+      Some(x) if wtype == WriteType::Append => x.clone(),
+      Some(_) if wtype != WriteType::Overwrite => { return Err(FakeIOError::Overwrite.into()); },
       _ => String::new(),
     };
     let data = data.fold(base_data, |mut s, x|{s.push_str(x); s});

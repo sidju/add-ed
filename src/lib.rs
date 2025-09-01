@@ -57,7 +57,7 @@ mod cmd;
 pub mod ui;
 use ui::{UI, UILock, ScriptedUI};
 pub mod io;
-use io::IO;
+use io::{IO, WriteType};
 
 mod history;
 pub use history::History;
