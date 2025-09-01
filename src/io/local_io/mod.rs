@@ -49,6 +49,7 @@ impl LocalIO {
   fn write_internal<'a>(
     path: &str,
     append: bool,
+    overwrite: bool,
     data: impl Iterator<Item = &'a str>,
   ) -> std::io::Result<usize> {
     use std::io::Write;
@@ -57,6 +58,7 @@ impl LocalIO {
       .append(append)
       .truncate(!append)
       .create(true)
+      .create_new(!(overwrite || append))
       .open(path)
     ?;
     let mut written = 0;
@@ -188,10 +190,11 @@ impl IO for LocalIO {
   fn write_file(&mut self,
     path: &str,
     append: bool,
+    overwrite: bool,
     data: LinesIter,
   ) -> Result<usize> {
     if path.len() == 0 { return Err(LocalIOError::NoPath.into()); }
-    Self::write_internal(path, append, data)
+    Self::write_internal(path, append, overwrite, data)
       .map_err(|e| LocalIOError::file_error(path, e).into())
   }
   fn read_file(&mut self,
