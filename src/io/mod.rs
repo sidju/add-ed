@@ -99,6 +99,8 @@ pub trait IO {
     path: &str,
     // If appending
     append: bool,
+    // If not set won't overwrite an existing file
+    overwrite: bool,
     // Data to write to file
     data: LinesIter,
   ) -> Result<usize>;

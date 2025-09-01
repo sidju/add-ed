@@ -43,6 +43,7 @@ impl IO for DummyIO {
   fn write_file(&mut self,
     _path: &str,
     _append: bool,
+    _overwrite: bool,
     _data: LinesIter,
   ) -> Result<usize> {
     unimplemented!()

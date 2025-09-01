@@ -16,6 +16,7 @@ impl std::fmt::Display for FakeIOError {
     match self {
       ChildExitError => write!(f,"Child process returned error after running."),
       NotFound => write!(f,"Could not open file. Not found or invalid path."),
+      Overwrite => write!(f,"Will not overwrite existing file.")
     }
   }
 }
@@ -104,15 +105,13 @@ impl IO for FakeIO {
   fn write_file(&mut self,
     path: &str,
     append: bool,
+    overwrite: bool,
     data: LinesIter,
   ) -> Result<usize> {
-    let base_data = if append {
-      match self.fake_fs.get(path) {
-        Some(x) => x.clone(),
-        None => String::new(),
-      }
-    } else {
-      String::new()
+    let base_data = match self.fake_fs.get(path) {
+      Some(_) if overwrite => { return Err(FakeIOError::Overwrite); },
+      Some(x) if append => x.clone(),
+      None => String::new(),
     };
     let data = data.fold(base_data, |mut s, x|{s.push_str(x); s});
     let datalen = data.len();
