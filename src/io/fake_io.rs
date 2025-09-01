@@ -9,14 +9,15 @@ use super::Result;
 pub enum FakeIOError {
   ChildExitError,
   NotFound,
+  Overwrite,
 }
 impl std::fmt::Display for FakeIOError {
   fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-    use FakeIOError::*;
+    use FakeIOError as FIE;
     match self {
-      ChildExitError => write!(f,"Child process returned error after running."),
-      NotFound => write!(f,"Could not open file. Not found or invalid path."),
-      Overwrite => write!(f,"Will not overwrite existing file.")
+      FIE::ChildExitError => write!(f,"Child process returned error after running."),
+      FIE::NotFound => write!(f,"Could not open file. Not found or invalid path."),
+      FIE::Overwrite => write!(f,"Will not overwrite existing file.")
     }
   }
 }
