@@ -112,7 +112,7 @@ impl IO for FakeIO {
     let base_data = match self.fake_fs.get(path) {
       Some(_) if overwrite => { return Err(FakeIOError::Overwrite.into()); },
       Some(x) if append => x.clone(),
-      None => String::new(),
+      _ => String::new(),
     };
     let data = data.fold(base_data, |mut s, x|{s.push_str(x); s});
     let datalen = data.len();
