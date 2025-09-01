@@ -110,7 +110,7 @@ impl IO for FakeIO {
     data: LinesIter,
   ) -> Result<usize> {
     let base_data = match self.fake_fs.get(path) {
-      Some(_) if overwrite => { return Err(FakeIOError::Overwrite); },
+      Some(_) if overwrite => { return Err(FakeIOError::Overwrite.into()); },
       Some(x) if append => x.clone(),
       None => String::new(),
     };
