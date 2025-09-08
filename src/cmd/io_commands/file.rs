@@ -160,12 +160,15 @@ pub fn write_to_file(
   };
 
   // If not wq, parse path
-  let (q, path) = if in_path != "q" {
-    (false, parse_path(in_path).unwrap_or(Path::File(&state.file)))
+  let (q, path, overwrite) = if in_path != "q" {
+    match parse_path(in_path) {
+      Some(p) => (false, p, false),
+      None => (false, Path::File(&state.file), true),
+    }
   }
   // If wq, use current file path
   else {
-    (true, (Path::File(&state.file)))
+    (true, Path::File(&state.file), true)
   };
   // If the 'q' flag is set the whole buffer must be selected
   if q && sel.is_some() { return Err(EdError::UnsavedChanges); }
@@ -177,10 +180,18 @@ pub fn write_to_file(
   // Write into command or file, print nr of bytes written
   match path {
     Path::File(file) => {
-      let append = command == 'W';
+      let wtype = if command == 'W' {
+        WriteType::Append
+      } else {
+        if overwrite {
+          WriteType::Overwrite
+        } else {
+          WriteType::Create
+        }
+      };
       let written = state.io.write_file(
         file,
-        append,
+        wtype,
         data,
       )?;
       ui.print_message(&format!(

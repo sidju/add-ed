@@ -15,6 +15,17 @@ pub mod local_io;
 #[cfg(feature = "local_io")]
 pub use local_io::LocalIO;
 
+/// Simple enum only used for the IO trait's write_file method
+#[derive(PartialEq, Debug)]
+pub enum WriteType {
+  /// Used for 'w' interactions with an explicit path, prohibits overwriting
+  Create,
+  /// Used for all 'W' interactions
+  Append,
+  /// Only used for 'w' when writing to current file
+  Overwrite,
+}
+
 /// Trait that abstracts file interactions and running shell commands
 ///
 /// Intended to allow modifying how and where system interactions occur.
@@ -97,8 +108,8 @@ pub trait IO {
   fn write_file(&mut self,
     // Path to file as give by user. Not checked beyond shell escape parsing
     path: &str,
-    // If appending
-    append: bool,
+    // Write type, see above
+    wtype: WriteType,
     // Data to write to file
     data: LinesIter,
   ) -> Result<usize>;

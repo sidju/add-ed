@@ -1,5 +1,8 @@
 use crate::{
-  io::IO,
+  io::{
+    IO,
+    WriteType,
+  },
   ui::UILock,
   buffer::iters::LinesIter,
 };
@@ -9,13 +12,15 @@ use super::Result;
 pub enum FakeIOError {
   ChildExitError,
   NotFound,
+  Overwrite,
 }
 impl std::fmt::Display for FakeIOError {
   fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-    use FakeIOError::*;
+    use FakeIOError as FIE;
     match self {
-      ChildExitError => write!(f,"Child process returned error after running."),
-      NotFound => write!(f,"Could not open file. Not found or invalid path."),
+      FIE::ChildExitError => write!(f,"Child process returned error after running."),
+      FIE::NotFound => write!(f,"Could not open file. Not found or invalid path."),
+      FIE::Overwrite => write!(f,"Will not overwrite existing file.")
     }
   }
 }
@@ -103,16 +108,13 @@ impl IO for FakeIO {
   }
   fn write_file(&mut self,
     path: &str,
-    append: bool,
+    wtype: WriteType,
     data: LinesIter,
   ) -> Result<usize> {
-    let base_data = if append {
-      match self.fake_fs.get(path) {
-        Some(x) => x.clone(),
-        None => String::new(),
-      }
-    } else {
-      String::new()
+    let base_data = match self.fake_fs.get(path) {
+      Some(x) if wtype == WriteType::Append => x.clone(),
+      Some(_) if wtype != WriteType::Overwrite => { return Err(FakeIOError::Overwrite.into()); },
+      _ => String::new(),
     };
     let data = data.fold(base_data, |mut s, x|{s.push_str(x); s});
     let datalen = data.len();
