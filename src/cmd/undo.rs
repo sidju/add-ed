@@ -89,7 +89,7 @@ pub fn manage_history(
   let mut tmp = String::new();
   for hi in history_indices {
     tmp.push_str(&format!(
-      "{} {} {}",
+      "{} {} {}\n",
       if hi == i { '>' } else { ' ' },
       view[hi].0,
       if Some(hi) == saved { "(saved)" } else { "" },

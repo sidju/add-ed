@@ -103,6 +103,11 @@ impl MacroGetter for std::collections::HashMap<&str, Macro> {
     Ok(self.get(name))
   }
 }
+impl MacroGetter for std::collections::HashMap<String, Macro> {
+  fn get_macro(&self, name: &str) -> Result<Option<&Macro>> {
+    Ok(self.get(name))
+  }
+}
 
 /// Parse the macro and its arguments into a command string
 ///

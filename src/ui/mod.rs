@@ -20,6 +20,9 @@ pub mod dummy_ui;
 /// The UI trait used to abstract all common UI operations
 pub trait UI {
   /// A basic print for errors and other information messages
+  ///
+  /// Note that this must be able to print more than one message during the
+  /// execution of a command, since some commands may call it several times.
   fn print_message(&mut self,
     data: &str,
   ) -> Result<()>;
@@ -73,11 +76,15 @@ pub trait UI {
     literal: bool,
   ) -> Result<()>;
 
-  /// Prepare UI before handing down stdin/out/err to child process
+  /// Prepare UI before handing down stdin/out/err to a child process
   ///
   /// The returned UIHandle should hold a mutable reference to its parent UI.
   /// Using that reference the UIHandle calls unlock_ui() when being dropped.
-  fn lock_ui(&mut self) -> UILock<'_>;
+  /// * title name for lock reason handed in for clarifying print (such as
+  ///   "returned from {}")
+  fn lock_ui(&mut self,
+    child_title: String,
+  ) -> UILock<'_>;
 
   /// Resume UI after lock_ui has been called
   ///

@@ -115,9 +115,11 @@ impl <'a> UI for ScriptedUI<'a> {
       None => Ok(()),
     }
   }
-  fn lock_ui(&mut self) -> UILock<'_> {
+  fn lock_ui(&mut self,
+    child_title: String,
+  ) -> UILock<'_> {
     match self.print_ui {
-      Some(ref mut i) => i.lock_ui(),
+      Some(ref mut i) => i.lock_ui(child_title),
       None => UILock::new(self),
     }
   }

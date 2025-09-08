@@ -17,6 +17,7 @@
 //! use add_ed::{
 //!   ui::ScriptedUI,
 //!   io::LocalIO,
+//!   macros::Macro,
 //!   Ed,
 //!   EdError,
 //! };
@@ -27,7 +28,7 @@
 //!   input: vec![format!("e {}\n", "Cargo.toml")].into(),
 //!   print_ui: None,
 //! };
-//! let macro_store = std::collections::HashMap::new();
+//! let macro_store = std::collections::HashMap::<String,Macro>::new();
 //! let mut io = LocalIO::new();
 //! // Construct and run ed
 //! let mut ed = Ed::new(&mut io, &macro_store);
