@@ -36,31 +36,27 @@ pub fn run_command(
     state.history.current().verify_selection(sel)?;
     Some(sel)
   };
-  let (changed, substituted) = command_substitutions(
+  let substituted = command_substitutions(
     command,
     &state.file,
     &state.prev_shell_command,
   )?;
   state.prev_shell_command = substituted.clone();
-  if changed {ui.print_message( &substituted )?;}
   // Depending on selection or not we use run_transform_command or run_command
   match sel {
     // When there is no selection we just run the command, no buffer interaction
     None => {
-      let res = state.io.run_command(
-        &mut ui.lock_ui(),
+      state.io.run_command(
+        &mut ui.lock_ui(substituted.clone()),
         substituted,
-      );
-      // Signify end of command output before reacting to potential error
-      ui.print_message(&ch.to_string())?;
-      res?;
+      )?;
     },
     // When there is a selection we pipe that selection through the command and
     // replace it with the output
     Some(s) => {
       let data = state.history.current().get_lines(s)?;
       let mut transformed = state.io.run_transform_command(
-        &mut ui.lock_ui(),
+        &mut ui.lock_ui(substituted.clone()),
         substituted,
         data,
       )?;
@@ -76,9 +72,8 @@ pub fn run_command(
         (1.max(s.0 - 1), s.0 - 1)
       };
       ui.print_message(&format!(
-        "Transformation returned {} bytes through command `{}`",
+        "Transformation returned {} bytes",
         transformed.len(),
-        &state.prev_shell_command,
       ))?;
     },
   }

@@ -7,6 +7,7 @@ use shared::mock_ui::*;
 
 use shared::dummy_io::DummyIO;
 use add_ed::ui::ScriptedUI;
+use add_ed::macros::Macro;
 use add_ed::Ed;
 use add_ed::error::EdError;
 use add_ed::messages::{COMMAND_LIST,COMMAND_DOCUMENTATION};
@@ -50,7 +51,7 @@ fn help_noerror() {
 #[test]
 fn help() {
   let mut io = DummyIO::new();
-  let macros = std::collections::HashMap::new();
+  let macros = std::collections::HashMap::<String, Macro>::new();
   let mut inner_ui = MockUI{ prints_history: Vec::new() };
   let mut ui = ScriptedUI{
     print_ui: Some(&mut inner_ui),
@@ -88,7 +89,7 @@ fn help() {
 #[test]
 fn help_toggle() {
   let mut io = DummyIO::new();
-  let macros = std::collections::HashMap::new();
+  let macros = std::collections::HashMap::<String,Macro>::new();
   let mut ui = ScriptedUI{
     print_ui: None,
     input: vec![

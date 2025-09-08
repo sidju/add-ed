@@ -251,7 +251,7 @@ pub struct IOTest {
 impl IOTest {
   pub fn run(mut self) {
     // Create and init ed state
-    let macros = HashMap::new();
+    let macros = HashMap::<String, Macro>::new();
     let mut ed = Ed::new(
       &mut self.init_io,
       &macros,

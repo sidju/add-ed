@@ -1,6 +1,7 @@
 use add_ed::{Ed, Result};
 use add_ed::error::UIError;
 use add_ed::ui::{UI, UILock};
+use add_ed::macros::Macro;
 /// Error type for a [`ClassicUI`]
 #[derive(Debug)]
 enum ClassicUIError {
@@ -98,10 +99,14 @@ impl UI for ClassicUI {
     Ok(())
   }
   // Requires no additional code for locking and unlocking
-  fn lock_ui(&mut self) -> UILock<'_> {
+  fn lock_ui(&mut self,
+    _child_title: String,
+  ) -> UILock<'_> {
     UILock::new(self)
   }
-  fn unlock_ui(&mut self) {}
+  fn unlock_ui(&mut self) {
+    self.print_message("!").unwrap();
+  }
 }
 
 use clap::Parser;
@@ -117,7 +122,7 @@ fn main() {
   // Construct state components
   let mut ui = ClassicUI{};
   let mut io = add_ed::io::LocalIO::new();
-  let macro_store = std::collections::HashMap::new();
+  let macro_store = std::collections::HashMap::<String, Macro>::new();
   // Construct Ed
   let mut ed = Ed::new(&mut io, &macro_store);
   // Apply any configurations

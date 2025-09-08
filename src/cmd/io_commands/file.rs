@@ -79,16 +79,13 @@ pub fn read_from_file(
     let path = parse_path(path).unwrap_or(Path::File(&state.file));
     let unformated_data = match path {
       Path::Command(cmd) => {
-        let (changed, substituted) = command_substitutions(
+        let substituted = command_substitutions(
           cmd,
           &state.file,
           &state.prev_shell_command,
         )?;
-        if changed {
-          ui.print_message( &substituted )?;
-        }
         let data = state.io.run_read_command(
-          &mut ui.lock_ui(),
+          &mut ui.lock_ui(substituted.clone()),
           substituted.clone(),
         )?;
         state.prev_shell_command = substituted;
@@ -111,9 +108,8 @@ pub fn read_from_file(
       // into state.file, only aftereffect is state.prev_shell_command
       Path::Command(_cmd) => {
         ui.print_message(&format!(
-          "Read {} bytes from command `{}`",
+          "Read {} bytes",
           unformated_data.len(),
-          &state.prev_shell_command,
         ))?;
       },
       Path::File(file) => {
@@ -213,22 +209,20 @@ pub fn write_to_file(
       if command == 'W' {
         return Err(EdError::CommandEscapeForbidden(in_path.to_owned()));
       }
-      let (changed, substituted) = command_substitutions(
+      let substituted = command_substitutions(
         cmd,
         &state.file,
         &state.prev_shell_command,
       )?;
       state.prev_shell_command = substituted.clone();
-      if changed {ui.print_message( &substituted )?;}
       let written = state.io.run_write_command(
-        &mut ui.lock_ui(),
+        &mut ui.lock_ui(substituted.clone()),
         substituted,
         data,
       )?;
       ui.print_message(&format!(
-        "Wrote {} bytes to command `{}`",
+        "Wrote {} bytes",
         written,
-        &state.prev_shell_command,
       ))?;
     },
   }
