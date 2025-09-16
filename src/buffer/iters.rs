@@ -2,6 +2,7 @@
 //! through the API.
 
 use crate::Line;
+use crate::Tag;
 
 // Type shorthand for the current implementation specific iterator, to reduce
 // how many times I have to write out this monstrosity of a type
@@ -9,7 +10,7 @@ type Inner<'b> = std::iter::Map<
   std::slice::Iter<'b, Line>, for<'a> fn(&'a Line) -> &'a str
 >;
 type TaggedInner<'b> = std::iter::Map<
-  std::slice::Iter<'b, Line>, for<'a> fn(&'a Line) -> (char, &'a str)
+  std::slice::Iter<'b, Line>, for<'a> fn(&'a Line) -> (Tag, &'a str)
 >;
 
 /// The iterator returned by [`Ed::get_selection`]
@@ -61,7 +62,7 @@ pub struct TaggedLinesIter<'a> {
 }
 
 impl<'a> Iterator for TaggedLinesIter<'a> {
-  type Item = (char, &'a str);
+  type Item = (Tag, &'a str);
 
   fn next(&mut self) -> Option<Self::Item> {
     self.inner.next()

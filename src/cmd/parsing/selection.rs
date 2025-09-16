@@ -3,7 +3,7 @@
 /// struct which is then interpreted using additional data.
 
 use crate::error::*;
-use crate::Ed;
+use crate::{Ed, Tag};
 
 // A struct to formalise all the kinds of indices
 #[derive(PartialEq, Debug)]
@@ -11,7 +11,7 @@ pub enum Ind <'a> {
   Selection,
   BufferLen,
   Literal(usize),
-  Tag(char),
+  Tag(Tag),
   Pattern(&'a str),
   RevPattern(&'a str),
   Add(Box<Ind<'a>>, usize),
@@ -23,9 +23,11 @@ pub enum Sel <'a> {
   Lone(Ind<'a>)
 }
 
+#[derive(PartialEq, Debug)]
 enum State {
   Default(usize),
   Tag,
+  EndTag,
   Pattern(usize),
   RevPattern(usize),
   Offset(usize, bool),
@@ -81,7 +83,7 @@ pub fn parse_index(
           },
           // Invalid if current_ind is some, but we catch that in their handlers
           // to be able to give a clearer error
-          Some('/') | Some('\'') | Some('?') | Some('.') | Some('$') => {
+          Some('/') | Some('\'') | Some('`') | Some('?') | Some('.') | Some('$') => {
             let c = ch.unwrap();
             // These are only valid at the start of an index
             if start != i { return Err(EdError::IndexSpecialAfterStart{
@@ -91,6 +93,9 @@ pub fn parse_index(
             match c {
               '\'' => {
                 state = State::Tag;
+              },
+              '`' => {
+                state = State::EndTag;
               },
               '/' => {
                 state = State::Pattern(i + 1); // Since we know the length of these chars to be one byte
@@ -150,7 +155,7 @@ pub fn parse_index(
         }
       },
       // If the tag state was entered, save the next char as tag and return to default
-      State::Tag => {
+      State::Tag | State::EndTag => {
         // This error creation is correct no matter if input ran out or not
         if let Some(_) = current_ind { return Err(
           EdError::IndicesUnrelated{
@@ -169,11 +174,17 @@ pub fn parse_index(
         )}
         // However, if input ran out for the normal case that is another error
         if let Some(c) = ch {
-          current_ind = Some(Ind::Tag(c));
+          current_ind = Some(Ind::Tag(
+            if state == State::Tag { Tag::Start(c) }
+            else { Tag::End(c) }
+          ));
           state = State::Default( i + c.len_utf8() );
         }
         else {
-          return Err(EdError::IndexUnfinished("\'".to_string()));
+          return Err(EdError::IndexUnfinished(
+            if state == State::Tag { "\'".to_string() }
+            else { "`".to_string() }
+          ));
         }
       },
       // If the pattern state was entered, save as pattern until end char is given and return to default

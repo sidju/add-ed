@@ -1,6 +1,7 @@
 // Functions to ease interaction with the buffer
 
 use crate::{
+  Tag,
   Buffer,
   EdError,
   Result,
@@ -8,7 +9,7 @@ use crate::{
 
 pub (super) fn get_tag(
   buffer: &Buffer,
-  tag: char,
+  tag: Tag,
 ) -> Result<usize> {
   match buffer.iter().enumerate() // Enumerate 0-indexes our iteration
     .filter(|(_, line)| line.tag() == tag)

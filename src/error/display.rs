@@ -70,7 +70,7 @@ impl std::fmt::Display for EdError {
         args,
       ),
       TagNoMatch(t) => write!(f,
-        "Could not find any line matching the tag `{}`.",
+        "Could not find any line matching the tag `{:?}`.",
         t,
       ),
       RegexInvalid{regex, error} => write!(f,

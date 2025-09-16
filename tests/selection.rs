@@ -252,8 +252,8 @@ fn tag() {
   PrintTest{
     init_buffer: vec!["a","b","c","d"],
     init_clipboard: vec![],
-    command_input: vec!["3kx", "'x"],
-    expected_selection: (3,3),
+    command_input: vec!["3,4kx", "'x,`x"],
+    expected_selection: (3,4),
     expected_buffer: vec!["a","b","c","d"],
     expected_buffer_saved: true,
     expected_clipboard: vec![],
@@ -261,6 +261,7 @@ fn tag() {
       Print{
         text: vec![
           "c\n".to_string(),
+          "d\n".to_string(),
         ],
         n: false,
         l: false,

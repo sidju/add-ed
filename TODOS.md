@@ -1,5 +1,6 @@
 # Todos:
 
+- Add a way to specify starting / ending of selection rather than just `.`
 - Inject context environment variables into shell interaction.
   (File, selection_start, selection_end, prev_shell_command, if running script)
 - Improve classic.rs to support all of ed's command line arguments
@@ -8,6 +9,12 @@
     manual and compare to add-ed).
   - Implement missing features and remove them from listing in README.md.
     - 'g' command should accept an argument for case insensitive matching.
+
+
+# Add selection tagging
+
+Make `k` tag the whole selection rather than just the first index.
+See github issue for details.
 
 
 # Look over undo/redo

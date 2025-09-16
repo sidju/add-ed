@@ -56,6 +56,18 @@ impl TryFrom<&str> for LineText {
   }
 }
 
+/// An enum describing a tag
+///
+/// - Start marks the start of the tag's selection
+/// - End marks the end
+/// - Single marks that the line is both start and end.
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum Tag {
+  Start(char),
+  End(char),
+  None,
+}
+
 /// Text data and metadata for a single line of text
 ///
 /// Note that the internal field accessed by `.tag()` and `.set_tag()` is shared
@@ -74,7 +86,6 @@ impl TryFrom<&str> for LineText {
 pub struct Line {
   // Tracks if the line has been matched in a 'g' or similar command in a shared
   // instance throughout the line's lifetime (to save on allocations)
-  // (A change to BitVec would be good, TODO.)
   //
   // To support nested invocations we have a vector, where index 0 is the
   // outermost invocation and nested invocation have incrementing indices.
@@ -97,7 +108,7 @@ pub struct Line {
   // Rc<Cell> makes it so we can have the same tag throughout all snapshots of
   // the same line, but also requires us to hide the variable (so library users
   // can't clone the Rc and cause strange behaviour.
-  tag: Rc<Cell<char>>,
+  tag: Rc<Cell<Tag>>,
   /// The text data for a given line
   ///
   /// [`LineText`] ensures that the text data is valid for a single line and
@@ -118,18 +129,18 @@ impl Line {
   ) -> Result<Self, LineTextError> {
     Ok(Self{
       matched: Rc::new(RefCell::new(Vec::new())),
-      tag: Rc::new(Cell::new('\0')),
+      tag: Rc::new(Cell::new(Tag::None)),
       text: LineText::new(text)?,
     })
   }
   /// Get the current value of the tag field.
-  pub fn tag(&self) -> char {
+  pub fn tag(&self) -> Tag {
     self.tag.get()
   }
   /// Set the tag to given character
   ///
   /// Note that this changes all historical states of this line.
-  pub fn set_tag(&self, new: char) {
+  pub fn set_tag(&self, new: Tag) {
     self.tag.set(new)
   }
 }
@@ -174,7 +185,7 @@ pub struct PubLine {
   ///
   /// See [`Line`] `.tag()` and `.set_tag()`, but note that we disconnect the
   /// shared tag state through history by converting into this.
-  pub tag: char,
+  pub tag: Tag,
   /// The text data for the line
   ///
   /// See [`Line'].text.
@@ -183,24 +194,24 @@ pub struct PubLine {
 impl<'a> TryFrom<&'a str> for PubLine {
   type Error = LineTextError;
   fn try_from(t: &str) -> Result<Self, Self::Error> {
-    Ok(Self{tag: '\0', text: LineText::new(t)?})
+    Ok(Self{tag: Tag::None, text: LineText::new(t)?})
   }
 }
 impl<'a> TryFrom<&'a &'a str> for PubLine {
   type Error = LineTextError;
   fn try_from(t: &&str) -> Result<Self, Self::Error> {
-    Ok(Self{tag: '\0', text: LineText::new(*t)?})
+    Ok(Self{tag: Tag::None, text: LineText::new(*t)?})
   }
 }
-impl<'a> TryFrom<(char, &'a str)> for PubLine {
+impl<'a> TryFrom<(Tag, &'a str)> for PubLine {
   type Error = LineTextError;
-  fn try_from(l: (char, &str)) -> Result<Self, Self::Error> {
+  fn try_from(l: (Tag, &str)) -> Result<Self, Self::Error> {
     (&l).try_into()
   }
 }
-impl<'a> TryFrom<&'a (char, &'a str)> for PubLine {
+impl<'a> TryFrom<&'a (Tag, &'a str)> for PubLine {
   type Error = LineTextError;
-  fn try_from(l: &(char, &str)) -> Result<Self, Self::Error> {
+  fn try_from(l: &(Tag, &str)) -> Result<Self, Self::Error> {
     Ok(Self{tag: l.0, text: LineText::new(l.1)?})
   }
 }
