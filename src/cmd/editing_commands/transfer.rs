@@ -88,6 +88,7 @@ pub fn transfer(
       &state,
       ind.unwrap_or_else(|| Ind::BufferLen),
       state.selection.1,
+      state.selection.0,
     )?
   }
   // We still keep the handling for 'T' and 'M', we may re-enable it later
@@ -96,6 +97,7 @@ pub fn transfer(
       &state,
       ind.unwrap_or_else(|| Ind::Literal(1)),
       state.selection.0,
+      state.selection.1,
     )?
   };
   let mut flags = parse_flags(&tail[ind_end..], "pnl")?;
