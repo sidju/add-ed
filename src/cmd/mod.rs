@@ -254,7 +254,7 @@ pub(crate) fn run(
           res?;
           Ok(false)
         },
-        ':' => {
+        'o' => {
           let given_selection = if selection.is_some() {
             let s = interpret_selection(&state, selection, state.selection)?;
             state.history.current().verify_selection(s)?;
@@ -264,7 +264,7 @@ pub(crate) fn run(
             None
           };
           // Sloppy argument parsing into list
-          let mut args = clean.split(' ');
+          let mut args = clean.trim_start().split(' ');
           let macro_name = args.next().unwrap_or("");
           let args: Vec<&str> = args.collect();
           match state.macro_getter.get_macro(macro_name)? {

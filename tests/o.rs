@@ -30,7 +30,7 @@ fn create_macro_store() -> std::collections::HashMap<&'static str, Macro> {
   store.insert("double", Macro::new("t.").nr_arguments(NrArguments::Exactly(0)));
   store.insert("append_word", Macro::new(",a\n$1\n.").nr_arguments(NrArguments::Exactly(1)));
   store.insert("append_words", Macro::new(",a\n$0\n."));
-  store.insert("recursion", Macro::new(":recursion").nr_arguments(NrArguments::Exactly(0)));
+  store.insert("recursion", Macro::new("orecursion").nr_arguments(NrArguments::Exactly(0)));
   store
 }
 
@@ -42,12 +42,12 @@ fn macro_selection() {
     // We use a standard macro store
     macro_store: create_macro_store(),
     // and specify which macro to test in each test
-    macro_invocation: "1:double",
+    macro_invocation: "1o double",
     expected_buffer: vec!["a","a","b","c","d"],
     expected_buffer_saved: false,
     expected_selection: (2,2),
     expected_clipboard: vec![],
-    expected_history_tags: vec!["1:double"],
+    expected_history_tags: vec!["1o double"],
   }.run();
 }
 
@@ -59,12 +59,12 @@ fn macro_arguments() {
     // We use a standard macro store
     macro_store: create_macro_store(),
     // and specify which macro to test in each test
-    macro_invocation: ":append_word word_to_append",
+    macro_invocation: "oappend_word word_to_append",
     expected_buffer: vec!["a","b","word_to_append"],
     expected_buffer_saved: false,
     expected_selection: (3,3),
     expected_clipboard: vec![],
-    expected_history_tags: vec![":append_word word_to_append"],
+    expected_history_tags: vec!["oappend_word word_to_append"],
   }.run();
 }
 
@@ -75,7 +75,7 @@ fn macro_wrongnr_arguments() {
     // We use a standard macro store
     macro_store: create_macro_store(),
     // and specify which macro to test in each test
-    macro_invocation: ":append_word word_to_append unhandled_argument",
+    macro_invocation: "oappend_word word_to_append unhandled_argument",
     expected_error: EdError::ArgumentsWrongNr{expected: "1".into(), received: 2},
   }.run();
 }
@@ -88,12 +88,12 @@ fn macro_allarguments() {
     // We use a standard macro store
     macro_store: create_macro_store(),
     // and specify which macro to test in each test
-    macro_invocation: ":append_words words to append in",
+    macro_invocation: "oappend_words words to append in",
     expected_buffer: vec!["words to append in"],
     expected_buffer_saved: false,
     expected_selection: (1,1),
     expected_clipboard: vec![],
-    expected_history_tags: vec![":append_words words to append in"],
+    expected_history_tags: vec!["oappend_words words to append in"],
   }.run();
 }
 
@@ -104,7 +104,7 @@ fn macro_recursion() {
     // We use a standard macro store
     macro_store: create_macro_store(),
     // and specify which macro to test in each test
-    macro_invocation: ":recursion",
+    macro_invocation: "orecursion",
     expected_error: EdError::InfiniteRecursion,
   }.run();
 }
