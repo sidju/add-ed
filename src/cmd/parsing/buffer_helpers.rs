@@ -1,7 +1,6 @@
 // Functions to ease interaction with the buffer
 
 use crate::{
-  Tag,
   Buffer,
   EdError,
   Result,
@@ -9,14 +8,25 @@ use crate::{
 
 pub (super) fn get_tag(
   buffer: &Buffer,
-  tag: Tag,
+  tag: char,
+  backwards: bool,
 ) -> Result<usize> {
-  match buffer.iter().enumerate() // Enumerate 0-indexes our iteration
-    .filter(|(_, line)| line.tag() == tag)
-    .next()
-  {
-    Some((i, _)) => Ok(i + 1), // Convert to 1-indexed before returning
-    None => Err(EdError::TagNoMatch(tag)),
+  if ! backwards {
+    match buffer.iter().enumerate() // Enumerate 0-indexes our iteration
+      .filter(|(_, line)| line.tag() == tag)
+      .next()
+    {
+      Some((i, _)) => Ok(i + 1), // Convert to 1-indexed before returning
+      None => Err(EdError::TagNoMatch(tag)),
+    }
+  } else {
+    match buffer.iter().enumerate().rev() // Enumerate 0-indexes our iteration
+      .filter(|(_, line)| line.tag() == tag)
+      .next()
+    {
+      Some((i, _)) => Ok(i + 1), // Convert to 1-indexed before returning
+      None => Err(EdError::TagNoMatch(tag)),
+    }
   }
 }
 

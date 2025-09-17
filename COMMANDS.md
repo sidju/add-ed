@@ -12,10 +12,13 @@ the previously presented shorthands.)
   - `.` Interpreted as the start of the currently viewed selection in most cases
     but as the end of the currently viewed selection when given to an appending
     command (or as end of a selection).
+  - `:` The opposite side of the viewed selection compared to `.`.
   - `<positive integer>` Interpreted as index of a line.
   - `$` Interpreted as index of the last line, or 0 there are no lines.
-  - `'<char>` Interpreted as index of first line tagged with
-    the given character.
+  - `'<char>` Interpreted as index of first line tagged with the given
+    character.
+  - `` `<char>`` Interpreted as index of last line tagged with the given
+    character.
   - `/<pattern>/` Interpreted as index of nearest following
     line matching the given regex pattern.
   - `?<pattern>?` same as above but nearest preceeding.
@@ -37,6 +40,8 @@ the previously presented shorthands.)
     (Empty indices are interpreted as index `1` and `.` respectively.)
   - `<nothing>` Interpreted as the currently viewed selection. Use the `=`
     command to print the currently viewed selection.
+  - `"<char>` Only valid if at least one line is tagged with char, interpreted
+    as ``'<char>,`<char>``.
 - `/` A separator. Can be any character (except newline), but for each command
   invocation you must use the same separator. Traditionally `/` or `_`.
 
@@ -165,7 +170,7 @@ More advanced commands to apply the same or similar changes many times.
    on that line, same as `g`.
 - `(.,.)V/<regex>/` Inverse of `G`. Does the same for lines that don't match the
    given regex.
-- `(.,.):<macro-name>(<space separated arguments>)` Set selection to given
+- `(.,.)o<macro-name>(<space separated arguments>)` Set selection to given
   selection (if any) and run given macro. Same as `g` it doesn't set selection,
   but the commands in the macro will probably do so.
 
@@ -191,3 +196,10 @@ For printing information about and changing editor state.
   without printing (this is the only way to do this, as even no command prints).
 - `f(<path>)` If no path given prints the default path, otherwise sets the given
   path as default path.
+- `(.,.)k<character>` Tags the start and end of that selection with the given
+  character, allowing you to use those indices via the shorthands `'<character>`
+  for the first index and `` `<character>`` for the last.
+- `(.,.)k` Untags the start and end of the selection, removing any tag currently
+  on those lines. Note that tags between them are left untouched.
+- `(.,.)K[<character>]` Equivalent to `k` but only operates on the last line in
+  the selection.

@@ -3,7 +3,7 @@
 /// struct which is then interpreted using additional data.
 
 use crate::error::*;
-use crate::{Ed, Tag};
+use crate::Ed;
 
 // A struct to formalise all the kinds of indices
 #[derive(PartialEq, Debug)]
@@ -12,7 +12,8 @@ pub enum Ind <'a> {
   OtherSelection, // The one not selected by '.' in this position
   BufferLen,
   Literal(usize),
-  Tag(Tag),
+  Tag(char),
+  RevTag(char),
   Pattern(&'a str),
   RevPattern(&'a str),
   Add(Box<Ind<'a>>, usize),
@@ -28,7 +29,7 @@ pub enum Sel <'a> {
 enum State {
   Default(usize),
   Tag,
-  EndTag,
+  RevTag,
   Pattern(usize),
   RevPattern(usize),
   Offset(usize, bool),
@@ -96,7 +97,7 @@ pub fn parse_index(
                 state = State::Tag;
               },
               '`' => {
-                state = State::EndTag;
+                state = State::RevTag;
               },
               '/' => {
                 state = State::Pattern(i + 1); // Since we know the length of these chars to be one byte
@@ -161,7 +162,7 @@ pub fn parse_index(
         }
       },
       // If the tag state was entered, save the next char as tag and return to default
-      State::Tag | State::EndTag => {
+      State::Tag | State::RevTag => {
         // This error creation is correct no matter if input ran out or not
         if let Some(_) = current_ind { return Err(
           EdError::IndicesUnrelated{
@@ -180,10 +181,11 @@ pub fn parse_index(
         )}
         // However, if input ran out for the normal case that is another error
         if let Some(c) = ch {
-          current_ind = Some(Ind::Tag(
-            if state == State::Tag { Tag::Start(c) }
-            else { Tag::End(c) }
-          ));
+          if state == State::Tag {
+            current_ind = Some(Ind::Tag(c));
+          } else {
+            current_ind = Some(Ind::RevTag(c));
+          }
           state = State::Default( i + c.len_utf8() );
         }
         else {
@@ -310,7 +312,8 @@ pub fn interpret_index(
     Ind::Literal(i) => Ok(i),
     // These return values are 0 indexed like the rest of the Buffer API
     // Subtract/add 1 on input/output
-    Ind::Tag(tag) => super::get_tag(state.history.current(), tag),
+    Ind::Tag(tag) => super::get_tag(state.history.current(), tag, false),
+    Ind::RevTag(tag) => super::get_tag(state.history.current(), tag, true),
     Ind::Pattern(pattern) =>
       super::get_matching(
         state.history.current(),

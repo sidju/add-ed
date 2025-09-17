@@ -13,7 +13,6 @@ use add_ed::{
   Clipboard,
   PubLine,
   LineText,
-  Tag,
   macros::Macro,
 };
 
@@ -48,7 +47,7 @@ pub fn inner_fixture(
   ed.file = init_filepath.to_owned();
   let init_clipboard = init_clipboard.iter().fold(Clipboard::new(), |mut c, x| {
     c.push(PubLine{
-      tag: Tag::None,
+      tag: '\0',
       text: LineText::new(format!("{}\n", x)).unwrap(),
     });
     c
@@ -60,7 +59,7 @@ pub fn inner_fixture(
   // can be easily converted into Buffer when needed.
   let init_buffer = init_buffer.iter().fold(Clipboard::new(), |mut c, x| {
     c.push(PubLine{
-      tag: Tag::None,
+      tag: '\0',
       text: LineText::new(format!("{}\n", x)).unwrap(),
     });
     c

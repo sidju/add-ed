@@ -14,7 +14,6 @@ use add_ed::{
   PubLine,
   Clipboard,
   LineText,
-  Tag,
   macros::Macro,
 };
 
@@ -260,7 +259,7 @@ impl IOTest {
     ed.file = self.init_filepath.to_owned();
     let init_clipboard = self.init_clipboard.iter().fold(Clipboard::new(), |mut c, x| {
       c.push(PubLine{
-        tag: Tag::None,
+        tag: '\0',
         text: LineText::new(format!("{}\n", x)).unwrap(),
       });
       c
@@ -268,7 +267,7 @@ impl IOTest {
     ed.clipboard = init_clipboard;
     let init_buffer = self.init_buffer.iter().fold(Clipboard::new(), |mut c, x| {
       c.push(PubLine{
-        tag: Tag::None,
+        tag: '\0',
         text: LineText::new(format!("{}\n", x)).unwrap(),
       });
       c

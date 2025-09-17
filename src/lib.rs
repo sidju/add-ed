@@ -68,7 +68,6 @@ use macros::{Macro, MacroGetter};
 pub use buffer::iters::*;
 mod buffer;
 pub use buffer::{
-  Tag,
   LineText,
   Line,
   Buffer,

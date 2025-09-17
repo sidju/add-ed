@@ -116,7 +116,7 @@ pub enum EdError {
   TagInvalid(String),
   /// Given tag found no match.
   /// Holds the used tag.
-  TagNoMatch(crate::Tag),
+  TagNoMatch(char),
   /// Any regex operation received an invalid regex or substitution.
   RegexInvalid{regex: String, error: regex::Error},
   /// Given regex found no match.

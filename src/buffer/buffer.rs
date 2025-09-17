@@ -42,9 +42,9 @@ impl<'a> From<&'a [Line]> for Clipboard {
     }
   }
 }
-impl<'a> TryFrom<&'a [(Tag, &str)]> for Clipboard {
+impl<'a> TryFrom<&'a [(char, &str)]> for Clipboard {
   type Error = LineTextError;
-  fn try_from(l: &'a [(Tag,&str)]) -> core::result::Result<Self, Self::Error> {
+  fn try_from(l: &'a [(char,&str)]) -> core::result::Result<Self, Self::Error> {
     let mut tmp = Vec::new();
     for line in l {
       tmp.push(line.try_into()?);
@@ -87,7 +87,6 @@ impl Into<Vec<Line>> for &Clipboard {
 /// Examples of how to construct Line instances to insert into the Buffer:
 /// ```
 /// use add_ed::{
-///   Tag,
 ///   Buffer,
 ///   Clipboard,
 ///   PubLine,
@@ -99,7 +98,7 @@ impl Into<Vec<Line>> for &Clipboard {
 ///
 /// let mut buffer = Buffer::default();
 /// // Note that we can create a PubLine by tag+text tuples
-/// let pub_line: PubLine = (Tag::Start('a'), "test\n").try_into().expect("Invalid line");
+/// let pub_line: PubLine = ('a', "test\n").try_into().expect("Invalid line");
 /// buffer.push((&pub_line).into());
 /// // Or just from &str
 /// let pub_line: PubLine = "data\n".try_into().expect("Invalid line");
@@ -112,7 +111,6 @@ impl Into<Vec<Line>> for &Clipboard {
 /// Examples of how to copy out and insert multiple lines of data:
 /// ```
 /// use add_ed::{
-///   Tag,
 ///   Buffer,
 ///   Clipboard,
 ///   PubLine,
@@ -124,7 +122,7 @@ impl Into<Vec<Line>> for &Clipboard {
 ///
 /// let mut buffer = Buffer::default();
 /// // Since we can construct a Clipboard from a slice of (char, &str)
-/// let pub_lines: Clipboard = (&vec![(Tag::Start('b'), "more\n"),(Tag::None, "data\n")][..])
+/// let pub_lines: Clipboard = (&vec![('b', "more\n"),('\0', "data\n")][..])
 ///   .try_into().expect("Invalid line");
 /// buffer.append(&mut (&pub_lines).into());
 /// // And of course you don't have to give tags if you don't want to
@@ -235,7 +233,7 @@ impl Buffer {
     self.verify_selection(selection)?;
     Ok(self[selection.0 - 1 .. selection.1]
       .iter()
-      .map(get_tagged_lines_helper as fn(&Line) -> (Tag, &str))
+      .map(get_tagged_lines_helper as fn(&Line) -> (char, &str))
       .into()
     )
   }
@@ -247,6 +245,6 @@ impl Buffer {
 fn get_lines_helper(line: &Line) -> &str {
   &line.text[..]
 }
-fn get_tagged_lines_helper(line: &Line) -> (Tag, &str) {
+fn get_tagged_lines_helper(line: &Line) -> (char, &str) {
   (line.tag(), &line.text[..])
 }
