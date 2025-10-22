@@ -138,3 +138,27 @@ fn undo_tag_move() {
 //   - 'a' prints absolute indices (instead of relative to current)
 //   - '$' prints indices relative to last snapshot
 //   - 'A' prints all undo snapshots instead of the nearest surrounding
+
+// Normal case
+#[test]
+fn undo_list() {
+  PrintTest{
+    init_buffer: vec![],
+    init_clipboard: vec![],
+    command_input: vec![
+      "U",
+    ],
+    expected_buffer: vec![],
+    expected_buffer_saved: true,
+    expected_selection: (1,0),
+    expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: vec!["  Before reading in a file (empty)\n> initial load (saved)\n".to_owned()],
+        n: false,
+        l: false,
+      },
+    ],
+    expected_history_tags: vec![],
+  }.run()
+}

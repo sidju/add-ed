@@ -38,7 +38,7 @@ pub fn run_macro(
         // For expose we don't need to do anything, just run the commands
         ModificationMode::Expose => {},
         // For squash/default create a normal snapshot and set dont_snapshot
-        ModificationMode::Default | ModificationMode::Squash => {
+        ModificationMode::Default => {
           state.history.snapshot(clean_command.into());
           state.history.dont_snapshot = true;
         },
@@ -74,18 +74,8 @@ pub fn run_macro(
         // Delete present to revert changes without creating history
         ModificationMode::Revert => {
           state.history.delete_present()?;
+          // On error revert selection changes
           if res.is_err() {
-            state.selection = orig_selection;
-          }
-          else if let Some(selection) = given_selection {
-            state.selection = selection;
-          }
-        },
-        // Squashing occurs by default
-        ModificationMode::Squash => {
-          // See Default branch for reasoning
-          if res.is_err() && !orig_dont_snapshot {
-            state.history.delete_present()?;
             state.selection = orig_selection;
           }
         },

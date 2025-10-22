@@ -14,8 +14,6 @@ pub enum ModificationMode {
   Default,
   /// Any modifications to the buffer are rollbacked after execution
   Revert,
-  /// Any modifications are shown as caused by the macro invocation
-  Squash,
   /// Any modifications are shown as caused by the modifying command in the
   /// macro
   Expose,

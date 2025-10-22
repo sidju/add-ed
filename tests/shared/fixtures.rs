@@ -105,6 +105,10 @@ pub struct MacroErrorTest {
   pub macro_store: HashMap<&'static str, Macro>,
   pub macro_invocation: &'static str,
   pub expected_error: EdError,
+  pub expected_buffer: Vec<&'static str>,
+  pub expected_buffer_saved: bool,
+  pub expected_selection: (usize, usize),
+  pub expected_history_tags: Vec<&'static str>,
 }
 impl MacroErrorTest {
   pub fn run(self) {
@@ -117,10 +121,10 @@ impl MacroErrorTest {
       Some(self.macro_store),
       vec![self.macro_invocation],
       Err(self.expected_error),
-      self.init_buffer,
-      true,
-      vec![],
-      (1,init_buffer_len),
+      self.expected_buffer,
+      self.expected_buffer_saved,
+      self.expected_history_tags,
+      self.expected_selection,
       vec![],
       "path",
       vec![], // No prints expected
