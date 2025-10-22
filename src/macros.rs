@@ -2,22 +2,24 @@ use std::borrow::Cow;
 
 use crate::{Result, EdError};
 
-// TODO, enable this later
-///// How to handle undo/redo snapshotting during macro execution
-//pub enum MacroSnapshottingMode {
-//  /// The default mode, same behaviour as the 'g' command
-//  ///
-//  /// Will squash modifications into the invocation itself *AND* remove that
-//  /// snapshot if it isn't changed from the previous.
-//  Default,
-//  /// Any modifications to the buffer are rollbacked after execution
-//  RevertMutation,
-//  /// Any modifications are shown as caused by the macro invocation
-//  SquashModifications,
-//  /// Any modifications are shown as caused by the modifying command in the
-//  /// macro
-//  ExposeModifications,
-//}
+/// How to handle undo/redo snapshotting during macro execution
+#[derive(Debug)]
+#[cfg_attr(feature="serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature="serde", serde(rename_all="lowercase"))]
+pub enum ModificationMode {
+  /// The default mode, same behaviour as the 'g' command
+  ///
+  /// Will squash modifications into the invocation itself *AND* remove that
+  /// snapshot if it isn't changed from the previous.
+  Default,
+  /// Any modifications to the buffer are rollbacked after execution
+  Revert,
+  /// Any modifications are shown as caused by the macro invocation
+  Squash,
+  /// Any modifications are shown as caused by the modifying command in the
+  /// macro
+  Expose,
+}
 
 /// Small enum describing argument nr constraints
 ///
@@ -60,9 +62,9 @@ pub struct Macro {
   /// nr of arguments given, and if `None` is set no argument substitution is 
   /// run on the macro (which means '$'s don't need to be doubled in the macro).
   pub nr_arguments: NrArguments,
-  // TODO, enable this later
-  // /// How the macro execution interacts with undo/redo snapshotting
-  // snapshotting_mode: MacroSnapshottingMode,
+  /// How the macro execution acts when modifying the buffer; what undo
+  /// snapshots are created when it runs.
+  pub modification_mode: ModificationMode,
 }
 impl Macro {
   /// Construct a macro
@@ -76,11 +78,17 @@ impl Macro {
     Self{
       input: input.into(),
       nr_arguments: NrArguments::Any,
+      modification_mode: ModificationMode::Default,
     }
   }
   /// Configure required nr of arguments for the macro
   pub fn nr_arguments(mut self, nr: NrArguments) -> Self {
     self.nr_arguments = nr;
+    self
+  }
+  /// Configure how modifications by the script are handled
+  pub fn modification_mode(mut self, modification_mode: ModificationMode) -> Self {
+    self.modification_mode = modification_mode;
     self
   }
 }

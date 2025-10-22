@@ -1,4 +1,4 @@
-// Tests for ':' command
+// Tests for 'o' command
 
 mod shared;
 use shared::fixtures::{
@@ -14,7 +14,7 @@ use add_ed::{
   },
 };
 
-// Verify behaviour of ':' command
+// Verify behaviour of 'o' command
 //
 // - Takes selection set as state selection before macro execution
 // - Accepts space separated arguements for the macro after the command character
@@ -108,3 +108,6 @@ fn macro_recursion() {
     expected_error: EdError::InfiniteRecursion,
   }.run();
 }
+
+
+// Tests regarding modification mode and how undo history is created

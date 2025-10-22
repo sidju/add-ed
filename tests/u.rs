@@ -127,3 +127,14 @@ fn undo_tag_move() {
     expected_history_tags: vec!["2m"],
   }.run()
 }
+
+// Verify behaviour of 'U' command
+//
+// - Prints undo snapshots
+// - Doesn't allow selection or index
+// - Accepts one integer argument, defining undo index to print nearby snapshots
+//   to, defaults to current undo index
+// - Accepts flags after the argument
+//   - 'a' prints absolute indices (instead of relative to current)
+//   - '$' prints indices relative to last snapshot
+//   - 'A' prints all undo snapshots instead of the nearest surrounding

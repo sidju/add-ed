@@ -1,6 +1,5 @@
 # Todos:
 
-- Add a way to specify starting / ending of selection rather than just `.`
 - Inject context environment variables into shell interaction.
   (File, selection_start, selection_end, prev_shell_command, if running script)
 - Improve classic.rs to support all of ed's command line arguments
@@ -9,12 +8,6 @@
     manual and compare to add-ed).
   - Implement missing features and remove them from listing in README.md.
     - 'g' command should accept an argument for case insensitive matching.
-
-
-# Add selection tagging
-
-Make `k` tag the whole selection rather than just the first index.
-See github issue for details.
 
 
 # Look over undo/redo
@@ -34,11 +27,9 @@ See github issue for details.
 # Look over macros.
 
 Make macros more useful by:
-- Adding some per-macro configurations, such as:
-  - Abort on error, abort on error except NoMatch and NoOp, or ignore errors
-  - Modifies buffer or not (if not we auto undo to before execution and delete
-    its potential future, ie. make modifications not have an impact)
-  - Snapshot for each command or for the whole macro
+- Add tests over modification mode
+- Provide a default macro-store that live-loads from a config dir in addition to
+  reading from config
 
 
 # Documentation fixes:

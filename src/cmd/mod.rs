@@ -2,6 +2,7 @@ use crate::{Ed, Substitution, Line, Clipboard, Buffer, WriteType};
 use crate::ui::{UI, ScriptedUI};
 use crate::error::*;
 use crate::messages::*;
+use crate::macros::*;
 
 
 // Parsing helpers
@@ -21,6 +22,8 @@ use regex_commands::*;
 
 mod undo;
 use undo::*;
+mod macros;
+use macros::*;
 
 // Helps to hand in globally relevant flags as one &mut struct to the command
 // implementations
@@ -250,43 +253,12 @@ pub(crate) fn run(
           state.history.dont_snapshot = orig_dont_snapshot;
           // If snapshotting was originally enabled we should handle if no
           // mutation of the buffer occured during the dont_snapshot.
-          if !orig_dont_snapshot { state.history.dedup_present(); }
+          if !orig_dont_snapshot { state.history.dedup_present()?; }
           res?;
           Ok(false)
         },
         'o' => {
-          let given_selection = if selection.is_some() {
-            let s = interpret_selection(&state, selection, state.selection)?;
-            state.history.current().verify_selection(s)?;
-            Some(s)
-          }
-          else {
-            None
-          };
-          // Sloppy argument parsing into list
-          let mut args = clean.trim_start().split(' ');
-          let macro_name = args.next().unwrap_or("");
-          let args: Vec<&str> = args.collect();
-          match state.macro_getter.get_macro(macro_name)? {
-            Some(m) => {
-              // Before disabling snapshotting, create one for this command
-              state.history.snapshot(clean_command.into());
-              // Disable undo snapshotting during macro execution
-              let orig_dont_snapshot = state.history.dont_snapshot;
-              state.history.dont_snapshot = true;
-              if let Some(selection) = given_selection {
-                state.selection = selection;
-              }
-              let res = state.private_run_macro(ui, m, &args, recursion_depth+1);
-              // Re-enable snapshotting after
-              state.history.dont_snapshot = orig_dont_snapshot;
-              // If snapshotting was originally enabled we should handle if no
-              // mutation of the buffer occured during the dont_snapshot.
-              if !orig_dont_snapshot { state.history.dedup_present(); }
-              res
-            },
-            None => Err(EdError::MacroUndefined(macro_name.to_owned())),
-          }?;
+          run_macro(state, ui, recursion_depth, selection, clean_command, clean)?;
           Ok(false)
         },
         _cmd => {
