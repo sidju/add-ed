@@ -231,7 +231,7 @@ impl <T> History<T> where
       Ok(&self.snapshots[self.viewed_i].0)
     }
     else {
-      Err(EdError::UndoIndexTooBig{
+      Err(EdError::HistoryIndexTooBig{
         index: new_i,
         history_len: self.len(),
         relative_redo_limit: self.len() - self.viewed_i - 1,

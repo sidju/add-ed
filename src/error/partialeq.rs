@@ -23,8 +23,8 @@ impl std::cmp::PartialEq for EdError {
       (UnsavedChanges,UnsavedChanges) => true,
       (NoOp,NoOp) => true,
       (
-        UndoIndexTooBig{index: a, history_len: b, relative_redo_limit: c},
-        UndoIndexTooBig{index: d, history_len: e, relative_redo_limit: f},
+        HistoryIndexTooBig{index: a, history_len: b, relative_redo_limit: c},
+        HistoryIndexTooBig{index: d, history_len: e, relative_redo_limit: f},
       ) => {
         a == d && b == e && c == f
       },

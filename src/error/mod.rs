@@ -105,9 +105,9 @@ pub enum EdError {
   /// Selection and arguments were given that makes its command do nothing.
   NoOp,
   /// Tried to undo beyond start of history.
-  UndoIndexNegative{relative_undo_limit: usize},
+  HistoryIndexNegative{relative_undo_limit: usize},
   /// Tried to redo past end of history.
-  UndoIndexTooBig{index: usize, history_len: usize, relative_redo_limit: usize},
+  HistoryIndexTooBig{index: usize, history_len: usize, relative_redo_limit: usize},
   /// Tried to given shell escape where a file path is required.
   /// Holds given path string.
   CommandEscapeForbidden(String),
@@ -147,6 +147,18 @@ pub enum EdError {
   /// Unfinished index, a special index without its arguments.
   /// Holds its text.
   IndexUnfinished(String),
+
+  // History index parsing errors
+  /// Special index character found after start of history index
+  HistoryIndexSpecialAfterStart{prior_index: String, special_index: char},
+  /// Given history index couldn't be parsed as a number. Holds its text.
+  HistoryIndexNotInt(String),
+  /// Offset part of history index couldn't be parsed as a number. Holds its text
+  HistoryOffsetNotInt(String),
+  /// Multiple history indices with unclear relation
+  HistoryIndicesUnrelated{prior_index: String, unrelated_index: String},
+  /// Unfinished history index, a special index missing its arguments. Holds its text
+  HistoryIndexUnfinished(String),
 
   // Command and argument parsing errors
   /// The given command doesn't exist.

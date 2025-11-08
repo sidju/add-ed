@@ -128,6 +128,91 @@ fn undo_tag_move() {
   }.run()
 }
 
+// Try out absolute undo indexing
+#[test]
+fn undo_absolute_index() {
+  PrintTest{
+    init_buffer: vec!["a","b","c"],
+    init_clipboard: vec![],
+    command_input: vec![
+      "2t", // copy line 2 to end of buffer
+      "2d", // delete the original
+      "u*2", // undo the delete by absolute index (2 first from fixture (0 indexed))
+    ],
+    expected_buffer: vec!["a","b","c","b"],
+    expected_buffer_saved: false,
+    expected_selection: (2,2),
+    expected_clipboard: vec!["b"],
+    expected_prints: vec![
+      Print{
+        text: vec!["Undid 1 operation(s) to right after 2t.".to_owned()],
+        n: false,
+        l: false,
+      },
+    ],
+    expected_history_tags: vec!["2t", "2d"],
+  }.run()
+}
+
+// Try out the last index literal
+#[test]
+fn redo_all() {
+  PrintTest{
+    init_buffer: vec!["a","b","c"],
+    init_clipboard: vec![],
+    command_input: vec![
+      "2t", // copy line 2 to end of buffer
+      "2d", // delete the original
+      "u*2", // undo the delete by absolute index (2 first from fixture (0 indexed))
+      "u$", // redo everything
+    ],
+    expected_buffer: vec!["a","c","b"],
+    expected_buffer_saved: false,
+    expected_selection: (2,2),
+    expected_clipboard: vec!["b"],
+    expected_prints: vec![
+      Print{
+        text: vec!["Undid 1 operation(s) to right after 2t.".to_owned()],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec!["Redid 1 operation(s) to right after 2d.".to_owned()],
+        n: false,
+        l: false,
+      },
+    ],
+    expected_history_tags: vec!["2t", "2d"],
+  }.run()
+}
+
+// Try out the add/subtract undo index
+#[test]
+fn undo_math() {
+  PrintTest{
+    init_buffer: vec!["a","b","c"],
+    init_clipboard: vec![],
+    command_input: vec![
+      "2t", // copy line 2 to end of buffer
+      "2d", // delete the original
+      "u.-1+3-3", // undo the delete by explicit relative
+    ],
+    expected_buffer: vec!["a","b","c","b"],
+    expected_buffer_saved: false,
+    expected_selection: (2,2),
+    expected_clipboard: vec!["b"],
+    expected_prints: vec![
+      Print{
+        text: vec!["Undid 1 operation(s) to right after 2t.".to_owned()],
+        n: false,
+        l: false,
+      },
+    ],
+    expected_history_tags: vec!["2t", "2d"],
+  }.run()
+}
+
+
 // Verify behaviour of 'U' command
 //
 // - Prints undo snapshots
