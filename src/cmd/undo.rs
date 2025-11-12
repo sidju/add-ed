@@ -56,43 +56,56 @@ pub fn manage_history(
   tail: &str,
 ) -> Result<()> {
   if selection.is_some() {return Err(EdError::SelectionForbidden); }
-  // Some custom flags (or maybe arguments) should probably be added later
-  let mut _flags = parse_flags(tail, "")?;
-  // To enable undoing to an absolute "index" from start of editing the
-  // History struct must allow both accessing current index and the labels for
-  // all indices. Due to the data structure this will also require allowing
-  // access to the snapshotted states and effectively expose internal design.
+  let (i, hist_ind) = parse_history_index(tail)?;
+  let mut flags = parse_flags(&tail[i..], "Aa")?;
+  // Realize the input
+  let hist_ind = hist_ind.map_or_else(
+    || Ok(i.saturating_sub(1)),
+    |ind| interpret_history_index(
+      state,
+      ind,
+      state.history.viewed_i(),
+    )
+  )?;
+  let viewed_i = state.history.viewed_i();
+  let saved_i = state.history.saved_i();
+
+  let absolute_indexing = flags.remove(&'a').unwrap();
+  let print_full_history = flags.remove(&'A').unwrap();
 
   // Figure out the history index slice for the nearest 10 snapshots
-  let i = state.history.viewed_i();
   let view = state.history.snapshots();
-  // If in the first five snapshots we want the first 10
-  let history_indices = if i < 10 {
-    // Use .min(view.len()) to limit within valid slicing
-    0 .. 10.min(view.len())
-  }
-  // If in the last five snapshots we want the last 10
-  else if view.len().saturating_sub(10) <= i {
-    // Use saturating sub to avoid underflow
-    view.len().saturating_sub(10) .. view.len()
-  }
-  // Otherwise we want the 5 preceding, current and 4 following snapshots
-  // (Since none of the preceeding were true we can safely slice this)
+  let history_indices = if print_full_history { 0..view.len() }
   else {
-    i - 5 .. i + 4
+    // If in the first five snapshots we want the first 10
+    if hist_ind < 10 {
+      // Use .min(view.len()) to limit within valid slicing
+      0 .. 10.min(view.len())
+    }
+    // If in the last five snapshots we want the last 10
+    else if view.len().saturating_sub(10) <= hist_ind {
+      // Use saturating sub to avoid underflow
+      view.len().saturating_sub(10) .. view.len()
+    }
+    // Otherwise we want the 5 preceding, current and 4 following snapshots
+    // (Since none of the preceeding were true we can safely slice this)
+    else {
+      hist_ind - 5 .. hist_ind + 4
+    }
   };
 
   // Print it nicely
-  let saved = state.history.saved_i();
-  let mut tmp = String::new();
+  let mut message = String::new();
   for hi in history_indices {
-    tmp.push_str(&format!(
-      "{} {}{}\n",
-      if hi == i { '>' } else { ' ' },
+    message.push_str(&format!(
+      "{}{}{}: {}{}\n",
+      if hi == viewed_i { '>' } else { ' ' },
+      if absolute_indexing { "*" } else { "" },
+      if absolute_indexing { hi as isize } else { viewed_i as isize - hi as isize },
       view[hi].0,
-      if Some(hi) == saved { " (saved)" } else { "" },
+      if Some(hi) == saved_i { " (saved)" } else { "" },
     ));
   }
-  ui.print_message(&tmp)?;
+  ui.print_message(&message)?;
   Ok(())
 }

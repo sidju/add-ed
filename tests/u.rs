@@ -11,19 +11,26 @@ use shared::mock_ui::Print;
 // Verify behaviour of 'u' command
 //
 // - Doesn't allow selection or index
-// - Accepts a signed numeric argument of how many steps to undo
-//   - If none given defaults to 1
+// - Accepts a history index of where in history to move to
+//   - If none given defaults to one step into history
+//   - If a lone number is given move that number of steps into history
+//   - . and $ are shortcuts to current position and latest snapshot
+//   - *<index> takes you to an absolute history index
+//   - +/-[<steps>] shifts preceeding index further back/forward respectively
+//     (If no preceeding index . is assumed. If no steps 1 is assumed.)
 // - Changes the state of the buffer the given number of modifying commands back
 //   in history, negative number moves forward.
 //   - If it isn't possible to move the given number of steps prints error,
 //     INVALID_UNDO_STEPS.
 // - Sets saved / unsaved after if that undo step is saved / unsaved
-// - Currently doesn't modify selection.
+// - As a temporary improvement we make the selection point within the buffer
+//   with as little modification as possible.
 //   (Later it may be good to set selection to the selection _acted upon_ in the
 //   last undone step. But to do that pairing selection with buffer state could
 //   be good, or validation. Current code may leave state.selection in an
 //   invalid state. Optimum would be to store selection with the buffer state,
 //   but that would require a _big_ refactor...)
+
 // Test fully defined
 #[test]
 fn undo() {
@@ -217,11 +224,9 @@ fn undo_math() {
 //
 // - Prints undo snapshots
 // - Doesn't allow selection or index
-// - Accepts one integer argument, defining undo index to print nearby snapshots
-//   to, defaults to current undo index
+// - Accepts a history index, same as for 'u'
 // - Accepts flags after the argument
 //   - 'a' prints absolute indices (instead of relative to current)
-//   - '$' prints indices relative to last snapshot
 //   - 'A' prints all undo snapshots instead of the nearest surrounding
 
 // Normal case
@@ -239,11 +244,107 @@ fn undo_list() {
     expected_clipboard: vec![],
     expected_prints: vec![
       Print{
-        text: vec!["  Before reading in a file (empty)\n> initial load (saved)\n".to_owned()],
+        text: vec![" 1: Before reading in a file (empty)\n>0: initial load (saved)\n".to_owned()],
         n: false,
         l: false,
       },
     ],
     expected_history_tags: vec![],
+  }.run()
+}
+
+// Normal case
+#[test]
+fn undo_list_absolute() {
+  PrintTest{
+    init_buffer: vec![],
+    init_clipboard: vec![],
+    command_input: vec![
+      "Ua",
+    ],
+    expected_buffer: vec![],
+    expected_buffer_saved: true,
+    expected_selection: (1,0),
+    expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: vec![" *0: Before reading in a file (empty)\n>*1: initial load (saved)\n".to_owned()],
+        n: false,
+        l: false,
+      },
+    ],
+    expected_history_tags: vec![],
+  }.run()
+}
+
+// Normal case
+#[test]
+fn undo_list_everything_absolute() {
+  PrintTest{
+    init_buffer: vec![],
+    init_clipboard: vec![],
+    command_input: vec![
+      "i",
+      "a",
+      ".",
+      ".s_._$0\n$0_g",
+      ".s",
+      ".s",
+      ".s",
+      ".s",
+      ".s",
+      ".s",
+      ".s",
+      ".d",
+      ".d",
+      ".d",
+      ".d",
+      ",j",
+      "UAa",
+    ],
+    expected_buffer: vec!["aaaaa"],
+    expected_buffer_saved: false,
+    expected_selection: (1,1),
+    expected_clipboard: vec!["a", "a", "a", "a", "a"],
+    expected_prints: vec![
+      Print{
+        text: vec![concat!(
+          " *0: Before reading in a file (empty)\n",
+          " *1: initial load (saved)\n",
+          " *2: i\n",
+          " *3: .s_._$0\n$0_g\n",
+          " *4: .s\n",
+          " *5: .s\n",
+          " *6: .s\n",
+          " *7: .s\n",
+          " *8: .s\n",
+          " *9: .s\n",
+          " *10: .s\n",
+          " *11: .d\n",
+          " *12: .d\n",
+          " *13: .d\n",
+          " *14: .d\n",
+          ">*15: ,j\n",
+        ).to_owned()],
+        n: false,
+        l: false,
+      },
+    ],
+    expected_history_tags: vec![
+      "i",
+      ".s_._$0\n$0_g",
+      ".s",
+      ".s",
+      ".s",
+      ".s",
+      ".s",
+      ".s",
+      ".s",
+      ".d",
+      ".d",
+      ".d",
+      ".d",
+      ",j",
+    ],
   }.run()
 }
