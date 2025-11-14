@@ -60,6 +60,22 @@ impl std::cmp::PartialEq for EdError {
       },
       (IndexUnfinished(x),IndexUnfinished(y)) => x == y,
 
+      (
+        HistoryIndexSpecialAfterStart{prior_index: a, special_index: b},
+        HistoryIndexSpecialAfterStart{prior_index: c, special_index: d},
+      ) => {
+        a == c && b == d
+      },
+      (HistoryIndexNotInt(x),HistoryIndexNotInt(y)) => x == y,
+      (OffsetNotInt(x),OffsetNotInt(y)) => x == y,
+      (
+        IndicesUnrelated{prior_index: a, unrelated_index: b},
+        IndicesUnrelated{prior_index: c, unrelated_index: d},
+      ) => {
+        a == c && b == d
+      },
+      (HistoryIndexUnfinished(x),HistoryIndexUnfinished(y)) => x == y,
+
       (CommandUndefined(x),CommandUndefined(y)) => x == y,
       (ArgumentListEscapedEnd(x),ArgumentListEscapedEnd(y)) => x == y,
       (
