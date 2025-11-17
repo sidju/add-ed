@@ -73,7 +73,7 @@ pub(crate) fn run(
     None => {
       if selection.is_some() {
         // Get and update the selection.
-        let sel = interpret_selection(&state, selection, state.selection)?;
+        let sel = interpret_selection(state, selection, state.selection)?;
         state.history.current().verify_selection(sel)?;
         state.selection = sel;
         pflags.p = true; // Default command is 'p'
@@ -137,7 +137,7 @@ pub(crate) fn run(
         }
         // Non-editing commands
         '=' | '#' => {
-          let sel = interpret_selection(&state, selection, state.selection)?;
+          let sel = interpret_selection(state, selection, state.selection)?;
           state.history.current().verify_selection(sel)?;
           if ch== '=' { parse_flags(clean, "")?; }
           state.selection = sel;
@@ -177,7 +177,7 @@ pub(crate) fn run(
         },
         // Print commands
         'p' | 'n' | 'l' => {
-          let sel = interpret_selection(&state, selection, state.selection)?;
+          let sel = interpret_selection(state, selection, state.selection)?;
           state.history.current().verify_selection(sel)?;
           // Get the flags
           let mut flags = parse_flags(&command[cmd_i..], "pnl")?;

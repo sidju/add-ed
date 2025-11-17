@@ -61,7 +61,7 @@ pub fn read_from_file(
 ) -> Result<()> {
   let index =
     if command == 'r' {
-      let i = interpret_index_from_selection(&state, selection, state.selection, true)?;
+      let i = interpret_index_from_selection(state, selection, state.selection, true)?;
       state.history.current().verify_index(i)?;
       Ok(Some(i))
     }
@@ -144,7 +144,7 @@ pub fn write_to_file(
     // If selection given we interpret it
     // (When explicit selection is whole buffer we change it to None to signal that)
     Some(s) => {
-      let inter = interpret_selection(&state, Some(s), state.selection)?;
+      let inter = interpret_selection(state, Some(s), state.selection)?;
       if inter == (1, state.history.current().len()) {
         None
       } else {

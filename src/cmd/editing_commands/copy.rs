@@ -14,7 +14,7 @@ pub fn copy(
   selection: Option<Sel<'_>>,
   tail: &str,
 ) -> Result<()> {
-  let sel = interpret_selection(&state, selection, state.selection)?;
+  let sel = interpret_selection(state, selection, state.selection)?;
   state.history.current().verify_selection(sel)?;
   let mut flags = parse_flags(tail, "pnl")?;
   pflags.p = flags.remove(&'p').unwrap();

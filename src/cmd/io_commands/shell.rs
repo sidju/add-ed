@@ -32,7 +32,7 @@ pub fn run_command(
   }
   // '|' parses selection normally
   else {
-    let sel = interpret_selection(&state, selection, state.selection)?;
+    let sel = interpret_selection(state, selection, state.selection)?;
     state.history.current().verify_selection(sel)?;
     Some(sel)
   };

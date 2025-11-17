@@ -298,7 +298,7 @@ pub fn parse_selection(
 // (1-indexed so append operations can append to line 0 to insert before line 1)
 // Should not be able to return a index bigger than history.len().
 pub fn interpret_index(
-  state: &Ed<'_>,
+  state: &mut Ed<'_>,
   index: Ind<'_>,
   old_selection: usize,
   other_old_selection: usize,
@@ -314,20 +314,36 @@ pub fn interpret_index(
     // Subtract/add 1 on input/output
     Ind::Tag(tag) => super::get_tag(state.history.current(), tag, false),
     Ind::RevTag(tag) => super::get_tag(state.history.current(), tag, true),
-    Ind::Pattern(pattern) =>
-      super::get_matching(
+    Ind::Pattern(maybe_pattern) => {
+      let pattern = if maybe_pattern.is_empty() {
+        &state.prev_search
+      } else {
+        maybe_pattern
+      };
+      let i = super::get_matching(
         state.history.current(),
         pattern,
         old_selection,
         super::Direction::Forwards,
-      ),
-    Ind::RevPattern(pattern) =>
-      super::get_matching(
+      )?;
+      state.prev_search = pattern.to_owned();
+      Ok(i)
+    },
+    Ind::RevPattern(maybe_pattern) => {
+      let pattern = if maybe_pattern.is_empty() {
+        &state.prev_search
+      } else {
+        maybe_pattern
+      };
+      let i = super::get_matching(
         state.history.current(),
         pattern,
         old_selection,
         super::Direction::Backwards
-      ),
+      )?;
+      state.prev_search = pattern.to_owned();
+      Ok(i)
+    },
     // These are relative to the prior, so have no indexing per-se
     Ind::Add(inner, offset) => {
       let inner = interpret_index(state, *inner, old_selection, other_old_selection)?;
@@ -345,7 +361,7 @@ pub fn interpret_index(
 // 1-indexed just like indices, since 'i'/'a' use selection start/end as index
 // This function tries to make every selection inclusive towards its ending index
 pub fn interpret_selection(
-  state: &Ed<'_>,
+  state: &mut Ed<'_>,
   input: Option<Sel<'_>>,
   old_selection: (usize, usize),
 ) -> Result<(usize, usize)> {
@@ -368,7 +384,7 @@ pub fn interpret_selection(
 // Basically behaves like interpret selection and taking only the index you want
 // but also handles Lone indices better by giving them the correct default
 pub fn interpret_index_from_selection(
-  state: &Ed<'_>,
+  state: &mut Ed<'_>,
   selection: Option<Sel<'_>>,
   // When selection is None this is interpreted as a lone selection instead
   // If this isn't given it is defaulted to Ind::Selection

@@ -28,8 +28,3 @@
 - Probably in some Vec<String>, to make nested macro recordings easy
 
 
-# Minor refactors
-
-- Really consider if we really should be using usize for all the parsing, it
-  would be smart to either really check against under-/overflow and properly
-  error on that or use something like i128 and check that it is within usize.

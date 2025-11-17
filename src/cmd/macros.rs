@@ -9,7 +9,7 @@ pub fn run_macro(
   clean: &str,
 ) -> Result<()> {
   let given_selection = if selection.is_some() {
-    let s = interpret_selection(&state, selection, state.selection)?;
+    let s = interpret_selection(state, selection, state.selection)?;
     state.history.current().verify_selection(s)?;
     Some(s)
   }

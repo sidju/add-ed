@@ -73,7 +73,7 @@ pub fn substitute(
   selection: Option<Sel<'_>>,
   tail: &str,
 ) -> Result<()> {
-  let selection = interpret_selection(&state, selection, state.selection)?;
+  let selection = interpret_selection(state, selection, state.selection)?;
   // Clip newline from tail if any
   let tail = tail.trim_end_matches('\n');
   // switch based on if tail was given or not

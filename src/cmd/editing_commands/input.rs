@@ -82,17 +82,18 @@ pub fn input(
   pflags.n = flags.remove(&'n').unwrap();
   pflags.l = flags.remove(&'l').unwrap();
 
-  let buffer = state.history.current();
   let index = match command {
     'a' | 'A' => {
-      let i = interpret_index_from_selection(&state, selection, state.selection, true)?;
+      let i = interpret_index_from_selection(state, selection, state.selection, true)?;
+      let buffer = state.history.current();
       if command == 'a' { buffer.verify_index(i)? } else { buffer.verify_line(i)? }
       i
     },
     // Note that saturating_sub really is needed, since inserting at index 0
     // should be valid and equivalent to inserting at index 1.
     'i' | 'I' => {
-      let mut i = interpret_index_from_selection(&state, selection, state.selection, false)?;
+      let mut i = interpret_index_from_selection(state, selection, state.selection, false)?;
+      let buffer = state.history.current();
       if command == 'i' {
         i = i.saturating_sub(1);
         buffer.verify_index(i)?;

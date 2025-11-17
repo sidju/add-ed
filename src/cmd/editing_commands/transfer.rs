@@ -80,12 +80,12 @@ pub fn transfer(
   command: char,
   tail: &str,
 ) -> Result<()> {
-  let selection = interpret_selection(&state, selection, state.selection)?;
+  let selection = interpret_selection(state, selection, state.selection)?;
   // Parse the target index, then the flags if any
   let (ind_end, ind) = parse_index(tail)?;
   let index = if command == 'm' || command == 't' {
     interpret_index(
-      &state,
+      state,
       ind.unwrap_or_else(|| Ind::BufferLen),
       state.selection.1,
       state.selection.0,
@@ -94,7 +94,7 @@ pub fn transfer(
   // We still keep the handling for 'T' and 'M', we may re-enable it later
   else {
     interpret_index(
-      &state,
+      state,
       ind.unwrap_or_else(|| Ind::Literal(1)),
       state.selection.0,
       state.selection.1,

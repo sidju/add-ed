@@ -67,10 +67,10 @@ impl std::cmp::PartialEq for EdError {
         a == c && b == d
       },
       (HistoryIndexNotInt(x),HistoryIndexNotInt(y)) => x == y,
-      (OffsetNotInt(x),OffsetNotInt(y)) => x == y,
+      (HistoryOffsetNotInt(x),HistoryOffsetNotInt(y)) => x == y,
       (
-        IndicesUnrelated{prior_index: a, unrelated_index: b},
-        IndicesUnrelated{prior_index: c, unrelated_index: d},
+        HistoryIndicesUnrelated{prior_index: a, unrelated_index: b},
+        HistoryIndicesUnrelated{prior_index: c, unrelated_index: d},
       ) => {
         a == c && b == d
       },

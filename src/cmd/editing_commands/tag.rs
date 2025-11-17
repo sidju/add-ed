@@ -6,7 +6,7 @@ pub fn tag(
   command: char,
   tail: &str,
 ) -> Result<()> {
-  let selection = interpret_selection(&state, selection, state.selection)?;
+  let selection = interpret_selection(state, selection, state.selection)?;
   let buffer = state.history.current();
   buffer.verify_selection(selection)?;
   // we only expect the tag, no flags

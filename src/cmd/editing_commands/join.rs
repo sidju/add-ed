@@ -31,7 +31,7 @@ pub fn join(
   selection: Option<Sel<'_>>,
   tail: &str,
 ) -> Result<()> {
-  let selection = interpret_selection(&state, selection, state.selection)?;
+  let selection = interpret_selection(state, selection, state.selection)?;
   state.history.current().verify_selection(selection)?; // Verify without creating snapshot
   let mut flags = parse_flags(tail, "pnl")?;
   pflags.p = flags.remove(&'p').unwrap();
