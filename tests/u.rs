@@ -106,9 +106,11 @@ fn undo_tag_move() {
     command_input: vec![
       "2m", // move line 2 to end of buffer
       "2kp", // mark new line 2, previously line 3
-      "'p=", // print index of marked line (should be 2)
+      "'p#",
+      "=", // print index of marked line (should be 2)
       "u", // undo the move (move is the only snapshot creating command here)
-      "'p=", // print index of marked line _before it was marked_ (should be 3)
+      "'p#",
+      "=", // print index of marked line _before it was marked_ (should be 3)
     ],
     expected_buffer: vec!["a","b","c"],
     expected_buffer_saved: true,

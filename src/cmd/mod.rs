@@ -24,6 +24,8 @@ mod undo;
 use undo::*;
 mod macros;
 use macros::*;
+mod status;
+use status::*;
 
 // Helps to hand in globally relevant flags as one &mut struct to the command
 // implementations
@@ -136,12 +138,14 @@ pub(crate) fn run(
           Ok(false)
         }
         // Non-editing commands
-        '=' | '#' => {
+        '#' => {
           let sel = interpret_selection(state, selection, state.selection)?;
           state.history.current().verify_selection(sel)?;
-          if ch== '=' { parse_flags(clean, "")?; }
           state.selection = sel;
-          if ch == '=' { ui.print_message(&format!("({},{})", sel.0, sel.1) )?; }
+          Ok(false)
+        },
+        '=' => {
+          status(state, ui, selection, clean)?;
           Ok(false)
         },
         // Toggles printing with/without numbering/literal by default
