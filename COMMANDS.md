@@ -57,27 +57,10 @@ are `[pnl]`.
   instead of tabs and `$$` instead of `$`. (Or not, if the `L` default is on).
 
 
-# Printing commands
-
-Commands to print buffer contents.
-
-- `<nothing>` Prints as many lines after the currently selected as you have
-  selected. (Intended so you can print the first 20 lines and press enter to do
-  so again.)
-- `(.,.)[pnl]` Print given selection.
-  (`p` is used to distinct the invocation from `<nothing>` when not giving an
-  explicit selection, it doesn't affect the printing.)
-- `(.,.)z(<positive integer>)[pnl]` Prints the given number of lines following
-  the given selection with the given printing configuration.
-
-
 # Basic editing commands
 
 Simple commands to edit the text in the editing buffer.
 
-- `(.)a[pnl]` Append text after given line. Enters input mode terminated by '.'.
-  After running the inserted text is selected.
-- `(.)i[pnl]` Insert text before given line. Otherwise same behaviour as `a`.
 - `(.,.)d[pnl]` Cut the selected lines into (editor internal) clipboard. Selects
   the nearest following line if any, otherwise the nearest preceeding. If
   deleting all of the buffer there is no selection after running, wherefore
@@ -91,9 +74,18 @@ Simple commands to edit the text in the editing buffer.
   newline characters, everything else is kept). Selects the resulting line.
 
 
+# Input mode commands
+
+Commands that enter input mode for text entry.
+
+- `(.)a[pnl]` Append text after given line. Enters input mode terminated by '.'.
+  After running the inserted text is selected.
+- `(.)i[pnl]` Insert text before given line. Otherwise same behaviour as `a`.
+
+
 # Combined editing commands
 
-Commands that kind of combine two basic editing commands.
+Commands that behave like two existing commands in sequence.
 
 - `(.,.)c[pnl]` Change out the selected lines. Enters input mode terminated by
   '.'. Equivalent to `.,.d` followed by `i`. Selects the inserted text if any
@@ -109,6 +101,28 @@ Commands that kind of combine two basic editing commands.
   given it copies to the end of the buffer by default. Kind of equivalent to
   `.,.y` followed by `x.`, except it doesn't affect the (editor internal)
   clipboard. Selects the copied lines in their new location.
+- `(.)A[pnl]` Append text after given line, joining the last line of input with
+  the indexed line. Enters input mode terminated by '.'. Equivalent to `a`
+  followed by joining with the indexed line.
+- `(.)I[pnl]` Insert text before given line, joining the first line of input with
+  the indexed line. Enters input mode terminated by '.'. Equivalent to `i`
+  followed by joining with the indexed line.
+
+
+# Printing commands
+
+Commands to print buffer contents.
+
+- `<nothing>` Prints as many lines after the currently selected as you have
+  selected. (Intended so you can print the first 20 lines and press enter to do
+  so again.)
+- `(.,.)[pnl]` Print given selection.
+  (`p` is used to distinct the invocation from `<nothing>` when not giving an
+  explicit selection, it doesn't affect the printing.)
+- `(.,.)z(<positive integer>)[pnl]` Prints the given number of lines following
+  the given selection with the given printing configuration.
+- `(.,.)Z(<positive integer>)[pnl]` Same as `z` but scrolls backward (up) instead
+  of forward (down).
 
 
 # File and shell commands
@@ -190,7 +204,10 @@ For printing information about and changing editor state.
   Capitalize 'q' to 'Q' to override and quit anyways.
 - `h` Print last previous error.
 - `H` Toggle between printing the error or only `?` when an error occurs.
-- `(.,.)=` Prints selection. If none given prints the current selection.
+- `=[as]` Prints editor status. Accepts flags `[as]` to select parts of state,
+  defaults to only selection.
+  - `a` Print full editor status including all available information
+  - `s` Print only the selection (default behavior when no flags given)
 - `(.,.)#(<anything>)` If no selection is given it does nothing, to enable
   inlining comments in scripts. If a selection is given that selection is set
   without printing (this is the only way to do this, as even no command prints).
@@ -203,3 +220,18 @@ For printing information about and changing editor state.
   on those lines. Note that tags between them are left untouched.
 - `(.,.)K[<character>]` Equivalent to `k` but only operates on the last line in
   the selection.
+
+
+# History and undo commands
+
+For managing command history and undo/redo operations.
+
+- `u[(<history index>)]` Undo or redo operations. If no history index given,
+  undoes the last operation. A negative number undoes, a positive number redoes.
+  Accepts history indices to jump to specific points in history.
+- `U[(<history index>)[Aa]]` Manage and view history. If no arguments given,
+  shows the last 10 history entries. Accepts flags:
+  - `A` Print full history instead of just the last 10 entries
+  - `a` Use absolute indexing instead of relative indexing
+- `P[nl]` Toggle default printing behavior. Accepts flags `[nl]` to toggle
+  line numbering (`n`) and literal printing (`l`) by default.

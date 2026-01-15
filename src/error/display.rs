@@ -17,6 +17,10 @@ impl std::fmt::Display for EdError {
         "UI error: {}",
         e.inner,
       ),
+      Macro(e) => write!(f,
+        "Macro error: {}",
+        e.inner,
+      ),
 
       InfiniteRecursion => write!(f,
         "Execution recursion hit recursion limit, no changes made."

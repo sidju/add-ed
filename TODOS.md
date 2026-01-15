@@ -14,8 +14,7 @@
 
 # Look over macros.
 
-- Provide a default macro-store that live-loads from a config dir in addition to
-  reading from config
+- Write proper tests for the local_macrostore (similar to local_io)
 
 
 # Documentation fixes:

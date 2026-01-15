@@ -52,6 +52,28 @@ impl IOError {
     (&*self.inner).downcast_ref::<T>()
   }
 }
+/// A trait to mark fulfilling the requirements put upon Macro error types.
+pub trait MacroErrorTrait: std::error::Error + as_any::AsAny + 'static {}
+/// A wrapper type for any Macro implementation's error type
+///
+/// To use the wrapper implement [`MacroErrorTrait`] on the error type to wrap. The
+/// return types on the [`MacroGetter`] trait's methods will give automatic
+/// conversion via the `?` operator in a lot of cases, but in some cases it is
+/// likely still needed to call `.into()` to convert.
+#[derive(Clone, Debug)]
+pub struct MacroError {
+  pub inner: Rc<dyn MacroErrorTrait>,
+}
+impl MacroError {
+  /// Helper for downcasting into the internal error type
+  ///
+  /// Due to how finnicky this is to get right, with coercing the Rc<T> into &T
+  /// before downcasting, I very much recommend using this helper.
+  pub fn downcast_ref<T: MacroErrorTrait>(&self) -> Option<&T> {
+    use as_any::Downcast;
+    (&*self.inner).downcast_ref::<T>()
+  }
+}
 
 // Large trait implementations in their own files
 mod display;
@@ -79,6 +101,12 @@ pub enum EdError {
   /// will need to downcast and verify this yourself if relevant. (See helper on
   /// [`UIError`].)
   UI(UIError),
+  /// A holder for errors from the Macro implementation.
+  ///
+  /// WARNING: internal equality of the held Macro error will not be checked. You
+  /// will need to downcast and verify this yourself if relevant. (See helper on
+  /// [`MacroError`].)
+  Macro(MacroError),
 
   /// Execution recursed more times than [`Ed.recursion_limit`], indicating
   /// infinite recursion.
@@ -227,6 +255,16 @@ impl<E: IOErrorTrait> From<E> for IOError {
 //   Self::IO(e.into())
 // }
 //}
+impl From<MacroError> for EdError {
+  fn from(e: MacroError) -> Self {
+    Self::Macro(e)
+  }
+}
+impl<E: MacroErrorTrait> From<E> for MacroError {
+  fn from(e: E) -> Self {
+    Self{ inner: Rc::new(e) }
+  }
+}
 impl From<InternalError> for EdError {
   fn from(e: InternalError) -> Self {
     Self::Internal(e)

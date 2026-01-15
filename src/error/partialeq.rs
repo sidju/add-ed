@@ -7,6 +7,7 @@ impl std::cmp::PartialEq for EdError {
       (Internal(x),Internal(y)) => x == y,
       (IO(_),IO(_)) => true,
       (UI(_),UI(_)) => true,
+      (Macro(_),Macro(_)) => true,
 
       (InfiniteRecursion, InfiniteRecursion) => true,
 

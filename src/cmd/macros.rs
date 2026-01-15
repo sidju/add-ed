@@ -1,4 +1,5 @@
 use super::*;
+use crate::macros::ModificationMode;
 
 pub fn run_macro(
   state: &mut Ed<'_>,
@@ -50,7 +51,7 @@ pub fn run_macro(
 
 
       // TODO: change so this conforms to error handling
-      let res = state.private_run_macro(ui, m, &args, recursion_depth+1);
+      let res = state.private_run_macro(ui, &m, &args, recursion_depth+1);
 
       // Re-set snapshotting after
       state.history.dont_snapshot = orig_dont_snapshot;
