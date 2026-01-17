@@ -33,7 +33,7 @@ pub enum MacroStoreError {
   /// Failed to read macro file
   FileReadError(std::io::Error),
   /// Failed to parse macro YAML from file
-  YamlParseError(serde_yaml::Error),
+  YamlParseError(serde_yml::Error),
   /// Failed to validate macro structure
   ValidationError(String),
 }
@@ -86,7 +86,7 @@ impl MacroStore {
     };
 
     // Parse the YAML content into a Macro
-    match serde_yaml::from_str::<Macro>(&content) {
+    match serde_yml::from_str::<Macro>(&content) {
       Ok(macro_obj) => Ok(Some(macro_obj)),
       Err(e) => Err(MacroStoreError::YamlParseError(e).into()),
     }
@@ -109,61 +109,5 @@ impl MacroGetter for MacroStore {
   }
 }
 
-#[cfg(test)]
-mod test {
-  use super::*;
-
-  #[test]
-  fn macro_store_hashmap_lookup() {
-    let mut macros = HashMap::new();
-    macros.insert("test".to_string(), Macro::new("hello $1"));
-    let store = MacroStore::new(macros, None);
-
-    let result = store.get_macro("test").unwrap();
-    assert!(result.is_some(), "Should find macro in HashMap");
-  }
-
-  #[test]
-  fn macro_store_not_found() {
-    let store = MacroStore::new(HashMap::new(), Some("/tmp".into()));
-    let result = store.get_macro("nonexistent").unwrap();
-    assert!(result.is_none(), "Should return None for nonexistent macro");
-  }
-
-  #[test]
-  fn macro_store_yaml_parsing() {
-    use crate::macros::{ModificationMode, NrArguments};
-    let yaml_content = r#"
-input: |
-  hello $1 and $2
-nr_arguments: 
-  Exactly: 2
-modification_mode: revert
-"#;
-    
-    let result = serde_yaml::from_str::<Macro>(yaml_content);
-    if let Err(ref e) = result {
-      println!("YAML parse error: {:?}", e);
-    }
-    assert!(result.is_ok(), "Should parse macro YAML successfully");
-    let macro_obj = result.unwrap();
-    assert_eq!(macro_obj.input, "hello $1 and $2\n");
-    assert!(matches!(macro_obj.nr_arguments, NrArguments::Exactly(2)));
-    assert!(matches!(macro_obj.modification_mode, ModificationMode::Revert));
-  }
-
-  #[test]
-  fn macro_store_yaml_simple() {
-    let yaml_content = r#"
-input: "simple macro content"
-"#;
-    
-    let result = serde_yaml::from_str::<Macro>(yaml_content);
-    if let Err(ref e) = result {
-      println!("YAML parse error: {:?}", e);
-    }
-    assert!(result.is_ok(), "Should parse simple macro YAML successfully");
-    let macro_obj = result.unwrap();
-    assert_eq!(macro_obj.input, "simple macro content");
-  }
-}
+#[cfg(all(feature = "test_file_macrostore", test))]
+mod tests;

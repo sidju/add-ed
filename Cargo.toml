@@ -24,7 +24,8 @@ local_io = []
 test_local_io = ["local_io"]
 initial_input_data = []
 serde = ["dep:serde"] # Currently only for Macro struct
-file_macrostore = ["serde", "dep:serde_yaml"] # Enable YAML-based macro file loading
+file_macrostore = ["serde", "dep:serde_yml"] # Enable YAML-based macro file loading
+test_file_macrostore = ["file_macrostore"]
 default = ["local_io"]
 bin_deps = ["dep:clap", "local_io"]
 
@@ -38,7 +39,7 @@ clap = { version = "4", features = ["derive", "env"], optional = true }
 # as possible, as it will need to match whatever use-case they have
 serde = { version = "1", features = ["derive"], optional = true }
 # For YAML macro file parsing (requires file_macrostore feature)
-serde_yaml = { version = "0.9", optional = true }
+serde_yml = { version = "0.0", optional = true }
 
 [[bin]]
 name = "classic-ed"

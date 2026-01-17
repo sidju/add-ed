@@ -3,7 +3,7 @@
 mkdir -p test-env
 cd test-env
 cargo build --features="bin_deps" && \
-cargo test --features="test_local_io,serde,initial_input_data"
+cargo test --features="test_local_io,serde,test_file_macrostore,initial_input_data"
 ret=$?
 cd ..
 rm -r test-env
