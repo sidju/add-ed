@@ -9,6 +9,7 @@ use shared::dummy_io::DummyIO;
 
 use add_ed::{
   ui::ScriptedUI,
+  macros::Macro,
   Ed,
 };
 
@@ -81,7 +82,7 @@ fn print_literal_numbered_noselection() {
 #[test]
 fn toggle_numbered_on() {
   let mut io = DummyIO::new();
-  let macros = std::collections::HashMap::new();
+  let macros = std::collections::HashMap::<String,Macro>::new();
   let mut ui = ScriptedUI{
     print_ui: None,
     input: vec![
@@ -107,7 +108,7 @@ fn toggle_numbered_on() {
 #[test]
 fn toggle_numbered_off() {
   let mut io = DummyIO::new();
-  let macros = std::collections::HashMap::new();
+  let macros = std::collections::HashMap::<String,Macro>::new();
   let mut ui = ScriptedUI{
     print_ui: None,
     input: vec![
@@ -135,7 +136,7 @@ fn toggle_numbered_off() {
 #[test]
 fn toggle_literal_on() {
   let mut io = DummyIO::new();
-  let macros = std::collections::HashMap::new();
+  let macros = std::collections::HashMap::<String,Macro>::new();
   let mut ui = ScriptedUI{
     print_ui: None,
     input: vec![
@@ -160,7 +161,7 @@ fn toggle_literal_on() {
 #[test]
 fn toggle_literal_off() {
   let mut io = DummyIO::new();
-  let macros = std::collections::HashMap::new();
+  let macros = std::collections::HashMap::<String,Macro>::new();
   let mut ui = ScriptedUI{
     print_ui: None,
     input: vec![

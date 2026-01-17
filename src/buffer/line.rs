@@ -74,7 +74,6 @@ impl TryFrom<&str> for LineText {
 pub struct Line {
   // Tracks if the line has been matched in a 'g' or similar command in a shared
   // instance throughout the line's lifetime (to save on allocations)
-  // (A change to BitVec would be good, TODO.)
   //
   // To support nested invocations we have a vector, where index 0 is the
   // outermost invocation and nested invocation have incrementing indices.

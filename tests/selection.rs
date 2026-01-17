@@ -150,6 +150,35 @@ fn pattern_terminated() {
     expected_history_tags: vec![],
   }.run()
 }
+#[test]
+fn pattern_default() {
+  PrintTest{
+    init_buffer: vec!["a","b","c","c"],
+    init_clipboard: vec![],
+    command_input: vec!["1#", "/c", "//"],
+    expected_selection: (4,4),
+    expected_buffer: vec!["a","b","c","c"],
+    expected_buffer_saved: true,
+    expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: vec![
+          "c\n".to_string(),
+        ],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec![
+          "c\n".to_string(),
+        ],
+        n: false,
+        l: false,
+      },
+    ],
+    expected_history_tags: vec![],
+  }.run()
+}
 
 // Backward pattern index
 #[test]
@@ -192,6 +221,35 @@ fn revpattern_terminated() {
         n: false,
         l: false,
       }
+    ],
+    expected_history_tags: vec![],
+  }.run()
+}
+#[test]
+fn revpattern_default_unterminated() {
+  PrintTest{
+    init_buffer: vec!["a","c","c","d"],
+    init_clipboard: vec![],
+    command_input: vec!["4#", "?c", "?"],
+    expected_selection: (2,2),
+    expected_buffer: vec!["a","c","c","d"],
+    expected_buffer_saved: true,
+    expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: vec![
+          "c\n".to_string(),
+        ],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec![
+          "c\n".to_string(),
+        ],
+        n: false,
+        l: false,
+      },
     ],
     expected_history_tags: vec![],
   }.run()
@@ -252,8 +310,8 @@ fn tag() {
   PrintTest{
     init_buffer: vec!["a","b","c","d"],
     init_clipboard: vec![],
-    command_input: vec!["3kx", "'x"],
-    expected_selection: (3,3),
+    command_input: vec!["3,4kx", "'x,`x"],
+    expected_selection: (3,4),
     expected_buffer: vec!["a","b","c","d"],
     expected_buffer_saved: true,
     expected_clipboard: vec![],
@@ -261,6 +319,7 @@ fn tag() {
       Print{
         text: vec![
           "c\n".to_string(),
+          "d\n".to_string(),
         ],
         n: false,
         l: false,

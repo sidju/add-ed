@@ -17,6 +17,7 @@
 //! use add_ed::{
 //!   ui::ScriptedUI,
 //!   io::LocalIO,
+//!   macros::Macro,
 //!   Ed,
 //!   EdError,
 //! };
@@ -27,7 +28,7 @@
 //!   input: vec![format!("e {}\n", "Cargo.toml")].into(),
 //!   print_ui: None,
 //! };
-//! let macro_store = std::collections::HashMap::new();
+//! let macro_store = std::collections::HashMap::<String,Macro>::new();
 //! let mut io = LocalIO::new();
 //! // Construct and run ed
 //! let mut ed = Ed::new(&mut io, &macro_store);
@@ -129,6 +130,9 @@ pub struct Ed <'a> {
   /// The previous `s` commands arguments, to support repeating last `s` command
   /// when no arguments are given to `s`.
   pub prev_s: Option<Substitution>,
+  /// Previous index search, defaulted to when / or ? is provided as an index
+  /// without a pattern as well as when 'g' is provided an empty pattern.
+  pub prev_search: String,
 
   /// Configuration of prefix before command input.
   ///
@@ -187,6 +191,7 @@ impl <'a, > Ed <'a> {
       history: History::new(),
       prev_s: None,
       prev_shell_command: String::new(),
+      prev_search: ".".to_owned(),
       // Sane defaults for externally visible variables
       file: String::new(),
       clipboard: Clipboard::new(),

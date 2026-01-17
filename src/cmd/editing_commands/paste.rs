@@ -25,7 +25,7 @@ pub fn paste(
   pflags.n = flags.remove(&'n').unwrap();
   pflags.l = flags.remove(&'l').unwrap();
   // Append or prepend based on command
-  let mut index = interpret_index_from_selection(&state, selection, state.selection, command == 'x')?;
+  let mut index = interpret_index_from_selection(state, selection, state.selection, command == 'x')?;
   if command == 'X' { index = index.saturating_sub(1); }
   let length = inner_paste(state, full_command, index)?;
   if length != 0 {

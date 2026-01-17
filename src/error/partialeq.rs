@@ -7,6 +7,7 @@ impl std::cmp::PartialEq for EdError {
       (Internal(x),Internal(y)) => x == y,
       (IO(_),IO(_)) => true,
       (UI(_),UI(_)) => true,
+      (Macro(_),Macro(_)) => true,
 
       (InfiniteRecursion, InfiniteRecursion) => true,
 
@@ -23,8 +24,8 @@ impl std::cmp::PartialEq for EdError {
       (UnsavedChanges,UnsavedChanges) => true,
       (NoOp,NoOp) => true,
       (
-        UndoIndexTooBig{index: a, history_len: b, relative_redo_limit: c},
-        UndoIndexTooBig{index: d, history_len: e, relative_redo_limit: f},
+        HistoryIndexTooBig{index: a, history_len: b, relative_redo_limit: c},
+        HistoryIndexTooBig{index: d, history_len: e, relative_redo_limit: f},
       ) => {
         a == d && b == e && c == f
       },
@@ -59,6 +60,22 @@ impl std::cmp::PartialEq for EdError {
         a == c && b == d
       },
       (IndexUnfinished(x),IndexUnfinished(y)) => x == y,
+
+      (
+        HistoryIndexSpecialAfterStart{prior_index: a, special_index: b},
+        HistoryIndexSpecialAfterStart{prior_index: c, special_index: d},
+      ) => {
+        a == c && b == d
+      },
+      (HistoryIndexNotInt(x),HistoryIndexNotInt(y)) => x == y,
+      (HistoryOffsetNotInt(x),HistoryOffsetNotInt(y)) => x == y,
+      (
+        HistoryIndicesUnrelated{prior_index: a, unrelated_index: b},
+        HistoryIndicesUnrelated{prior_index: c, unrelated_index: d},
+      ) => {
+        a == c && b == d
+      },
+      (HistoryIndexUnfinished(x),HistoryIndexUnfinished(y)) => x == y,
 
       (CommandUndefined(x),CommandUndefined(y)) => x == y,
       (ArgumentListEscapedEnd(x),ArgumentListEscapedEnd(y)) => x == y,

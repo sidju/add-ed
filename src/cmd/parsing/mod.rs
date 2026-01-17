@@ -9,3 +9,5 @@ mod path;
 pub use path::*;
 mod flags;
 pub use flags::*;
+mod undo_index;
+pub use undo_index::*;

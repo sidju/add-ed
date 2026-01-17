@@ -6,47 +6,45 @@ pub fn undo(
   selection: Option<Sel<'_>>,
   arguments: &str,
 ) -> Result<()> {
+  // Verify/parse input
   if selection.is_some() {return Err(EdError::SelectionForbidden); }
-  // A undo steps parsing not unlike index parsing would be good later
-  // ie. relative AND shorthand for start and end of history
-  let mut arg_iter = arguments.chars();
-  match arg_iter.next() {
-    // Go to point in history TODO
-    //Some('*') => {},
-    // Undo/redo (negative is redo
-    Some('-') => {
-      let steps = if arg_iter.next().is_some() {
-        arguments[1..]
-          .parse::<usize>()
-          .map_err(|_| EdError::UndoStepsNotInt(arguments[1..].to_owned()))
-        ?
-      } else { 1 };
-      if steps == 0 { return Err(EdError::NoOp); }
-      let new_pos = state.history.set_viewed_i(state.history.viewed_i() + steps)?;
+  let (i, hist_ind) = parse_history_index(arguments)?;
+  parse_flags(&arguments[i..], "")?;
+  // Realize the input
+  let hist_ind = hist_ind.map_or_else(
+    || Ok(state.history.viewed_i().saturating_sub(1)),
+    |ind| interpret_history_index(
+      state,
+      ind,
+      state.history.viewed_i(),
+    )
+  )?;
+  let change = hist_ind as i64 - state.history.viewed_i() as i64;
+  let new_pos = state.history.set_viewed_i(hist_ind)?;
+  match change {
+    0 => { return Err(EdError::NoOp); },
+    x if x > 0 => {
       ui.print_message(&format!(
         "Redid {} operation(s) to right after {}.",
-        steps,
+        x,
         new_pos,
-      ))?;
+      ))?
     },
     x => {
-      let steps = if x.is_some() {
-        arguments
-          .parse::<usize>()
-          .map_err(|_| EdError::UndoStepsNotInt(arguments.to_owned()))
-        ?
-      } else { 1 };
-      if steps == 0 { return Err(EdError::NoOp); }
-      if state.history.viewed_i() < steps {
-        return Err(EdError::UndoIndexNegative{relative_undo_limit: state.history.viewed_i()});
-      }
-      let new_pos = state.history.set_viewed_i(state.history.viewed_i() - steps)?;
       ui.print_message(&format!(
         "Undid {} operation(s) to right after {}.",
-        steps,
-        new_pos
-      ))?;
+        -x,
+        new_pos,
+      ))?
     },
+  };
+  // As a bonus, check that our selection isn't out of buffer
+  let buf_len = state.history.current().len();
+  if state.selection.1 > buf_len && buf_len != 0 {
+    state.selection.1 = buf_len;
+    if state.selection.0 > state.selection.1 {
+      state.selection.0 = state.selection.1;
+    }
   }
   Ok(())
 }
@@ -58,43 +56,56 @@ pub fn manage_history(
   tail: &str,
 ) -> Result<()> {
   if selection.is_some() {return Err(EdError::SelectionForbidden); }
-  // Some custom flags (or maybe arguments) should probably be added later
-  let mut _flags = parse_flags(tail, "")?;
-  // To enable undoing to an absolute "index" from start of editing the
-  // History struct must allow both accessing current index and the labels for
-  // all indices. Due to the data structure this will also require allowing
-  // access to the snapshotted states and effectively expose internal design.
+  let (i, hist_ind) = parse_history_index(tail)?;
+  let mut flags = parse_flags(&tail[i..], "Aa")?;
+  // Realize the input
+  let hist_ind = hist_ind.map_or_else(
+    || Ok(i.saturating_sub(1)),
+    |ind| interpret_history_index(
+      state,
+      ind,
+      state.history.viewed_i(),
+    )
+  )?;
+  let viewed_i = state.history.viewed_i();
+  let saved_i = state.history.saved_i();
+
+  let absolute_indexing = flags.remove(&'a').unwrap();
+  let print_full_history = flags.remove(&'A').unwrap();
 
   // Figure out the history index slice for the nearest 10 snapshots
-  let i = state.history.viewed_i();
   let view = state.history.snapshots();
-  // If in the first five snapshots we want the first 10
-  let history_indices = if i < 10 {
-    // Use .min(view.len()) to limit within valid slicing
-    0 .. 10.min(view.len())
-  }
-  // If in the last five snapshots we want the last 10
-  else if view.len().saturating_sub(10) <= i {
-    // Use saturating sub to avoid underflow
-    view.len().saturating_sub(10) .. view.len()
-  }
-  // Otherwise we want the 5 preceding, current and 4 following snapshots
-  // (Since none of the preceeding were true we can safely slice this)
+  let history_indices = if print_full_history { 0..view.len() }
   else {
-    i - 5 .. i + 4
+    // If in the first five snapshots we want the first 10
+    if hist_ind < 10 {
+      // Use .min(view.len()) to limit within valid slicing
+      0 .. 10.min(view.len())
+    }
+    // If in the last five snapshots we want the last 10
+    else if view.len().saturating_sub(10) <= hist_ind {
+      // Use saturating sub to avoid underflow
+      view.len().saturating_sub(10) .. view.len()
+    }
+    // Otherwise we want the 5 preceding, current and 4 following snapshots
+    // (Since none of the preceeding were true we can safely slice this)
+    else {
+      hist_ind - 5 .. hist_ind + 4
+    }
   };
 
   // Print it nicely
-  let saved = state.history.saved_i();
-  let mut tmp = String::new();
+  let mut message = String::new();
   for hi in history_indices {
-    tmp.push_str(&format!(
-      "{} {} {}",
-      if hi == i { '>' } else { ' ' },
+    message.push_str(&format!(
+      "{}{}{}: {}{}\n",
+      if hi == viewed_i { '>' } else { ' ' },
+      if absolute_indexing { "*" } else { "" },
+      if absolute_indexing { hi as isize } else { viewed_i as isize - hi as isize },
       view[hi].0,
-      if Some(hi) == saved { "(saved)" } else { "" },
+      if Some(hi) == saved_i { " (saved)" } else { "" },
     ));
   }
-  ui.print_message(&tmp)?;
+  ui.print_message(&message)?;
   Ok(())
 }

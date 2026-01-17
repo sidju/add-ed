@@ -98,7 +98,7 @@ fn test_file_io() {
 fn test_command_io() {
   let mut io = LocalIO::new();
   let mut mock_ui = DummyUI{};
-  let mut mock_ui_lock = mock_ui.lock_ui();
+  let mut mock_ui_lock = mock_ui.lock_ui(String::new());
   // Verify basic command execution via side effects
   io.run_command(
     &mut mock_ui_lock,

@@ -47,7 +47,8 @@ fn mark_print_adress() {
     init_clipboard: vec![],
     command_input: vec![
       "2,3kp", // Mark line with p
-      "'p=", // Print index of line tagged by p
+      "'p#", // Silently set selection to line tagged by p
+      "=", // Print selection
     ],
     expected_buffer: vec!["a","b","c"],
     expected_buffer_saved: true,
@@ -93,7 +94,8 @@ fn mark_last_print_adress() {
     init_clipboard: vec![],
     command_input: vec![
       "1,2Kp", // Mark line with p
-      "'p=", // Print index of line tagged by p
+      "'p#", // Silently set selection to line tagged by p
+      "=", // Print selection
     ],
     expected_buffer: vec!["a","b","c"],
     expected_buffer_saved: true,

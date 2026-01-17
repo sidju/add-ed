@@ -6,14 +6,20 @@ pub fn tag(
   command: char,
   tail: &str,
 ) -> Result<()> {
-  let selection = interpret_selection(&state, selection, state.selection)?;
-  let index = if command == 'k' { selection.0 } else { selection.1 };
+  let selection = interpret_selection(state, selection, state.selection)?;
   let buffer = state.history.current();
-  buffer.verify_line(index)?;
+  buffer.verify_selection(selection)?;
   // we only expect the tag, no flags
   if tail.chars().count() > 1 {
     return Err(EdError::TagInvalid(tail.to_owned()));
   }
-  buffer[index - 1].set_tag(tail.chars().next().unwrap_or('\0').into());
+  let ch = tail.chars().next().unwrap_or('\0');
+  if command == 'k' {
+    // Set end first, since selection .0 and .1 may be same index
+    buffer[selection.1 - 1].set_tag(ch.into());
+    buffer[selection.0 - 1].set_tag(ch.into());
+  } else {
+    buffer[selection.1 - 1].set_tag(ch.into());
+  }
   Ok(())
 }

@@ -215,7 +215,7 @@ impl Buffer {
   pub fn get_lines(
     &self,
     selection: (usize, usize),
-  ) -> Result<LinesIter> {
+  ) -> Result<LinesIter<'_>> {
     self.verify_selection(selection)?;
     Ok(self[selection.0 - 1 .. selection.1]
       .iter()
@@ -229,7 +229,7 @@ impl Buffer {
   pub fn get_tagged_lines(
     &self,
     selection: (usize, usize),
-  ) -> Result<TaggedLinesIter> {
+  ) -> Result<TaggedLinesIter<'_>> {
     self.verify_selection(selection)?;
     Ok(self[selection.0 - 1 .. selection.1]
       .iter()

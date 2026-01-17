@@ -7,7 +7,7 @@ pub fn cut(
   selection: Option<Sel<'_>>,
   tail: &str,
 ) -> Result<()> {
-  let sel = interpret_selection(&state, selection, state.selection)?;
+  let sel = interpret_selection(state, selection, state.selection)?;
   let buffer = state.history.current();
   buffer.verify_selection(sel)?;
   // Since selection after execution can be 0 it isn't allowed to auto print after

@@ -1,31 +1,43 @@
+//! Macro functionality for add-ed
+//!
+//! This module provides macro execution, storage, and parsing capabilities.
+
 use std::borrow::Cow;
 
 use crate::{Result, EdError};
 
-// TODO, enable this later
-///// How to handle undo/redo snapshotting during macro execution
-//pub enum MacroSnapshottingMode {
-//  /// The default mode, same behaviour as the 'g' command
-//  ///
-//  /// Will squash modifications into the invocation itself *AND* remove that
-//  /// snapshot if it isn't changed from the previous.
-//  Default,
-//  /// Any modifications to the buffer are rollbacked after execution
-//  RevertMutation,
-//  /// Any modifications are shown as caused by the macro invocation
-//  SquashModifications,
-//  /// Any modifications are shown as caused by the modifying command in the
-//  /// macro
-//  ExposeModifications,
-//}
+// Include the appropriate macrostore implementation based on feature flags
+#[cfg(feature = "file_macrostore")]
+mod file_macrostore;
+#[cfg(feature = "file_macrostore")]
+pub use file_macrostore::*;
+
+/// How to handle undo/redo snapshotting during macro execution
+#[derive(Debug, Clone, Default)]
+#[cfg_attr(feature="serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature="serde", serde(rename_all="lowercase"))]
+pub enum ModificationMode {
+  /// The default mode, same behaviour as the 'g' command
+  ///
+  /// Will squash modifications into the invocation itself *AND* remove that
+  /// snapshot if it isn't changed from the previous.
+  #[default]
+  Default,
+  /// Any modifications to the buffer are rollbacked after execution
+  Revert,
+  /// Any modifications are shown as caused by the modifying command in the
+  /// macro
+  Expose,
+}
 
 /// Small enum describing argument nr constraints
 ///
 /// (We use serde's default, externally tagged)
-#[derive(Debug)]
+#[derive(Debug, Clone, Default)]
 #[cfg_attr(feature="serde", derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(feature="serde", serde(rename_all="lowercase"))]
 pub enum NrArguments {
+  #[default]
   Any,
   None,
   Exactly(usize),
@@ -44,26 +56,34 @@ pub enum NrArguments {
 /// the version of `add-ed` being used, if newer features are used in the macro
 /// than the deserializing version of `add-ed` has access to an unknown field
 /// error will be raised.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature="serde", derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(feature="serde", serde(deny_unknown_fields))]
 #[non_exhaustive]
 pub struct Macro {
   /// Input to simulate
   ///
   /// Should be a string of newline separated commands. Execution is equivalent
   /// to if this input was given on STDIN while the editor is running.
+  #[cfg_attr(feature="serde", serde(default = "default_input"))]
   pub input: Cow<'static, str>,
   /// The number of arguments the macro accepts
   ///
   /// `Any` performs no validation, `Exactly` verifies that it is exactly that
   /// nr of arguments given, and if `None` is set no argument substitution is 
   /// run on the macro (which means '$'s don't need to be doubled in the macro).
+  #[cfg_attr(feature="serde", serde(default))]
   pub nr_arguments: NrArguments,
-  // TODO, enable this later
-  // /// How the macro execution interacts with undo/redo snapshotting
-  // snapshotting_mode: MacroSnapshottingMode,
+  /// How the macro execution acts when modifying the buffer; what undo
+  /// snapshots are created when it runs.
+  #[cfg_attr(feature="serde", serde(default))]
+  pub modification_mode: ModificationMode,
 }
+
+#[cfg(feature = "serde")]
+fn default_input() -> Cow<'static, str> {
+  Cow::Borrowed("")
+}
+
 impl Macro {
   /// Construct a macro
   ///
@@ -76,11 +96,17 @@ impl Macro {
     Self{
       input: input.into(),
       nr_arguments: NrArguments::Any,
+      modification_mode: ModificationMode::Default,
     }
   }
   /// Configure required nr of arguments for the macro
   pub fn nr_arguments(mut self, nr: NrArguments) -> Self {
     self.nr_arguments = nr;
+    self
+  }
+  /// Configure how modifications by the script are handled
+  pub fn modification_mode(mut self, modification_mode: ModificationMode) -> Self {
+    self.modification_mode = modification_mode;
     self
   }
 }
@@ -94,13 +120,21 @@ impl Macro {
 /// A ready implementation exists for HashMap, if you prefer to load in at
 /// startup for infallible macro getting during execution. A very good option if
 /// if you embedd your macro declarations in your editor's main config file.
+///
+/// This trait uses Cow to allow both returning references to stored macros
+/// and returning newly created macros (e.g., loaded from files).
 pub trait MacroGetter {
-  fn get_macro(&self, name: &str) -> Result<Option<&Macro>>;
+  fn get_macro(&self, name: &str) -> Result<Option<Cow<'_, Macro>>>;
 }
 
 impl MacroGetter for std::collections::HashMap<&str, Macro> {
-  fn get_macro(&self, name: &str) -> Result<Option<&Macro>> {
-    Ok(self.get(name))
+  fn get_macro(&self, name: &str) -> Result<Option<Cow<'_, Macro>>> {
+    Ok(self.get(name).map(|m| Cow::Borrowed(m)))
+  }
+}
+impl MacroGetter for std::collections::HashMap<String, Macro> {
+  fn get_macro(&self, name: &str) -> Result<Option<Cow<'_, Macro>>> {
+    Ok(self.get(name).map(|m| Cow::Borrowed(m)))
   }
 }
 
@@ -207,7 +241,7 @@ pub fn apply_arguments<
           },
         }
       },
-      // The normal case, just write in the char into the output
+      // The normal case, just write in the char into output
       (x, None) => {
         output.push(x);
       },

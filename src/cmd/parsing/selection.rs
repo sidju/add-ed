@@ -9,9 +9,11 @@ use crate::Ed;
 #[derive(PartialEq, Debug)]
 pub enum Ind <'a> {
   Selection,
+  OtherSelection, // The one not selected by '.' in this position
   BufferLen,
   Literal(usize),
   Tag(char),
+  RevTag(char),
   Pattern(&'a str),
   RevPattern(&'a str),
   Add(Box<Ind<'a>>, usize),
@@ -23,9 +25,11 @@ pub enum Sel <'a> {
   Lone(Ind<'a>)
 }
 
+#[derive(PartialEq, Debug)]
 enum State {
   Default(usize),
   Tag,
+  RevTag,
   Pattern(usize),
   RevPattern(usize),
   Offset(usize, bool),
@@ -81,7 +85,7 @@ pub fn parse_index(
           },
           // Invalid if current_ind is some, but we catch that in their handlers
           // to be able to give a clearer error
-          Some('/') | Some('\'') | Some('?') | Some('.') | Some('$') => {
+          Some('/') | Some('\'') | Some('`') | Some('?') | Some('.') | Some(':') | Some('$') => {
             let c = ch.unwrap();
             // These are only valid at the start of an index
             if start != i { return Err(EdError::IndexSpecialAfterStart{
@@ -92,13 +96,16 @@ pub fn parse_index(
               '\'' => {
                 state = State::Tag;
               },
+              '`' => {
+                state = State::RevTag;
+              },
               '/' => {
                 state = State::Pattern(i + 1); // Since we know the length of these chars to be one byte
               },
               '?' => {
                 state = State::RevPattern(i + 1); // Since we know the length of these chars to be one byte
               },
-              '.' | '$' => {
+              '.' | ':' | '$' => {
                 // The other special indices handle this error upon termination,
                 // but since these are only one character we do it here.
                 if let Some(_) = current_ind { return Err(
@@ -108,7 +115,12 @@ pub fn parse_index(
                   }
                 )}
                 current_ind = Some(
-                  if c == '.' { Ind::Selection } else { Ind::BufferLen }
+                  match c {
+                    '.' => Ind::Selection,
+                    ':' => Ind::OtherSelection,
+                    '$' => Ind::BufferLen,
+                    _ => ed_unreachable!()?,
+                  }
                 );
                 state = State::Default(i + 1); // reset start after moving into current_ind
               },
@@ -150,7 +162,7 @@ pub fn parse_index(
         }
       },
       // If the tag state was entered, save the next char as tag and return to default
-      State::Tag => {
+      State::Tag | State::RevTag => {
         // This error creation is correct no matter if input ran out or not
         if let Some(_) = current_ind { return Err(
           EdError::IndicesUnrelated{
@@ -169,11 +181,18 @@ pub fn parse_index(
         )}
         // However, if input ran out for the normal case that is another error
         if let Some(c) = ch {
-          current_ind = Some(Ind::Tag(c));
+          if state == State::Tag {
+            current_ind = Some(Ind::Tag(c));
+          } else {
+            current_ind = Some(Ind::RevTag(c));
+          }
           state = State::Default( i + c.len_utf8() );
         }
         else {
-          return Err(EdError::IndexUnfinished("\'".to_string()));
+          return Err(EdError::IndexUnfinished(
+            if state == State::Tag { "\'".to_string() }
+            else { "`".to_string() }
+          ));
         }
       },
       // If the pattern state was entered, save as pattern until end char is given and return to default
@@ -279,40 +298,59 @@ pub fn parse_selection(
 // (1-indexed so append operations can append to line 0 to insert before line 1)
 // Should not be able to return a index bigger than history.len().
 pub fn interpret_index(
-  state: &Ed<'_>,
+  state: &mut Ed<'_>,
   index: Ind<'_>,
   old_selection: usize,
+  other_old_selection: usize,
 ) -> Result<usize> {
   let ind = match index {
     Ind::Selection => Ok(old_selection),
+    Ind::OtherSelection => Ok(other_old_selection),
     // Since we want 1-indexed len() points at the last valid line or 0 if none
     Ind::BufferLen => Ok(state.history.current().len()),
     // May be invalid, history is expected to check
     Ind::Literal(i) => Ok(i),
     // These return values are 0 indexed like the rest of the Buffer API
     // Subtract/add 1 on input/output
-    Ind::Tag(tag) => super::get_tag(state.history.current(), tag),
-    Ind::Pattern(pattern) =>
-      super::get_matching(
+    Ind::Tag(tag) => super::get_tag(state.history.current(), tag, false),
+    Ind::RevTag(tag) => super::get_tag(state.history.current(), tag, true),
+    Ind::Pattern(maybe_pattern) => {
+      let pattern = if maybe_pattern.is_empty() {
+        &state.prev_search
+      } else {
+        maybe_pattern
+      };
+      let i = super::get_matching(
         state.history.current(),
         pattern,
         old_selection,
         super::Direction::Forwards,
-      ),
-    Ind::RevPattern(pattern) =>
-      super::get_matching(
+      )?;
+      state.prev_search = pattern.to_owned();
+      Ok(i)
+    },
+    Ind::RevPattern(maybe_pattern) => {
+      let pattern = if maybe_pattern.is_empty() {
+        &state.prev_search
+      } else {
+        maybe_pattern
+      };
+      let i = super::get_matching(
         state.history.current(),
         pattern,
         old_selection,
         super::Direction::Backwards
-      ),
+      )?;
+      state.prev_search = pattern.to_owned();
+      Ok(i)
+    },
     // These are relative to the prior, so have no indexing per-se
     Ind::Add(inner, offset) => {
-      let inner = interpret_index(state, *inner, old_selection)?;
+      let inner = interpret_index(state, *inner, old_selection, other_old_selection)?;
       Ok(inner.saturating_add(offset))
     },
     Ind::Sub(inner, offset) => {
-      let inner = interpret_index(state, *inner, old_selection)?;
+      let inner = interpret_index(state, *inner, old_selection, other_old_selection)?;
       Ok(inner.saturating_sub(offset))
     },
   }?;
@@ -323,7 +361,7 @@ pub fn interpret_index(
 // 1-indexed just like indices, since 'i'/'a' use selection start/end as index
 // This function tries to make every selection inclusive towards its ending index
 pub fn interpret_selection(
-  state: &Ed<'_>,
+  state: &mut Ed<'_>,
   input: Option<Sel<'_>>,
   old_selection: (usize, usize),
 ) -> Result<(usize, usize)> {
@@ -331,12 +369,12 @@ pub fn interpret_selection(
   let interpreted = match selection {
     Sel::Lone(ind) => {
       // Just interpret the lone index and make it a selection
-      let i = interpret_index(state, ind, old_selection.0 )?;
+      let i = interpret_index(state, ind, old_selection.0, old_selection.1)?;
       (i, i)
     },
     Sel::Pair(ind1, ind2) => {
-      let i = interpret_index(state, ind1, old_selection.0 )?;
-      let i2 = interpret_index(state, ind2, old_selection.1 )?;
+      let i = interpret_index(state, ind1, old_selection.0, old_selection.1)?;
+      let i2 = interpret_index(state, ind2, old_selection.1, old_selection.0)?;
       (i, i2)
     },
   };
@@ -346,7 +384,7 @@ pub fn interpret_selection(
 // Basically behaves like interpret selection and taking only the index you want
 // but also handles Lone indices better by giving them the correct default
 pub fn interpret_index_from_selection(
-  state: &Ed<'_>,
+  state: &mut Ed<'_>,
   selection: Option<Sel<'_>>,
   // When selection is None this is interpreted as a lone selection instead
   // If this isn't given it is defaulted to Ind::Selection
@@ -355,17 +393,20 @@ pub fn interpret_index_from_selection(
   appends: bool,
 ) -> Result<usize> {
   let selection = selection.unwrap_or(Sel::Lone(
-//    default_index.unwrap_or(Ind::Selection)
     Ind::Selection
   ));
-  let default = if appends { old_selection.1 } else { old_selection.0 };
+  let (default, other_default) = if appends {
+    (old_selection.1, old_selection.0)
+  } else {
+    (old_selection.0, old_selection.1)
+  };
   Ok(match selection {
     Sel::Lone(ind) => {
-      interpret_index(state, ind, default)?
+      interpret_index(state, ind, default, other_default)?
     },
     Sel::Pair(ind1, ind2) => {
       let ind = if appends { ind2 } else { ind1 };
-      interpret_index(state, ind, default)?
+      interpret_index(state, ind, default, other_default)?
     },
   })
 }

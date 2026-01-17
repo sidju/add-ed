@@ -78,7 +78,9 @@ impl UI for MockUI {
     panic!("get_input not implemented on mock ui")
   }
 
-  fn lock_ui(&mut self) -> UILock<'_> {
+  fn lock_ui(&mut self,
+    _child_title: String
+  ) -> UILock<'_> {
     UILock::new(self)
   }
   fn unlock_ui(&mut self){}

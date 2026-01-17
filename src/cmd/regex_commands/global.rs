@@ -19,6 +19,9 @@ fn mark_matching(
   use regex::RegexBuilder;
   let buffer = state.history.current();
   buffer.verify_selection(selection)?;
+  let pattern = if pattern.is_empty() {
+    &state.prev_search
+  } else { pattern };
   let regex = RegexBuilder::new(pattern)
     .multi_line(true)
     .build()
@@ -44,6 +47,7 @@ fn mark_matching(
   if !match_found {
     Err(EdError::RegexNoMatch(pattern.to_owned()))
   } else {
+    state.prev_search = pattern.to_owned();
     Ok(())
   }
 }
@@ -79,7 +83,7 @@ pub fn global(
   tail: &str,
   recursion_depth: usize,
 ) -> Result<()> {
-  let selection = interpret_selection(&state, selection, state.selection)?;
+  let selection = interpret_selection(state, selection, state.selection)?;
   // Since this command takes input we need to check inputs early
   let mut expressions = parse_expressions(tail)?;
   if expressions.len() < 2 {
@@ -136,7 +140,7 @@ pub fn global_interactive(
   tail: &str,
   recursion_depth: usize,
 ) -> Result<()> {
-  let selection = interpret_selection(&state, selection, state.selection)?;
+  let selection = interpret_selection(state, selection, state.selection)?;
   // Since this command takes input we need to check inputs early
   let expressions = parse_expressions(tail)?;
   if expressions.len() != 2 {

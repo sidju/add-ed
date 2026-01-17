@@ -11,7 +11,8 @@ use shared::mock_ui::Print;
 //   - If given, marks all matching lines in that selection
 //   - If none, same using state.selection
 // - Takes a list of arguments separated by the first char following 'g'
-//   - First is the regex that lines are marked if matching
+//   - First is the regex that lines are marked if matching. If none given uses
+//     the last used search regex (from / and ? index or previous 'g' command).
 //   - Then it takes any number of commands to run on all matching lines.
 //   - If the last argument on the line doesn't have a separator after:
 //     - Starts taking input with the separator from above as terminator.
@@ -41,6 +42,42 @@ fn global_grep_defaultcommand() {
     expected_selection: (3,3),
     expected_clipboard: vec![],
     expected_prints: vec![
+      Print{
+        text: vec!["1\n".to_string(),],
+        n: false,
+        l: false,
+      },
+      Print{
+        text: vec!["4\n".to_string(),],
+        n: false,
+        l: false,
+      },
+    ],
+    expected_history_tags: vec![],
+  }.run();
+}
+#[test]
+fn global_grep_defaultcommand_defaultpattern() {
+  let buffer = vec![
+    "hello",
+    "1",
+    "4",
+    "there",
+  ];
+  PrintTest{
+    init_buffer: buffer.clone(),
+    init_clipboard: vec![],
+    command_input: vec!["1#", r"/\d", ",g//"],
+    expected_buffer: buffer,
+    expected_buffer_saved: true,
+    expected_selection: (3,3),
+    expected_clipboard: vec![],
+    expected_prints: vec![
+      Print{
+        text: vec!["1\n".to_string(),],
+        n: false,
+        l: false,
+      },
       Print{
         text: vec!["1\n".to_string(),],
         n: false,

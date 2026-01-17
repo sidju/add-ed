@@ -1,6 +1,6 @@
 //! Module for history snapshotting and management.
 
-use crate::{EdError, Result};
+use crate::{EdError, error::InternalError, Result};
 use std::fmt::Debug;
 
 /// A special type of Clone for [`History`]
@@ -113,13 +113,19 @@ impl <T> History<T> where
     &mut self.snapshots[self.viewed_i].1
   }
 
-  fn internal_create_snapshot(&mut self, label: String) {
+  /// Force adding a snapshot
+  ///
+  /// This ignores the dont_snapshot flag, should only be used to create
+  /// snapshots for edits that will be reverted before handing back to
+  /// the user.
+  pub fn force_create_snapshot(&mut self, label: String) {
     // Push the current index to end of history with label
     // (reverts if in history, snapshots if at end of history)
     self.snapshots.push((label, self.snapshots[self.viewed_i].1.create_snapshot()));
     // Move to end of history
     self.viewed_i = self.snapshots.len() - 1;
   }
+
   /// Manually add a snapshot
   ///
   /// Takes a String as an argument that should describe what causes the
@@ -134,14 +140,14 @@ impl <T> History<T> where
     // If we are in the past, create a revert snapshot
     // This is needed even if snapshots are disabled, to not change history
     if self.viewed_i < self.snapshots.len() - 1 {
-      self.internal_create_snapshot(format!(
+      self.force_create_snapshot(format!(
         "u{}",
         self.snapshots.len().saturating_sub(self.viewed_i + 1),
       ));
     }
     // If snapshots aren't disabled, create one
     if !self.dont_snapshot {
-      self.internal_create_snapshot(modification_cause);
+      self.force_create_snapshot(modification_cause);
     }
   }
 
@@ -152,12 +158,39 @@ impl <T> History<T> where
   /// even for non-mutating scripts since they don't know if a script will
   /// modify the buffer. By running this after macro execution the snapshot will
   /// be deleted if extraneous and left if relevant.
-  pub fn dedup_present(&mut self) {
+  pub fn dedup_present(&mut self) -> Result<()> {
+    if self.snapshots.len() < 2 {
+      return ed_unreachable!();
+    }
+    if self.viewed_i != self.snapshots.len() - 1 {
+      return ed_unreachable!();
+    }
     let mut last_2_iter = self.snapshots.iter().rev().take(2);
     if last_2_iter.next().map(|x| &x.1) == last_2_iter.next().map(|x| &x.1) {
       self.snapshots.pop();
       self.viewed_i = self.snapshots.len() - 1;
     }
+    Ok(())
+  }
+
+  /// Delete the last snapshot, loosing the data in it
+  ///
+  /// This is used in macro execution if the macro is set to self-revert after
+  /// execution. Before use a snapshot must have been created,
+  /// using `force_create_snapshot` is recommended to not risk fumbling the
+  /// dont_snapshot flag.
+  /// There is an overwhelming risk of data-loss, if anything it is the intended
+  /// outcome.
+  pub fn delete_present(&mut self) -> Result<()> {
+    if self.snapshots.len() < 2 {
+      return ed_unreachable!();
+    }
+    if self.viewed_i != self.snapshots.len() - 1 {
+      return ed_unreachable!();
+    }
+    self.snapshots.pop();
+    self.viewed_i = self.snapshots.len() - 1;
+    Ok(())
   }
 
   /// Accessor to view the full list of snapshots
@@ -198,7 +231,7 @@ impl <T> History<T> where
       Ok(&self.snapshots[self.viewed_i].0)
     }
     else {
-      Err(EdError::UndoIndexTooBig{
+      Err(EdError::HistoryIndexTooBig{
         index: new_i,
         history_len: self.len(),
         relative_redo_limit: self.len() - self.viewed_i - 1,

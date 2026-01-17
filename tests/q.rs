@@ -8,6 +8,7 @@ use shared::dummy_io::DummyIO;
 use shared::dummy_ui::DummyUI;
 use add_ed::{
   error::EdError,
+  macros::Macro,
   Ed,
 };
 
@@ -21,7 +22,7 @@ use add_ed::{
 #[test]
 fn quit() {
   let mut io = DummyIO::new();
-  let macros = std::collections::HashMap::new();
+  let macros = std::collections::HashMap::<String, Macro>::new();
   let mut ui = DummyUI{};
   // Construct editor state and run
   let mut ed = Ed::new(
@@ -46,7 +47,7 @@ fn quit_unsaved() {
 #[test]
 fn force_quit_unsaved() {
   let mut io = DummyIO::new();
-  let macros = std::collections::HashMap::new();
+  let macros = std::collections::HashMap::<String, Macro>::new();
   let mut ui = DummyUI{};
   // Construct editor state and run
   let mut ed = Ed::new(

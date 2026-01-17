@@ -25,12 +25,11 @@ pub fn command_substitutions(
   command: &str,
   state_file: &str,
   prev_command: &str,
-) -> Result<(bool, String)> {
+) -> Result<String> {
   // In command we replace ! with previous command and % with state.file.
   // To not clash with other escape processing we only handle \% and \!,
   // for every other case we print the escaping \ and the escaped char.
   let mut escaped = false;
-  let mut modified = false;
   let mut output = String::new();
   for ch in command.chars() {
     match ch {
@@ -44,7 +43,6 @@ pub fn command_substitutions(
         output.push(ch);
         escaped = false;
       } else {
-        modified = true;
         if state_file.is_empty() { return Err(EdError::DefaultFileUnset); }
         output.push_str(state_file);
       },
@@ -52,7 +50,6 @@ pub fn command_substitutions(
         output.push(ch);
         escaped = false;
       } else {
-        modified = true;
         if prev_command.is_empty() {
           return Err(EdError::DefaultShellCommandUnset);
         }
@@ -67,7 +64,7 @@ pub fn command_substitutions(
       },
     }
   }
-  Ok((modified, output))
+  Ok(output)
 }
 #[cfg(test)]
 mod test {
@@ -79,7 +76,7 @@ mod test {
         "%",
         "state.file",
         "prev_command",
-      ).unwrap().1,
+      ).unwrap(),
       "state.file",
       "command_substitutions didn't replace % with data from state_file."
     );
@@ -88,7 +85,7 @@ mod test {
         "\\%",
         "state.file",
         "prev_command",
-      ).unwrap().1,
+      ).unwrap(),
       "%",
       "command_substitutions didn't respect escape on %."
     );
@@ -97,7 +94,7 @@ mod test {
         "!",
         "state.file",
         "prev_command",
-      ).unwrap().1,
+      ).unwrap(),
       "prev_command",
       "command_substitutions didn't replace ! with data from prev_command."
     );
@@ -106,7 +103,7 @@ mod test {
         "\\!",
         "state.file",
         "prev_command",
-      ).unwrap().1,
+      ).unwrap(),
       "!",
       "command_substitutions didn't respect escape on !."
     );
@@ -115,7 +112,7 @@ mod test {
         "\\\\",
         "state.file",
         "prev_command",
-      ).unwrap().1,
+      ).unwrap(),
       "\\\\",
       "command_substitution handled escape on \\, it should be passed through."
     );

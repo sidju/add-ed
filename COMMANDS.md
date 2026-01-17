@@ -12,10 +12,13 @@ the previously presented shorthands.)
   - `.` Interpreted as the start of the currently viewed selection in most cases
     but as the end of the currently viewed selection when given to an appending
     command (or as end of a selection).
+  - `:` The opposite side of the viewed selection compared to `.`.
   - `<positive integer>` Interpreted as index of a line.
   - `$` Interpreted as index of the last line, or 0 there are no lines.
-  - `'<char>` Interpreted as index of first line tagged with
-    the given character.
+  - `'<char>` Interpreted as index of first line tagged with the given
+    character.
+  - `` `<char>`` Interpreted as index of last line tagged with the given
+    character.
   - `/<pattern>/` Interpreted as index of nearest following
     line matching the given regex pattern.
   - `?<pattern>?` same as above but nearest preceeding.
@@ -37,6 +40,8 @@ the previously presented shorthands.)
     (Empty indices are interpreted as index `1` and `.` respectively.)
   - `<nothing>` Interpreted as the currently viewed selection. Use the `=`
     command to print the currently viewed selection.
+  - `"<char>` Only valid if at least one line is tagged with char, interpreted
+    as ``'<char>,`<char>``.
 - `/` A separator. Can be any character (except newline), but for each command
   invocation you must use the same separator. Traditionally `/` or `_`.
 
@@ -52,27 +57,10 @@ are `[pnl]`.
   instead of tabs and `$$` instead of `$`. (Or not, if the `L` default is on).
 
 
-# Printing commands
-
-Commands to print buffer contents.
-
-- `<nothing>` Prints as many lines after the currently selected as you have
-  selected. (Intended so you can print the first 20 lines and press enter to do
-  so again.)
-- `(.,.)[pnl]` Print given selection.
-  (`p` is used to distinct the invocation from `<nothing>` when not giving an
-  explicit selection, it doesn't affect the printing.)
-- `(.,.)z(<positive integer>)[pnl]` Prints the given number of lines following
-  the given selection with the given printing configuration.
-
-
 # Basic editing commands
 
 Simple commands to edit the text in the editing buffer.
 
-- `(.)a[pnl]` Append text after given line. Enters input mode terminated by '.'.
-  After running the inserted text is selected.
-- `(.)i[pnl]` Insert text before given line. Otherwise same behaviour as `a`.
 - `(.,.)d[pnl]` Cut the selected lines into (editor internal) clipboard. Selects
   the nearest following line if any, otherwise the nearest preceeding. If
   deleting all of the buffer there is no selection after running, wherefore
@@ -86,9 +74,18 @@ Simple commands to edit the text in the editing buffer.
   newline characters, everything else is kept). Selects the resulting line.
 
 
+# Input mode commands
+
+Commands that enter input mode for text entry.
+
+- `(.)a[pnl]` Append text after given line. Enters input mode terminated by '.'.
+  After running the inserted text is selected.
+- `(.)i[pnl]` Insert text before given line. Otherwise same behaviour as `a`.
+
+
 # Combined editing commands
 
-Commands that kind of combine two basic editing commands.
+Commands that behave like two existing commands in sequence.
 
 - `(.,.)c[pnl]` Change out the selected lines. Enters input mode terminated by
   '.'. Equivalent to `.,.d` followed by `i`. Selects the inserted text if any
@@ -104,6 +101,28 @@ Commands that kind of combine two basic editing commands.
   given it copies to the end of the buffer by default. Kind of equivalent to
   `.,.y` followed by `x.`, except it doesn't affect the (editor internal)
   clipboard. Selects the copied lines in their new location.
+- `(.)A[pnl]` Append text after given line, joining the last line of input with
+  the indexed line. Enters input mode terminated by '.'. Equivalent to `a`
+  followed by joining with the indexed line.
+- `(.)I[pnl]` Insert text before given line, joining the first line of input with
+  the indexed line. Enters input mode terminated by '.'. Equivalent to `i`
+  followed by joining with the indexed line.
+
+
+# Printing commands
+
+Commands to print buffer contents.
+
+- `<nothing>` Prints as many lines after the currently selected as you have
+  selected. (Intended so you can print the first 20 lines and press enter to do
+  so again.)
+- `(.,.)[pnl]` Print given selection.
+  (`p` is used to distinct the invocation from `<nothing>` when not giving an
+  explicit selection, it doesn't affect the printing.)
+- `(.,.)z(<positive integer>)[pnl]` Prints the given number of lines following
+  the given selection with the given printing configuration.
+- `(.,.)Z(<positive integer>)[pnl]` Same as `z` but scrolls backward (up) instead
+  of forward (down).
 
 
 # File and shell commands
@@ -165,7 +184,7 @@ More advanced commands to apply the same or similar changes many times.
    on that line, same as `g`.
 - `(.,.)V/<regex>/` Inverse of `G`. Does the same for lines that don't match the
    given regex.
-- `(.,.):<macro-name>(<space separated arguments>)` Set selection to given
+- `(.,.)o<macro-name>(<space separated arguments>)` Set selection to given
   selection (if any) and run given macro. Same as `g` it doesn't set selection,
   but the commands in the macro will probably do so.
 
@@ -185,9 +204,34 @@ For printing information about and changing editor state.
   Capitalize 'q' to 'Q' to override and quit anyways.
 - `h` Print last previous error.
 - `H` Toggle between printing the error or only `?` when an error occurs.
-- `(.,.)=` Prints selection. If none given prints the current selection.
+- `=[as]` Prints editor status. Accepts flags `[as]` to select parts of state,
+  defaults to only selection.
+  - `a` Print full editor status including all available information
+  - `s` Print only the selection (default behavior when no flags given)
 - `(.,.)#(<anything>)` If no selection is given it does nothing, to enable
   inlining comments in scripts. If a selection is given that selection is set
   without printing (this is the only way to do this, as even no command prints).
 - `f(<path>)` If no path given prints the default path, otherwise sets the given
   path as default path.
+- `(.,.)k<character>` Tags the start and end of that selection with the given
+  character, allowing you to use those indices via the shorthands `'<character>`
+  for the first index and `` `<character>`` for the last.
+- `(.,.)k` Untags the start and end of the selection, removing any tag currently
+  on those lines. Note that tags between them are left untouched.
+- `(.,.)K[<character>]` Equivalent to `k` but only operates on the last line in
+  the selection.
+
+
+# History and undo commands
+
+For managing command history and undo/redo operations.
+
+- `u[(<history index>)]` Undo or redo operations. If no history index given,
+  undoes the last operation. A negative number undoes, a positive number redoes.
+  Accepts history indices to jump to specific points in history.
+- `U[(<history index>)[Aa]]` Manage and view history. If no arguments given,
+  shows the last 10 history entries. Accepts flags:
+  - `A` Print full history instead of just the last 10 entries
+  - `a` Use absolute indexing instead of relative indexing
+- `P[nl]` Toggle default printing behavior. Accepts flags `[nl]` to toggle
+  line numbering (`n`) and literal printing (`l`) by default.

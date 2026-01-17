@@ -9,7 +9,7 @@ pub fn scroll(
   default_scroll_length: usize,
 ) -> Result<()> {
   // Depending on forward or backward we use start or end of selection as starting point
-  let sel = interpret_selection(&state, selection, state.selection)?;
+  let sel = interpret_selection(state, selection, state.selection)?;
   let index = if command == 'z' {
     sel.1
   } else {

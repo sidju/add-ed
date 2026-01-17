@@ -26,7 +26,7 @@ pub fn change(
   command: char,
   flags: &str,
 ) -> Result<()> {
-  let sel = interpret_selection(&state, selection, state.selection)?;
+  let sel = interpret_selection(state, selection, state.selection)?;
   let buffer = state.history.current();
   buffer.verify_selection(sel)?;
   let mut flags = parse_flags(flags, "pnl")?;
