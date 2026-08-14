@@ -76,7 +76,7 @@ This project is essentially built upon the regex crate, as regex is the heart of
 
 ## Contributing:
 
-There are two main contributions welcomed as of now.
+There are four main contributions welcomed as of now.
 
 1. Adding tests. Though core uses for command are tested, more behaviours should
    be validated. If you have the time, add test cases that validate that:
