@@ -61,7 +61,7 @@ impl std::fmt::Display for EdError {
         relative_undo_limit,
       ),
       HistoryIndexTooBig{index, history_len, relative_redo_limit} => write!(f,
-        "Tried to redo beyond existing snapshots.\nHigest valid nr of redo steps is {}.\n(Given index: {}, Highest valid index: {})",
+        "Tried to redo beyond existing snapshots.\nHighest valid nr of redo steps is {}.\n(Given index: {}, Highest valid index: {})",
         relative_redo_limit,
         index,
         history_len - 1,
